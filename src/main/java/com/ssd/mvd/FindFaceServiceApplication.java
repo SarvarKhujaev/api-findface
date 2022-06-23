@@ -6,5 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class FindFaceServiceApplication {
-    public static void main( String[] args ) { SpringApplication.run( FindFaceServiceApplication.class, args ); }
+    public static void main( String[] args ) {
+        KafkaDataControl.getInstance();
+        SpringApplication.run( FindFaceServiceApplication.class, args ); }
 }

@@ -65,6 +65,7 @@ public class KafkaDataControl {
         this.kafkaTemplate = this.kafkaTemplate();
         this.getNewTopic( "api_server_findface_face_events_0.0.1" );
         this.getNewTopic( "api_server_findface_car_events_0.0.1" );
+        this.getNewTopic( "test" );
         this.start(); }
 
     private void start () {

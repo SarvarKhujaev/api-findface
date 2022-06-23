@@ -1,5 +1,6 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,5 +27,6 @@ public class TexPassport {
     private String dateOfCreation; // the date when car was created
     private String dateOfReceiving; // дата выдачи машины
     private String texPassportSeries;
+    @JsonDeserialize
     private ModelForPassport modelForPassport; // car owner
 }
