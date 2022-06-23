@@ -1,7 +1,7 @@
 package com.ssd.mvd.database;
 
 import com.google.gson.Gson;
-import com.ssd.mvd.entity.modelForFindFace.PreferenceItem;
+import com.ssd.mvd.controller.SerDes;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -36,7 +36,7 @@ public class KafkaConsumer implements Runnable {
 
     private void readFromKafka () {
         if ( !( this.records = this.kafkaConsumer.poll( Duration.ofSeconds( 2 ) ) ).isEmpty() ) {
-            records.forEach( record -> Archive.getInstance().save( this.gson.fromJson( record.value(), PreferenceItem.class ) ) ); // saving all data toDataSave class
+            records.forEach( record -> Archive.getInstance().save( SerDes.getSerDes().deserializePreferenceItem( record.value() ) ) ); // saving all data toDataSave class
             this.kafkaConsumer.commitAsync( ( map, e ) -> { if ( e != null ) this.logger.info( "Smth wrong during reading of offset: " + e.getCause() ); } ); } } // committing offset asynchronously
 
     public void clear () {

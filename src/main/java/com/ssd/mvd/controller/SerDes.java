@@ -8,6 +8,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.ssd.mvd.entity.Pinpp;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForCadastr.ModelForCadastor;
+import com.ssd.mvd.entity.modelForFindFace.PreferenceItem;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 
@@ -22,7 +23,7 @@ public class SerDes {
     private final Map< String, Object > fields = new HashMap<>();
     private final Map< String, String > headers = new HashMap<>();
     private String tokenForPassport = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjEiLCJMT0NBTCBBVVRIT1JJVFkiOiJBc2J0QXV0aDIuMFNlcnZlciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IjEwMTIwMDAiLCJuYmYiOjE2NTQyNjg3MjAsImV4cCI6MTY1NTEzMjcyMCwiaXNzIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vYXNidC51ei8ifQ.5HzXqMANiy5znL6IkKrzgNJku7WFxjyQFYvBMgsbajE";
-    private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU0MzM2MzIwLCJleHAiOjE2NTQ0MjI3MjAsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.MdKSogowgmJxHeh2foklKSHIAGQbgK2q5C-C0vYdjZY";
+    private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU1OTcyMjYwLCJleHAiOjE2NTYwNTg2NjAsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.zGGIC-Og2viEn_0Koo10mOS0Q6e_E_Y84Wq2Vz-Q2nk";
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
 
@@ -50,6 +51,8 @@ public class SerDes {
         this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
         if ( value ) try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetAddress" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().toString(), ModelForAddress.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); }
         else return null; }
+
+    public PreferenceItem deserializePreferenceItem ( String object ) { return this.gson.fromJson( object, PreferenceItem.class ); }
 
     public ModelForCadastor deserialize ( String Pcadastre ) {
         this.getFields().clear();

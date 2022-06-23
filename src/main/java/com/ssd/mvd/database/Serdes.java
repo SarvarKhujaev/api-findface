@@ -11,7 +11,7 @@ public class Serdes {
     private static Serdes serdes = new Serdes();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public <T> String serialize(T object) { return this.getGson().toJson( object ); }
+    public <T> String serialize( T object ) { return this.getGson().toJson( object ); }
 
     public static Serdes getInstance() { return serdes != null ? serdes : ( serdes = new Serdes() ); }
 
