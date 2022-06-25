@@ -4,10 +4,7 @@ import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.core.policies.TokenAwarePolicy;
 import com.datastax.driver.core.*;
-
-import reactor.core.publisher.Flux;
 import java.util.logging.Logger;
-import java.time.Duration;
 
 public final class CassandraDataControl {
     private final Cluster cluster;
@@ -17,11 +14,6 @@ public final class CassandraDataControl {
     public final String patrols = "PATRULS"; // for table with Patruls info
     public final String polygon = "POLYGON";
     private final String dbName = "TABLETS";
-    public final String tablets = "tablets";
-    public final String policeTypes = "POLICETYPES";
-    public final String polygonType = "POLYGONTYPE";
-    public final String selfEmployment = "SELFEMPLOYMENT";
-    public final String polygonForPatrul = "POLYGONFORPATRUl";
     private static CassandraDataControl cassandraDataControl = new CassandraDataControl();
     private final Logger logger = Logger.getLogger( CassandraDataControl.class.toString() );
 
