@@ -15,5 +15,9 @@ public class RSocketConfigs {
 
     @Primary
     @Bean( name = "AssomidinService" ) // connection to trackers service
-    RSocketRequester connectToAssomidinService ( RSocketRequester.Builder builder ) { return builder.tcp( "", 5050 ); }
+    RSocketRequester connectToAssomidinService ( RSocketRequester.Builder builder ) { return builder.tcp( "10.254.1.229", 5050 ); }
+
+    @Lazy
+    @Bean( name = "tablets" ) // connection to tablets service
+    RSocketRequester tablets ( RSocketRequester.Builder builder ) { return builder.tcp( "10.254.1.229", 6060 ); }
 }
