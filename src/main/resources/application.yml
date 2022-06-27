@@ -1,6 +1,6 @@
 server:
     port: 6006
-    address: localhost
+    address: 0.0.0.0
 
 spring:
     data:
@@ -36,4 +36,4 @@ spring:
     rsocket:
         server:
             port: 6066
-            address: localhost
+            address: 10.254.1.229

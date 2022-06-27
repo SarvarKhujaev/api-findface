@@ -1,18 +1,21 @@
 package com.ssd.mvd.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.mashape.unirest.http.ObjectMapper;
+
 import com.mashape.unirest.http.Unirest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
+
 import com.ssd.mvd.entity.Pinpp;
-import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
-import com.ssd.mvd.entity.modelForCadastr.ModelForCadastor;
-import com.ssd.mvd.entity.modelForFindFace.PreferenceItem;
 import com.ssd.mvd.entity.modelForGai.*;
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.entity.modelForFindFace.PreferenceItem;
+import com.ssd.mvd.entity.modelForCadastr.ModelForCadastor;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +26,11 @@ public class SerDes {
     private final Map< String, Object > fields = new HashMap<>();
     private final Map< String, String > headers = new HashMap<>();
     private String tokenForPassport = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjEiLCJMT0NBTCBBVVRIT1JJVFkiOiJBc2J0QXV0aDIuMFNlcnZlciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IjEwMTIwMDAiLCJuYmYiOjE2NTQyNjg3MjAsImV4cCI6MTY1NTEzMjcyMCwiaXNzIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vYXNidC51ei8ifQ.5HzXqMANiy5znL6IkKrzgNJku7WFxjyQFYvBMgsbajE";
-    private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU1OTcyMjYwLCJleHAiOjE2NTYwNTg2NjAsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.zGGIC-Og2viEn_0Koo10mOS0Q6e_E_Y84Wq2Vz-Q2nk";
+    private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU2MzM1MTcwLCJleHAiOjE2NTY0MjE1NzAsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.2eII8j1XgJb1s5KKCTiTMZcHk7pBNDKT8jSxqrGL5ck";
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
+
+    public <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.gson.fromJson( object, clazz ) ); }
 
     private SerDes () {
         Unirest.setObjectMapper( new ObjectMapper() {
@@ -76,8 +81,8 @@ public class SerDes {
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
     public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ViolationsList( this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), List.class ) ); } catch (UnirestException e ) { throw new RuntimeException(e); } }
+        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
     public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new DoverennostList( this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), List.class ) ); } catch (UnirestException e ) { throw new RuntimeException(e); } }
+        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), Doverennost[].class ) ); } catch (UnirestException e ) { throw new RuntimeException(e); } }
 }
