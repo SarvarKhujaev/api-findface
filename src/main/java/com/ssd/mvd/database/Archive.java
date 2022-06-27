@@ -1,7 +1,11 @@
 package com.ssd.mvd.database;
 
-import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.entity.CarTotalData;
+import com.ssd.mvd.constants.Status;
+import com.ssd.mvd.entity.*;
+import java.util.ArrayList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
@@ -10,7 +14,8 @@ import lombok.Data;
 
 @Data
 @Slf4j
-public class Archive {
+public class Archive implements Runnable {
+    private Boolean flag = true;
     private static Archive archive = new Archive();
     private final Map< String, CarTotalData > preferenceItemMapForCar = new HashMap<>();
     private final Map< String, PsychologyCard > preferenceItemMapForFace = new HashMap<>();
@@ -22,4 +27,21 @@ public class Archive {
     public CarTotalData save ( CarTotalData carTotalData ) {
         this.getPreferenceItemMapForCar().putIfAbsent( carTotalData.getGosNumber(), carTotalData );
         return carTotalData; }
+
+    // links Patrul to existing Card
+    public Mono< ApiResponseModel > save ( Request request ) {
+        if ( this.getPreferenceItemMapForCar().get( request.getAdditional() ).getPatruls() == null ) this.getPreferenceItemMapForCar().get( request.getAdditional() ).setPatruls( new ArrayList<>() );
+        this.getPreferenceItemMapForCar().get( request.getAdditional() ).getPatruls().add( request.getData() );
+        return RedisDataControl.getRedis().update( request.getData(), request.getAdditional() ); }
+
+    @Override
+    public void run() { while ( this.getFlag() ) { try { Thread.sleep( 30 * 1000 ); } catch (InterruptedException e) { e.printStackTrace(); }
+            Flux.fromStream( this.getPreferenceItemMapForCar().values().stream() ).filter( carTotalData -> carTotalData.getStatus().compareTo( Status.FINISHED ) == 0 ).subscribe( carTotalData -> {
+                        this.getPreferenceItemMapForCar().remove( carTotalData );
+                        CassandraDataControl.getInstance().addValue( carTotalData ); } ); } }
+
+    public Mono< ApiResponseModel > save ( ReportForCard reportForCard ) { return RedisDataControl.getRedis().getPatrul( reportForCard.getPassportSeries() ).flatMap( patrul -> {
+                this.getPreferenceItemMapForCar().get( patrul.getFindFaceTask() ).getReportForCards().add( reportForCard );
+                return RedisDataControl.getRedis().update( patrul.getPassportNumber() ).flatMap( apiResponseModel -> Mono.just( ApiResponseModel.builder().success( CassandraDataControl.getInstance().addValue( patrul, Serdes.getInstance().serializePatrul( patrul ) ) )
+                        .status( com.ssd.mvd.entity.Status.builder().message( "Report from: " + patrul.getName() + " was saved" ).code( 200 ).build() ).build() ) ); } ); }
 }
