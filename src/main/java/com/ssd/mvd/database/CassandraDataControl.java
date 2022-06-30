@@ -14,8 +14,8 @@ import java.time.Duration;
 import java.util.logging.Logger;
 
 public final class CassandraDataControl {
-    private final Cluster cluster;
-    private final Session session;
+    private  Cluster cluster;
+    private  Session session;
     public final String patrols = "PATRULS"; // for table with Patruls info
     private final String dbName = "FindFace";
     private final String carTotalData = "CarTotalData";

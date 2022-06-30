@@ -1,8 +1,12 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ModelForCar {
     private String Stir;
     private String Year;

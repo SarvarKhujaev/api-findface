@@ -3,8 +3,8 @@ package com.ssd.mvd.entity.modelForGai;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Data
 @NoArgsConstructor

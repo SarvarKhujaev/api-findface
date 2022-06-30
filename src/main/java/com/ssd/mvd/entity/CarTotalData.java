@@ -14,11 +14,11 @@ public class CarTotalData {
 
     private Tonirovka tonirovka;
     private Insurance insurance;
-    private TexPassport texPassport; // where to take link
     private ModelForCar modelForCar;
     private PsychologyCard psychologyCard;
     private ViolationsList violationsList;
     private DoverennostList doverennostList;
+    private ModelForCarList modelForCarList; // the list of all cars of each citizen
 
     private Status status;
     private List< String > patruls; // link to list of Patruls who is gonna deal with this Card

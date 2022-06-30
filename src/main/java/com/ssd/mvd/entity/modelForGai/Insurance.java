@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Insurance {
-    private String companyName;
-    private String insuranceType;
-    private String dateOfCreation;
-    private String insuranceNumber;
-    private String dateOfValidation;
+    private String DateBegin;
+    private String DateValid;
+    private String InsuranceSerialNumber;
 }
