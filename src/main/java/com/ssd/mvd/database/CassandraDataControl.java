@@ -3,15 +3,14 @@ package com.ssd.mvd.database;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.core.policies.TokenAwarePolicy;
-import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.entity.CarTotalData;
+import com.ssd.mvd.constants.Status;
 import com.datastax.driver.core.*;
-
 import com.ssd.mvd.entity.Patrul;
-import reactor.core.publisher.Flux;
 
-import java.time.Duration;
+import reactor.core.publisher.Flux;
 import java.util.logging.Logger;
+import java.time.Duration;
 
 public final class CassandraDataControl {
     private  Cluster cluster;

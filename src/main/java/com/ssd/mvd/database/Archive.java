@@ -1,14 +1,14 @@
 package com.ssd.mvd.database;
 
-import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.entity.*;
-import java.util.ArrayList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
@@ -22,6 +22,10 @@ public class Archive implements Runnable {
     private final Map< String, PsychologyCard > preferenceItemMapForFace = new HashMap<>();
 
     public static Archive getInstance() { return archive != null ? archive : ( archive = new Archive() ); }
+
+    public Archive () {
+        SerDes.getSerDes();
+        CassandraDataControl.getInstance().resetData(); }
 
     public CarTotalData getCarTotalData ( String id ) { return this.getPreferenceItemMapForCar().get( id ); }
 

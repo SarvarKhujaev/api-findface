@@ -20,8 +20,21 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 public class RequestController {
     private final FindFaceComponent component;
 
+    @MessageMapping ( value = "updateToken" )
+    public Mono< String > updateToken( String token ) {
+        SerDes.getSerDes().setTokenForPassport( token );
+        return Mono.just( "Token was saved" ); }
+
     @MessageMapping ( value = "getPersonTotalData" )
-    public Mono< PapilonList > getPersonTotalData ( String base64url ) { return this.component.getPapilonList( base64url ); }
+    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) {
+        PsychologyCard psychologyCard = new PsychologyCard();
+        return this.component.getPapilonList( base64url ).map( value -> {
+            psychologyCard.setPapilonData( value.getResults().get( 0 ) );
+            psychologyCard.setPinpp( SerDes.getSerDes().pinpp( value.getResults().get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForAddress( SerDes.getSerDes().deserialize( value.getResults().get( 0 ).getPersonal_code(), true ) );
+            psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( value.getResults().get( 0 ).getPersonal_code(), value.getResults().get( 0 ).getBirth() ) );
+            psychologyCard.setModelForCadastor( SerDes.getSerDes().deserialize( psychologyCard.getModelForAddress().getData().getPermanentRegistration().getPCadastre() ) );
+            return psychologyCard; } ); }
 
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Archive.getInstance().getPreferenceItemMapForCar().containsKey( platenumber ) ? Mono.just( Archive.getInstance().getCarTotalData( platenumber ) ) :
