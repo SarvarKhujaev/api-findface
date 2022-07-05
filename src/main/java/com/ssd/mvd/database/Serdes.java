@@ -14,6 +14,8 @@ public class Serdes {
 
     public <T> String serialize( T object ) { return this.getGson().toJson( object ); }
 
+    public String serializePatrul ( Patrul patrul ) { return this.getGson().toJson( patrul ); }
+
     public static Serdes getInstance() { return serdes != null ? serdes : ( serdes = new Serdes() ); }
 
     public Patrul deserializePatrul ( String item ) { return this.getGson().fromJson( item,   Patrul.class ); }

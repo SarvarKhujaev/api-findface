@@ -1,10 +1,12 @@
 package com.ssd.mvd.database;
 
+import com.ssd.mvd.entity.ApiResponseModel;
+import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.entity.Patrul;
+
 import org.redisson.api.*;
 import org.redisson.Redisson;
 import org.redisson.config.Config;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public final class RedisDataControl {
@@ -21,9 +23,17 @@ public final class RedisDataControl {
         this.redissonReactiveClient = Redisson.createReactive( config );
         this.patrulMap = this.redissonReactiveClient.getMap( "patrulMap" ); } // for cars
 
-    public Flux< Patrul > getAllPatruls () { return this.patrulMap.valueIterator().map(value -> Serdes.getInstance().deserializePatrul( value ) ); }
+    public Mono< Patrul > getPatrul ( String passportNumber ) { return this.patrulMap.containsKey( passportNumber ).flatMap(value -> value ? this.patrulMap.get( passportNumber ).map( s -> Serdes.getInstance().deserializePatrul( s ) ) : Mono.empty() ); }
 
-    public Mono< Patrul > getPatrul (String passportNumber ) { return this.patrulMap.containsKey( passportNumber ).flatMap(value -> value ? this.patrulMap.get( passportNumber ).map( s -> Serdes.getInstance().deserializePatrul( s ) ) : Mono.empty() ); }
+    public Mono< ApiResponseModel > update ( String passportNumber, String findFaceTask ) { return this.patrulMap.containsKey( passportNumber ).flatMap( aBoolean -> aBoolean ?
+            this.getPatrul( passportNumber ).flatMap( patrul -> {
+                patrul.changeTaskStatus( Status.ATTACHED ).setFindFaceTask( findFaceTask );
+                return this.patrulMap.fastPutIfExists( patrul.getPassportNumber(), Serdes.getInstance().serializePatrul( patrul ) ).flatMap( aBoolean1 -> Mono.just( ApiResponseModel.builder().success( CassandraDataControl.getInstance().addValue( patrul, Serdes.getInstance().serializePatrul( patrul ) ) ).status( com.ssd.mvd.entity.Status.builder().code( 200 ).message( "Patrul: " + patrul.getName() + " linked to card" ).build() ).build() ) );
+            } ).log().doOnError( throwable -> this.clear() ) : Mono.just( ApiResponseModel.builder().success( false ).status( com.ssd.mvd.entity.Status.builder().message( "Wrong Patrul data" ).code( 201 ).build() ).build() ) ); }
+
+    public Mono< ApiResponseModel > update ( String passportNumber ) { return this.patrulMap.containsKey( passportNumber ).flatMap( aBoolean -> aBoolean ?
+            this.getPatrul( passportNumber ).flatMap( patrul -> this.patrulMap.fastPutIfExists( patrul.getPassportNumber(), Serdes.getInstance().serializePatrul( patrul ) ).flatMap( aBoolean1 -> Mono.just( ApiResponseModel.builder().success( CassandraDataControl.getInstance().addValue( patrul, Serdes.getInstance().serializePatrul( patrul ) ) ).status( com.ssd.mvd.entity.Status.builder().code( 200 ).message( "Patrul: " + patrul.getName() + " linked to card" ).build() ).build() ) ) )
+                    .log().doOnError( throwable -> this.clear() ) : Mono.just( ApiResponseModel.builder().success( false ).status( com.ssd.mvd.entity.Status.builder().message( "Wrong Patrul data" ).code( 201 ).build() ).build() ) ); }
 
     public void clear () {
         this.patrulMap.delete().onErrorStop().log().subscribe();
