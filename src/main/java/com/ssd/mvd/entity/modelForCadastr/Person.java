@@ -1,8 +1,12 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Person {
     private String pPsp;
     private String pPerson;

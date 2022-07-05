@@ -1,14 +1,12 @@
 package com.ssd.mvd.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties ( ignoreUnknown = true )
 public class PapilonData {
     private Integer rank;
     private Double score;
