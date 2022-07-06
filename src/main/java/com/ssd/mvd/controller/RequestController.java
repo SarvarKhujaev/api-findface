@@ -20,32 +20,26 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 public class RequestController {
     private final FindFaceComponent component;
 
-    @MessageMapping ( value = "updateToken" )
-    public Mono< String > updateToken( String token ) {
-        SerDes.getSerDes().setTokenForPassport( token );
-        return Mono.just( "Token was saved" ); }
-
     @MessageMapping ( value = "getPersonTotalData" )
-    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) {
-        PsychologyCard psychologyCard = new PsychologyCard();
-        return this.component.getPapilonList( base64url ).map( value -> {
-            psychologyCard.setPapilonData( value.getResults().get( 0 ) );
-            psychologyCard.setPinpp( SerDes.getSerDes().pinpp( value.getResults().get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForAddress( SerDes.getSerDes().deserialize( value.getResults().get( 0 ).getPersonal_code(), true ) );
-            psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( value.getResults().get( 0 ).getPersonal_code(), value.getResults().get( 0 ).getBirth() ) );
-            psychologyCard.setModelForCadastor( SerDes.getSerDes().deserialize( psychologyCard.getModelForAddress().getData().getPermanentRegistration().getPCadastre() ) );
-            return psychologyCard; } ); }
+    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return this.component.getPapilonList( base64url )
+            .log()
+            .doOnError( System.out::println )
+            .onErrorStop()
+            .map( value -> SerDes.getSerDes().getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0], value.getResults() ) ); }
 
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Archive.getInstance().getPreferenceItemMapForCar().containsKey( platenumber ) ? Mono.just( Archive.getInstance().getCarTotalData( platenumber ) ) :
-            Mono.just( Archive.getInstance().save( CassandraDataControl.getInstance().addValue( CarTotalData.builder()
-                    .doverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) )
-                    .violationsList( SerDes.getSerDes().getViolationList( platenumber ) )
-                    .tonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) )
-                    .modelForCar( SerDes.getSerDes().getVehicleData( platenumber ) )
-                    .insurance( SerDes.getSerDes().insurance( platenumber ) )
-                    .cameraImage( platenumber.split( "@$" )[0] )
-                    .status( Status.CREATED ).gosNumber( platenumber ).build() ) ) ); }
+                Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
+                    carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
+                    carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
+                    carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
+                    carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
+                    carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCsard( carTotalData.getModelForCar().getPinpp() )  );
+                    carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
+                    carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
+                    carTotalData.setStatus( Status.CREATED );
+                    Archive.getInstance().save( CassandraDataControl.getInstance().addValue( carTotalData ) );
+                    return Mono.just( carTotalData ); } ); }
 
     @MessageMapping ( value = "addReportForFindFace" )
     public Mono< ApiResponseModel > addReportForFindFace ( ReportForCard reportForCard ) { return Archive.getInstance().save( reportForCard ); }
