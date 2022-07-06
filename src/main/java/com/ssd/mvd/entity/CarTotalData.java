@@ -7,7 +7,6 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-@Builder
 public class CarTotalData {
     private String gosNumber;
     private String cameraImage; // image which was made by camera

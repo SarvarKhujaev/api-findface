@@ -23,9 +23,7 @@ public class Archive implements Runnable {
 
     public static Archive getInstance() { return archive != null ? archive : ( archive = new Archive() ); }
 
-    public Archive () {
-        SerDes.getSerDes();
-        CassandraDataControl.getInstance().resetData(); }
+    public Archive () { SerDes.getSerDes(); }
 
     public CarTotalData getCarTotalData ( String id ) { return this.getPreferenceItemMapForCar().get( id ); }
 
