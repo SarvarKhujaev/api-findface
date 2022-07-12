@@ -1,5 +1,6 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
+import com.ssd.mvd.entity.PsychologyCard;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Data;

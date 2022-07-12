@@ -6,17 +6,13 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import com.ssd.mvd.entity.PapilonData;
-import com.ssd.mvd.entity.Pinpp;
-import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.entity.*;
 import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.modelForCadastr.Data;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @lombok.Data
 public class SerDes {
@@ -36,7 +32,7 @@ public class SerDes {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
             @Override
-            public String writeValue(Object o) { try { return this.objectMapper.writeValueAsString( o ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } }
+            public String writeValue( Object o ) { try { return this.objectMapper.writeValueAsString( o ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } }
 
             @Override
             public <T> T readValue( String s, Class<T> aClass ) { try { return this.objectMapper.readValue( s, aClass ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } } } );
@@ -47,60 +43,70 @@ public class SerDes {
         this.getFields().put( "CurrentSystem" , "40" );
         this.getFields().put( "Login", "SharafIT_PSP" );
         this.getFields().put( "Password" , "Sh@r@fITP@$P" );
-        try {
-            this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" ).fields( this.getFields() ).asJson().getBody().getObject().get( "access_token" ) ) );
+        try { this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" ).fields( this.getFields() ).asJson().getBody().getObject().get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-//            this.setTokenForPassport( String.valueOf( Unirest.post( "http://172.250.1.67:7101/Agency/token" ).fields( fields ).asJson().getBody().getObject().get( "access_token" ) ) );
         } catch ( UnirestException e ) { throw new RuntimeException(e); } }
-
-    public com.ssd.mvd.entity.modelForPassport.Data deserialize ( String SerialNumber, String BirthDate ) {
-        this.getFields().clear();
-        this.getFields().put( "BirthDate", BirthDate );
-        this.getFields().put( "SerialNumber", SerialNumber );
-        this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject().get( "Data" ).toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
     public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
         this.getFields().clear();
         this.getFields().put( "Pcadastre", pinfl );
         this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.gson.fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject().get( "Data" ).toString(), Data.class ); } catch (UnirestException e ) { throw new RuntimeException(e); } }
+        try { JSONObject object = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject();
+            return object != null ? this.gson.fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
+        } catch ( JSONException | UnirestException e ) { return new Data(); } }
 
-    public PsychologyCard getPsychologyCard ( String passport, List<PapilonData> results) {
+    public PsychologyCard getPsychologyCard ( String passport, List< PapilonData > results, List< Violation > violationList ) { // returns the card in case of Person
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( passport.length() == 9 ) passport = passport.replace( "-", "0" );
         psychologyCard.setPapilonData( results );
+        psychologyCard.setViolationList( violationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
         return psychologyCard; }
 
+    public com.ssd.mvd.entity.modelForPassport.Data deserialize ( String SerialNumber, String BirthDate ) {
+        this.getFields().clear();
+        this.getFields().put( "BirthDate", BirthDate );
+        this.getFields().put( "SerialNumber", SerialNumber );
+        this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
+        try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject().get( "Data" ).toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); } catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
+
     public Pinpp pinpp ( String pinpp ) { this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject().toString(), Pinpp.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject().toString(), Pinpp.class ); } catch ( Exception e ) { return new Pinpp(); } }
 
     public Insurance insurance ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
-    public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), ModelForCar.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
-
-    public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ModelForCar[].class ) ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+    public String getImageByPnfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp )
+                    .headers( this.getHeaders() )
+                    .asJson()
+                    .getBody()
+                    .getObject()
+                    .getString( "Data" );
+        } catch ( UnirestException e ) { return "Error"; } }
 
     public Tonirovka getVehicleTonirovka ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
 
-    public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+    public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
+
+    public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
 
     public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), Doverennost[].class ) ); } catch (UnirestException e ) { throw new RuntimeException(e); } }
+        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
 
-    public PsychologyCard getPsychologyCsard( String pinpp ) {
+    public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
+
+    public PsychologyCard getPsychologyCard ( String pinfl ) { // returns a Card object in case of car data
         PsychologyCard psychologyCard = new PsychologyCard();
-        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinpp ) );
-        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinpp ) );
+        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
+        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 }
