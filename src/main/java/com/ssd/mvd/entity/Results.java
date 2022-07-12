@@ -14,4 +14,6 @@ import lombok.Data;
 public class Results {
     @JsonDeserialize
     private List< PapilonData > results;
+    @JsonDeserialize
+    private List< Violation > violationList;
 }
