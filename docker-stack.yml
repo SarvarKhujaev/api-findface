@@ -5,12 +5,14 @@ services:
         image: ${CI_REGISTRY}/${CI_PROJECT_PATH}:latest
         networks:
             - proxy_network
+        ports:
+            - ${SERVER_PORT}:${SERVER_PORT}
         environment:
             SERVER_PORT: ${SERVER_PORT}
             SERVER_ADDRESS: ${SERVER_ADDRESS}
 
         deploy:
-            replicas: 2
+            replicas: ${REPLICAS}
             placement:
                 constraints: [node.labels.mgmt != true ]
 
