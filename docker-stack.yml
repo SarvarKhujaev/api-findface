@@ -5,12 +5,25 @@ services:
         image: ${CI_REGISTRY}/${CI_PROJECT_PATH}:latest
         networks:
             - proxy_network
+        ports:
+            - ${SERVER_PORT}:${SERVER_PORT}
+            - ${RSOCKET_PORT}:${RSOCKET_PORT}
+            - ${PRODUCER_PORT}:${PRODUCER_PORT}
         environment:
             SERVER_PORT: ${SERVER_PORT}
+            RSOCKET_PORT: ${RSOCKET_PORT}
             SERVER_ADDRESS: ${SERVER_ADDRESS}
 
+            CASSANDRA_DC: ${CASSANDRA_DC}
+            KEYSPACE_NAME: ${KEYSPACE_NAME}
+            CASSANDRA_PORT: ${CASSANDRA_PORT}
+            CASSANDRA_HOST: ${CASSANDRA_HOST}
+            REQUEST_TIMEOUT_FOR_CASSANDRA: ${REQUEST_TIMEOUT_FOR_CASSANDRA}
+            CONNECTION_TIMEOUT_FOR_CASSANDRA: ${CONNECTION_TIMEOUT_FOR_CASSANDRA}
+            INIT_QUERY_TIMEOUT_FOR_CASSANDRA: ${INIT_QUERY_TIMEOUT_FOR_CASSANDRA}
+
         deploy:
-            replicas: 2
+            replicas: 1
             placement:
                 constraints: [node.labels.mgmt != true ]
 

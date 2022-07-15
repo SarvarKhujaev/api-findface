@@ -1,19 +1,28 @@
-#server:
-#    port: 6006
-#    address: 10.254.1.229
-#
-#spring:
-#    rsocket:
-#        server:
-#            port: 6066
-#            address: 10.254.1.229
-
-server:
-    port: ${SERVER_PORT}
-    address: ${SERVER_ADDRESS}
-
 spring:
+    data:
+        cassandra:
+            port: ${CASSANDRA_PORT}
+            keyspace-name: ${KEYSPACE_NAME}
+            contact-points: ${CASSANDRA_HOST}
+            local-datacenter: ${CASSANDRA_DC}
+            schema-action: CREATE_IF_NOT_EXISTS
+
+            request:
+                timeout: ${REQUEST_TIMEOUT_FOR_CASSANDRA}
+
+            connection:
+                connect-timeout: ${CONNECTION_TIMEOUT_FOR_CASSANDRA}
+                init-query-timeout: ${INIT_QUERY_TIMEOUT_FOR_CASSANDRA}
+
     rsocket:
         server:
             port: ${RSOCKET_PORT}
-            address: ${SERVER_ADDRESS}
+            address: ${SERVER_ADDR}
+
+server:
+    port: ${SERVER_PORT} # all trackers are going to send its data by its  port
+    address: ${SERVER_ADDR}
+
+variables:
+    PRODUCER_PORT: ${PRODUCER_PORT}
+    LOAD_BALANCER: ${LOAD_BALANCER}
