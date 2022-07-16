@@ -11,6 +11,7 @@ import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.database.CassandraDataControl;
 import com.ssd.mvd.entity.modelForCadastr.Person;
 
+import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,6 +21,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 
 @CrossOrigin
 @RestController
+@RequestMapping( value = "/findFaceService/api/v1/psychologyCard" )
 public class RequestController {
     @MessageMapping ( value = "getPersonTotalData" )
     public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ? FindFaceComponent.getInstance().getPapilonList( base64url )
