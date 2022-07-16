@@ -12,8 +12,8 @@ public class RSocketConfigs {
     @Value( "${variables.PRODUCER_PORT}" )
     private Integer port;
 
-    @Bean
-    RSocketRequester tablets ( RSocketRequester.Builder builder ) {
-        System.out.println( this.host + ":" + this.port );
-        return builder.tcp( this.host, this.port ); }
+//    @Bean
+//    RSocketRequester tablets ( RSocketRequester.Builder builder ) {
+//        System.out.println( this.host + ":" + this.port );
+//        return builder.tcp( this.host, this.port ); }
 }

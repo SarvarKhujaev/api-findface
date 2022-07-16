@@ -16,13 +16,13 @@ spring:
 
     rsocket:
         server:
-            port: ${RSOCKET_PORT}
-            address: ${LOAD_BALANCER}
+            port: ${RSOCKET_PORT} # 6066
+            address: ${SERVER_ADDR} # 0.0.0.0
 
 server:
-    port: ${SERVER_PORT} # all trackers are going to send its data by its  port
-    address: ${SERVER_ADDR}
+    port: ${SERVER_PORT} # 6006
+    address: ${SERVER_ADDR} # 0.0.0.0
 
 variables:
-    PRODUCER_PORT: ${PRODUCER_PORT}
-    LOAD_BALANCER: ${LOAD_BALANCER}
+    PRODUCER_PORT: ${PRODUCER_PORT} # 5055
+    LOAD_BALANCER: ${LOAD_BALANCER} # ms-backend.ssd.uz
