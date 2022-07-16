@@ -17,7 +17,7 @@ spring:
     rsocket:
         server:
             port: ${RSOCKET_PORT}
-            address: ${SERVER_ADDR}
+            address: ${LOAD_BALANCER}
 
 server:
     port: ${SERVER_PORT} # all trackers are going to send its data by its  port

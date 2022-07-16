@@ -13,5 +13,7 @@ public class RSocketConfigs {
     private Integer port;
 
     @Bean
-    RSocketRequester tablets ( RSocketRequester.Builder builder ) { return builder.tcp( this.host, this.port ); }
+    RSocketRequester tablets ( RSocketRequester.Builder builder ) {
+        System.out.println( this.host + ":" + this.port );
+        return builder.tcp( this.host, this.port ); }
 }
