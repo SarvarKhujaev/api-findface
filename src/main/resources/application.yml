@@ -2,7 +2,7 @@ spring:
     rsocket:
         server:
             port: ${RSOCKET_PORT} # 6066
-            address: ${SERVER_ADDR} # 0.0.0.0
+            address: ${LOAD_BALANCER} # 0.0.0.0
 
 server:
     port: ${SERVER_PORT} # 6006
