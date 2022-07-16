@@ -21,7 +21,7 @@ spring:
     rsocket:
         server:
             port: ${RSOCKET_PORT}
-            address: ${RSOCKET_ADDR}
+            address: ${SERVER_ADDR}
 
 variables:
     PRODUCER_PORT: ${PRODUCER_PORT} # 5055
