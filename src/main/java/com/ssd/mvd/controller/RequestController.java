@@ -13,19 +13,16 @@ import com.ssd.mvd.entity.modelForCadastr.Person;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 
 @CrossOrigin
 @RestController
-@RequiredArgsConstructor
 public class RequestController {
-    private final FindFaceComponent component;
-
     @MessageMapping ( value = "getPersonTotalData" )
-    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ? this.component.getPapilonList( base64url )
+    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ? FindFaceComponent.getInstance().getPapilonList( base64url )
             .filter( value -> value.getResults() != null && value.getResults().size() > 0 ).onErrorStop()
             .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ? SerDes.getSerDes().getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0], value.getResults(), value.getViolationList() )
                     : new PsychologyCard( value ) ).onErrorStop() : Mono.empty(); }
