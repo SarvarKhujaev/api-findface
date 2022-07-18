@@ -62,6 +62,7 @@ public class SerDes {
         psychologyCard.setPapilonData( results );
         psychologyCard.setViolationList( violationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
+        psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
@@ -108,6 +109,7 @@ public class SerDes {
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( psychologyCard::setViolationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
+        psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }

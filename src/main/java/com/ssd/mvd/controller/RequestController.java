@@ -26,8 +26,7 @@ public class RequestController {
     @MessageMapping ( value = "getPersonalCadastor" )
     public Flux< PsychologyCard > getPersonalCadastor ( String id ) {
         List< Person > personList = SerDes.getSerDes().deserialize( id ).getPermanentRegistration();
-        if ( personList != null ) return Flux.fromStream( personList.stream() ).flatMap( person -> this.getPersonTotalData( person.getPCitizen() ) );
-        else return Flux.empty(); }
+        return personList != null ? Flux.fromStream( personList.stream() ).flatMap( person -> this.getPersonTotalData( person.getPCitizen() ) ) : Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
