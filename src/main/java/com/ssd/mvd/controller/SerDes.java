@@ -104,10 +104,10 @@ public class SerDes {
     public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
-    public PsychologyCard getPsychologyCard ( String pinfl, FindFaceComponent component ) { // returns a Card object in case of car data
+    public PsychologyCard getPsychologyCard ( String pinfl ) { // returns a Card object in case of car data
         PsychologyCard psychologyCard = new PsychologyCard();
+        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( psychologyCard::setViolationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
-        component.getViolationListByPinfl( pinfl ).subscribe( psychologyCard::setViolationList );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
