@@ -6,6 +6,7 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.entity.modelForCadastr.Data;
@@ -105,6 +106,7 @@ public class SerDes {
 
     public PsychologyCard getPsychologyCard ( String pinfl ) { // returns a Card object in case of car data
         PsychologyCard psychologyCard = new PsychologyCard();
+        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( list -> psychologyCard.setViolationList( list ) );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );

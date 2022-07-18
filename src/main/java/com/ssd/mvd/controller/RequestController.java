@@ -1,19 +1,14 @@
 package com.ssd.mvd.controller;
 
-import java.util.List;
-import java.time.Duration;
-import java.util.ArrayList;
-
 import com.ssd.mvd.entity.*;
-import com.ssd.mvd.database.Archive;
 import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.component.FindFaceComponent;
-import com.ssd.mvd.database.CassandraDataControl;
 import com.ssd.mvd.entity.modelForCadastr.Person;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.List;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,32 +25,29 @@ public class RequestController {
                     : new PsychologyCard( value ) ).onErrorStop() : Mono.empty(); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
-    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return this.getPersonTotalData( SerDes.getSerDes().getImageByPnfl( pinfl ) ); }
+    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes.getSerDes().getPsychologyCard( pinfl ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" )
-    public Mono< List< PsychologyCard > > getPersonalCadastor ( String id ) {
-        List< PsychologyCard > list = new ArrayList<>();
+    public Flux< PsychologyCard > getPersonalCadastor ( String id ) {
         List< Person > personList = SerDes.getSerDes().deserialize( id ).getPermanentRegistration();
-        if ( personList != null && personList.size() > 0 ) Flux.fromStream( personList.stream() ).map( person -> this.getPersonTotalData( SerDes.getSerDes().getImageByPnfl( person.getPCitizen() ) ).subscribe( psychologyCard -> list.add( psychologyCard ) ) );
-        return Mono.just( list ).delayElement( Duration.ofMillis( list.size() > 0 ? 300L * list.size() : 0L ) ); }
+        if ( personList != null ) return Flux.fromStream( personList.stream() ).flatMap( person -> this.getPersonTotalData( person.getPCitizen() ) );
+        else return Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
-    public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Archive.getInstance().getPreferenceItemMapForCar().containsKey( platenumber ) ? Mono.just( Archive.getInstance().getCarTotalData( platenumber ) ) :
-                Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
-                    carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
-                    carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
-                    carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
-                    carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
-                    carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
-                    carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
-                    carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
-                    carTotalData.setStatus( Status.CREATED );
-                    Archive.getInstance().save( CassandraDataControl.getInstance().addValue( carTotalData ) );
-                    return Mono.just( carTotalData ); } ); }
+    public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
+        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
+        carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
+        carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
+        carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
+        carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
+        carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
+        carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
+        carTotalData.setStatus( Status.CREATED );
+        return Mono.just( carTotalData ); } ); }
 
-    @MessageMapping ( value = "linkPatrulToFindFaceCar" )
-    public Mono< ApiResponseModel > linkPatrulToFindFaceCar ( Request request ) { return Archive.getInstance().save( request ); }
-
-    @MessageMapping ( value = "addReportForFindFace" )
-    public Mono< ApiResponseModel > addReportForFindFace ( ReportForCard reportForCard ) { return Archive.getInstance().save( reportForCard ); }
+//    @MessageMapping ( value = "linkPatrulToFindFaceCar" )
+//    public Mono< ApiResponseModel > linkPatrulToFindFaceCar ( Request request ) { return Archive.getInstance().save( request ); }
+//
+//    @MessageMapping ( value = "addReportForFindFace" )
+//    public Mono< ApiResponseModel > addReportForFindFace ( ReportForCard reportForCard ) { return Archive.getInstance().save( reportForCard ); }
 }

@@ -8,7 +8,7 @@ services:
         ports:
             - ${SERVER_PORT}:${SERVER_PORT}
             - ${RSOCKET_PORT}:${RSOCKET_PORT}
-            - ${PRODUCER_PORT}:${PRODUCER_PORT}
+
         environment:
             SERVER_ADDR: ${SERVER_ADDR}
             SERVER_PORT: ${SERVER_PORT}
