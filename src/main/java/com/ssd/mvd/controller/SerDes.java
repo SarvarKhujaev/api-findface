@@ -82,13 +82,10 @@ public class SerDes {
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
     public String getImageByPnfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp )
-                    .headers( this.getHeaders() )
-                    .asJson()
-                    .getBody()
-                    .getObject()
-                    .getString( "Data" );
-        } catch ( UnirestException e ) { return "Error"; } }
+        try {
+            JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject();
+            return object != null ? object.getString( "Data" ) : "image was not found";
+        } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
     public Tonirovka getVehicleTonirovka ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
