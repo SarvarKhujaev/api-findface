@@ -68,7 +68,7 @@ public class SerDes {
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
         return psychologyCard; }
 
-    public com.ssd.mvd.entity.modelForPassport.Data deserialize ( String SerialNumber, String BirthDate ) {
+    public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
         this.getFields().clear();
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
@@ -102,12 +102,23 @@ public class SerDes {
     public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
-    public PsychologyCard getPsychologyCard ( String pinfl ) { // returns a Card object in case of car data
+    public PsychologyCard getPsychologyCard( String pinfl ) {
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( psychologyCard::setViolationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
+        psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
+        return psychologyCard; }
+
+    public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
+        System.out.println( data.getPerson().getPinpp() );
+        PsychologyCard psychologyCard = new PsychologyCard();
+        psychologyCard.setModelForPassport( data );
+        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() ).subscribe( psychologyCard::setViolationList );
+        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
+        psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
+        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 }
