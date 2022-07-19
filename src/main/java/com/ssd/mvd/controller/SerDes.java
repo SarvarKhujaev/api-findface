@@ -70,6 +70,7 @@ public class SerDes {
 
     public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
         this.getFields().clear();
+        System.out.println( "SerialNumber: " + SerialNumber );
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
         this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
@@ -112,8 +113,8 @@ public class SerDes {
         return psychologyCard; }
 
     public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
-        System.out.println( data.getPerson().getPinpp() );
         PsychologyCard psychologyCard = new PsychologyCard();
+        if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
         FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() ).subscribe( psychologyCard::setViolationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
