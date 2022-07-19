@@ -16,5 +16,5 @@ public class FindFaceComponent {
 
     public Mono< Results > getPapilonList( String base64url ) { return this.requester.route( "getFaceCard" ).data( base64url ).retrieveMono( Results.class ); }
 
-    public Mono< List > getViolationListByPinfl ( String pinfl ) { return pinfl != null ? this.requester.route( "getgetViolationListByPinfl" ).data( pinfl ).retrieveMono( List.class ) : null; }
+    public Mono< List > getViolationListByPinfl ( String pinfl ) { return pinfl != null ? this.requester.route( "getViolationListByPinfl" ).data( pinfl ).retrieveMono( List.class ) : null; }
 }
