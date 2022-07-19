@@ -11,8 +11,8 @@ import lombok.Data;
 public class Person {
     private String pPsp;
     private String pPerson;
+    private pStatus pStatus;
     private String pCitizen;
     private String pDateBirth;
     private String pRegistrationDate;
-    private pStatus pStatus;
 }

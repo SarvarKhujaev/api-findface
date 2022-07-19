@@ -53,7 +53,6 @@ public class SerDes {
         this.getFields().put( "Pcadastre", pinfl );
         this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { JSONObject object = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject();
-            System.out.println( object );
             return object != null ? this.gson.fromJson( object.toString(), Data.class ) : new Data();
         } catch ( JSONException | UnirestException e ) { return new Data(); } }
 

@@ -14,5 +14,5 @@ public class Data {
     @JsonDeserialize
     private List< Person > PermanentRegistration;
     @JsonDeserialize
-    private TemproaryRegistration TemproaryRegistration;
+    private List< TemproaryRegistration > TemproaryRegistration;
 }
