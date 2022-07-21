@@ -40,10 +40,4 @@ public class RequestController {
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
         carTotalData.setStatus( Status.CREATED );
         return Mono.just( carTotalData ); } ); }
-
-//    @MessageMapping ( value = "linkPatrulToFindFaceCar" )
-//    public Mono< ApiResponseModel > linkPatrulToFindFaceCar ( Request request ) { return Archive.getInstance().save( request ); }
-//
-//    @MessageMapping ( value = "addReportForFindFace" )
-//    public Mono< ApiResponseModel > addReportForFindFace ( ReportForCard reportForCard ) { return Archive.getInstance().save( reportForCard ); }
 }
