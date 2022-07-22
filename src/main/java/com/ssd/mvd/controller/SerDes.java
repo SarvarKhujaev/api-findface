@@ -118,8 +118,11 @@ public class SerDes {
         try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
     public PsychologyCard getPsychologyCard( String pinfl ) {
+        if ( pinfl == null ) { return null; }
         PsychologyCard psychologyCard = new PsychologyCard();
-        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( psychologyCard::setViolationList );
+        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( value -> {
+            if ( value != null ) psychologyCard.setViolationList( value );
+            else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
@@ -133,7 +136,9 @@ public class SerDes {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() ).subscribe( psychologyCard::setViolationList );
+        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() ).subscribe( value -> {
+            if ( value != null ) psychologyCard.setViolationList( value );
+            else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
