@@ -17,7 +17,8 @@ public class RequestController {
     @MessageMapping ( value = "getPersonTotalData" )
     public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ? FindFaceComponent.getInstance().getPapilonList( base64url )
             .filter( value -> value.getResults() != null && value.getResults().size() > 0 ).onErrorStop()
-            .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ? SerDes.getSerDes().getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0], value.getResults(), value.getViolationList() )
+            .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ? SerDes.getSerDes()
+                    .getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0], value.getResults(), value.getViolationList() )
                     : new PsychologyCard( value ) ).onErrorStop() : Mono.empty(); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
