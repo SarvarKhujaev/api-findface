@@ -68,8 +68,8 @@ public class SerDes {
         psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
-        System.out.println( passport );
-        System.out.println( psychologyCard.getPinpp().getBirthDate() );
+        System.out.println( "Passport: " + passport );
+        System.out.println( "BirthDate: " + psychologyCard.getPinpp().getBirthDate() );
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
         return psychologyCard; }
 
