@@ -68,13 +68,9 @@ public class SerDes {
         psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
-        String[] dates = psychologyCard.getPinpp().getBirthDate().split( "-" );
+        System.out.println( passport );
         System.out.println( psychologyCard.getPinpp().getBirthDate() );
-        if ( dates.length == 3 ) {
-            String data = dates[2] + "." + dates[1] + "." + dates[0];
-            System.out.println( passport );
-            System.out.println( data );
-            psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, data ) ); }
+        psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
         return psychologyCard; }
 
     public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
