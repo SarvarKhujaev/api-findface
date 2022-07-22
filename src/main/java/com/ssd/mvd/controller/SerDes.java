@@ -69,8 +69,8 @@ public class SerDes {
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
         String[] dates = psychologyCard.getPinpp().getBirthDate().split( "-" );
+        System.out.println( psychologyCard.getPinpp().getBirthDate() );
         if ( dates.length == 3 ) {
-            System.out.println( psychologyCard.getPinpp().getBirthDate() );
             String data = dates[2] + "." + dates[1] + "." + dates[0];
             System.out.println( passport );
             System.out.println( data );
