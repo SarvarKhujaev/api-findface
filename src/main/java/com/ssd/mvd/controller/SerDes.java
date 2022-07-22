@@ -75,10 +75,23 @@ public class SerDes {
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
         this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" ).headers( this.getHeaders() ).fields( this.getFields() ).asJson().getBody().getObject().get( "Data" ).toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); } catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
+        try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
+                .headers( this.getHeaders() )
+                .fields( this.getFields() )
+                .asJson()
+                .getBody()
+                .getObject()
+                .get( "Data" )
+                .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
+        catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
 
     public Pinpp pinpp ( String pinpp ) { this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject().toString(), Pinpp.class ); } catch ( Exception e ) { return new Pinpp(); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getObject()
+                .toString(), Pinpp.class ); } catch ( Exception e ) { return new Pinpp(); } }
 
     public Insurance insurance ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
@@ -111,6 +124,9 @@ public class SerDes {
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
+        if ( psychologyCard.getModelForCadastr() != null && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 )
+            psychologyCard.setModelForPassport( this.deserialize( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp(),
+                    psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth() ) );
         return psychologyCard; }
 
     public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
