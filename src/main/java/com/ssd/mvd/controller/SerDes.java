@@ -109,7 +109,13 @@ public class SerDes {
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
 
     public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .get(0)
+                .toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
 
     public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
@@ -152,6 +158,7 @@ public class SerDes {
 
     public ModelForAddress getModelForAddress ( String pinfl ) {
         try { this.getFields().clear();
+            System.out.println( pinfl );
             this.getFields().put( "Pcitizen", pinfl );
             this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
             return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetAddress" )
