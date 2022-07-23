@@ -67,10 +67,10 @@ public class SerDes {
         psychologyCard.setViolationList( violationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
-        psychologyCard.setModelForAddress( this.getModelForAddress( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
+        psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
         return psychologyCard; }
 
     public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
@@ -128,12 +128,12 @@ public class SerDes {
             else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
-        psychologyCard.setModelForAddress( this.getModelForAddress( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
-        if ( psychologyCard.getModelForCadastr() != null && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 )
+        if ( psychologyCard.getModelForCadastr() != null && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
             psychologyCard.setModelForPassport( this.deserialize( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp(),
                     psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen() ) ); }
         return psychologyCard; }
 
     public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
@@ -145,7 +145,7 @@ public class SerDes {
             else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
-        psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPinpp() ) );
+        psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
