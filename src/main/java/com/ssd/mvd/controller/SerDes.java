@@ -136,7 +136,9 @@ public class SerDes {
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
-        if ( psychologyCard.getModelForCadastr() != null && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
+        if ( psychologyCard.getModelForCadastr() != null
+                && psychologyCard.getModelForCadastr().getPermanentRegistration() != null
+                && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
             psychologyCard.setModelForPassport( this.deserialize( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp(),
                     psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth() ) );
             psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen() ) ); }
