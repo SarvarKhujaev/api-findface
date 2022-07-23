@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class pRegion {
+public class pDistrict {
     private Integer Id;
     private String value;
     private String IdValue;

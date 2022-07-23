@@ -1,11 +1,17 @@
 package com.ssd.mvd.entity.modelForAddress;
 
+import com.ssd.mvd.entity.modelForCadastr.TemproaryRegistration;
+import com.ssd.mvd.entity.modelForPassport.RequestGuid;
+import com.ssd.mvd.entity.PermanentRegistration;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ModelForAddress {
-    private Integer AnswereId;
-    private String AnswereMessage;
-    private String AnswereComment;
-    private com.ssd.mvd.entity.modelForAddress.Data Data;
+    private RequestGuid RequestGuid;
+    private PermanentRegistration PermanentRegistration;
+    private TemproaryRegistration TemproaryRegistration;
 }

@@ -1,9 +1,9 @@
 package com.ssd.mvd.entity;
 
-import lombok.Data;
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 @NoArgsConstructor
@@ -13,6 +13,7 @@ public class PsychologyCard {
     private List< PapilonData > papilonData;
     private List< Violation > violationList;
     private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
+    private ModelForAddress modelForAddress;
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
     private com.ssd.mvd.entity.modelForPassport.Data modelForPassport;
 

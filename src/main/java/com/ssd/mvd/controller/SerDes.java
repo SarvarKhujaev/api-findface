@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
@@ -66,10 +67,9 @@ public class SerDes {
         psychologyCard.setViolationList( violationList );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
+        psychologyCard.setModelForAddress( this.getModelForAddress( results.get( 0 ).getPersonal_code() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
-        System.out.println( "Passport: " + passport );
-        System.out.println( "BirthDate: " + psychologyCard.getPinpp().getBirthDate() );
         psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
         return psychologyCard; }
 
@@ -77,7 +77,7 @@ public class SerDes {
         this.getFields().clear();
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
-        this.headers.put("Authorization", "Bearer " + this.getTokenForPassport() );
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
                 .headers( this.getHeaders() )
                 .fields( this.getFields() )
@@ -126,8 +126,9 @@ public class SerDes {
         FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( value -> {
             if ( value != null ) psychologyCard.setViolationList( value );
             else psychologyCard.setViolationList( new ArrayList<>() ); } );
-        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( pinfl ) );
+        psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
+        psychologyCard.setModelForAddress( this.getModelForAddress( pinfl ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         if ( psychologyCard.getModelForCadastr() != null && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 )
@@ -144,7 +145,21 @@ public class SerDes {
             else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
+        psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
+
+    public ModelForAddress getModelForAddress ( String pinfl ) {
+        try { this.getFields().clear();
+            this.getFields().put( "Pcitizen", pinfl );
+            this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+            return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetAddress" )
+                .headers( this.getHeaders() )
+                .field( "Pcitizen", pinfl )
+                .asJson()
+                .getBody()
+                .getObject()
+                .get( "Data" )
+                .toString(), ModelForAddress.class ); } catch ( Exception e ) { return new ModelForAddress(); } }
 }
