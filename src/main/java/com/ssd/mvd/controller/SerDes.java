@@ -61,20 +61,24 @@ public class SerDes {
 
     public PsychologyCard getPsychologyCard ( String passport, List< PapilonData > results, List< Violation > violationList ) { // returns the card in case of Person
         PsychologyCard psychologyCard = new PsychologyCard();
-        if ( passport.length() == 9 ) passport = passport.replace( "-", "0" );
-        else passport = passport.replace( "-", "" );
-        psychologyCard.setPapilonData( results );
-        psychologyCard.setViolationList( violationList );
-        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
-        psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
-        psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
-        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
-        psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
-        psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
-        return psychologyCard; }
+        try { if ( passport.length() == 9 ) passport = passport.replace( "-", "0" );
+            else passport = passport.replace( "-", "" );
+            psychologyCard.setPapilonData( results );
+            psychologyCard.setViolationList( violationList );
+            System.out.println( "Personal code: " + results.get( 0 ).getPersonal_code() );
+            psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
+            psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
+            return psychologyCard;
+        } catch ( Exception e ) { return psychologyCard; } }
 
     public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
         this.getFields().clear();
+        System.out.println( "BirthDate: " + BirthDate );
+        System.out.println( "SerialNumber: " + SerialNumber );
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
@@ -160,7 +164,7 @@ public class SerDes {
 
     public ModelForAddress getModelForAddress ( String pinfl ) {
         try { this.getFields().clear();
-            System.out.println( pinfl );
+            System.out.println( "Pinpp: " + pinfl );
             this.getFields().put( "Pcitizen", pinfl );
             this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
             return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetAddress" )

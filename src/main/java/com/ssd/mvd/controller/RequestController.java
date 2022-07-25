@@ -15,11 +15,14 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 @RestController
 public class RequestController {
     @MessageMapping ( value = "getPersonTotalData" )
-    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ? FindFaceComponent.getInstance().getPapilonList( base64url )
-            .filter( value -> value.getResults() != null && value.getResults().size() > 0 ).onErrorStop()
-            .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ? SerDes.getSerDes()
-                    .getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0], value.getResults(), value.getViolationList() )
-                    : new PsychologyCard( value ) ).onErrorStop() : Mono.empty(); }
+    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ?
+            FindFaceComponent.getInstance().getPapilonList( base64url )
+            .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
+            .onErrorStop()
+            .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ?
+                    SerDes.getSerDes().getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0],
+                            value.getResults(), value.getViolationList() )
+                    : new PsychologyCard( value ) ).onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes.getSerDes().getPsychologyCard( pinfl ) ); }
@@ -28,7 +31,8 @@ public class RequestController {
     public Flux< PsychologyCard > getPersonalCadastor ( String id ) {
         List< Person > personList = SerDes.getSerDes().deserialize( id ).getPermanentRegistration();
         return personList != null ? Flux.fromStream( personList.stream() )
-                .flatMap( person -> Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes().deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
+                .flatMap( person -> Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes()
+                        .deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
