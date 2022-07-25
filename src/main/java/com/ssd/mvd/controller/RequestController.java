@@ -17,6 +17,10 @@ public class RequestController {
     @MessageMapping ( value = "getPersonTotalData" )
     public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ?
             FindFaceComponent.getInstance().getPapilonList( base64url )
+                    .map( results -> {
+                        System.out.println( results.getResults().get( 0 ) );
+                        return results;
+                    } )
             .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
             .onErrorStop()
             .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ?
