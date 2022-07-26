@@ -17,7 +17,7 @@ import org.json.JSONObject;
 import java.util.*;
 
 @lombok.Data
-public class SerDes {
+public class SerDes implements Runnable {
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
     private final Map< String, Object > fields = new HashMap<>();
@@ -42,7 +42,7 @@ public class SerDes {
         this.getHeaders().put( "accept", "application/json" );
         this.updateTokens(); }
 
-    public void updateTokens () {
+    private void updateTokens () {
         this.getFields().put( "CurrentSystem" , "40" );
         this.getFields().put( "Login", "SharafIT_PSP" );
         this.getFields().put( "Password" , "Sh@r@fITP@$P" );
@@ -128,10 +128,20 @@ public class SerDes {
                 .toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
 
     public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
+        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
 
     public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
+        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
         System.out.println( psychologyCard.getModelForCarList().getModelForCarList().size() );
@@ -190,4 +200,11 @@ public class SerDes {
         if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
+
+    @Override
+    public void run () {
+        while ( true ) {
+            this.updateTokens();
+            System.out.println( "Token was updated" );
+            try { Thread.sleep( 60 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
 }

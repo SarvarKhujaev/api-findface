@@ -9,5 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FindFaceServiceApplication {
     public static ApplicationContext context;
 
-    public static void main( String[] args ) { context = SpringApplication.run( FindFaceServiceApplication.class, args ); }
+    public static void main( String[] args ) {
+        new Thread( SerDes.getSerDes(), "serdes" ).start();
+        context = SpringApplication.run( FindFaceServiceApplication.class, args ); }
 }
