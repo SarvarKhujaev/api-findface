@@ -1,7 +1,6 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.entity.*;
-import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Person;
 
@@ -43,7 +42,6 @@ public class RequestController {
         carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
         carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
-        carTotalData.setStatus( Status.CREATED );
         return Mono.just( carTotalData ); } ); }
 
     @MessageMapping ( value = "getWithFile" )

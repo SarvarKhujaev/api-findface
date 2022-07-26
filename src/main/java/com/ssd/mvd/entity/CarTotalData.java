@@ -1,8 +1,6 @@
 package com.ssd.mvd.entity;
 
-import com.ssd.mvd.constants.Status;
 import com.ssd.mvd.entity.modelForGai.*;
-import lombok.Builder;
 import java.util.List;
 import lombok.Data;
 
@@ -19,7 +17,6 @@ public class CarTotalData {
     private DoverennostList doverennostList;
     private ModelForCarList modelForCarList; // the list of all cars of each citizen
 
-    private Status status;
     private List< String > patruls; // link to list of Patruls who is gonna deal with this Card
     private List< ReportForCard > reportForCards;
 }
