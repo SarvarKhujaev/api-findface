@@ -70,6 +70,7 @@ public class SerDes {
             psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
             psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
             psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
+            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
             psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
             psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
             return psychologyCard;
@@ -102,8 +103,7 @@ public class SerDes {
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
     public String getImageByPnfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try {
-            JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject();
+        try { JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject();
             return object != null ? object.getString( "Data" ) : "image was not found";
         } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
@@ -120,13 +120,27 @@ public class SerDes {
                 .toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
 
     public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
+        try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
 
     public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
 
     public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
+
+    private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
+        psychologyCard.setTonirovka( new ArrayList<>() );
+        psychologyCard.setInsurance( new ArrayList<>() );
+        psychologyCard.setDoverennostList( new ArrayList<>() );
+        psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
+            psychologyCard.getInsurance().add( this.insurance( modelForCar.getPlateNumber() ) );
+            psychologyCard.getTonirovka().add( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
+            psychologyCard.getDoverennostList().add( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
     public PsychologyCard getPsychologyCard( String pinfl ) {
         if ( pinfl == null ) { return null; }
@@ -136,7 +150,8 @@ public class SerDes {
             else psychologyCard.setViolationList( new ArrayList<>() ); } );
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
-        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( pinfl ) );
+        psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
+        if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         if ( psychologyCard.getModelForCadastr() != null
                 && psychologyCard.getModelForCadastr().getPermanentRegistration() != null
@@ -170,6 +185,7 @@ public class SerDes {
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
         psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
+        if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 }
