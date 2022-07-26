@@ -14,7 +14,11 @@ public class FindFaceComponent {
 
     private FindFaceComponent () { this.requester = FindFaceServiceApplication.context.getBean( RSocketRequester.class ); }
 
+    public Mono< Results > getPapilonList ( byte[] file ) { return this.requester.route( "getWithFile" ).data( file ).retrieveMono( Results.class ); }
+
     public Mono< Results > getPapilonList( String base64url ) { return this.requester.route( "getFaceCard" ).data( base64url ).retrieveMono( Results.class ); }
 
-    public Mono< List > getViolationListByPinfl ( String pinfl ) { return pinfl != null ? this.requester.route( "getViolationListByPinfl" ).data( pinfl ).retrieveMono( List.class ) : null; }
+    public Mono< List > getViolationListByPinfl ( String pinfl ) { return pinfl != null ?
+            this.requester.route( "getViolationListByPinfl" )
+            .data( pinfl ).retrieveMono( List.class ) : null; }
 }

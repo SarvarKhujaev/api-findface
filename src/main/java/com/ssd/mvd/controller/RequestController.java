@@ -45,4 +45,7 @@ public class RequestController {
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
         carTotalData.setStatus( Status.CREATED );
         return Mono.just( carTotalData ); } ); }
+
+    @MessageMapping ( value = "getWithFile" )
+    public Mono< Results > getWithFile ( byte[] file ) { return FindFaceComponent.getInstance().getPapilonList( file ); }
 }
