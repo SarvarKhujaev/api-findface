@@ -134,15 +134,17 @@ public class SerDes {
         try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().getArray().toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
+        System.out.println( psychologyCard.getModelForCarList().getModelForCarList().size() );
         psychologyCard.setTonirovka( new ArrayList<>() );
         psychologyCard.setInsurance( new ArrayList<>() );
         psychologyCard.setDoverennostList( new ArrayList<>() );
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
+            System.out.println( modelForCar.getPlateNumber() );
             psychologyCard.getInsurance().add( this.insurance( modelForCar.getPlateNumber() ) );
             psychologyCard.getTonirovka().add( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
             psychologyCard.getDoverennostList().add( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
-    public PsychologyCard getPsychologyCard( String pinfl ) {
+    public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) { return null; }
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( value -> {

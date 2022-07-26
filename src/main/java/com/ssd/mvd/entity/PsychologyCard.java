@@ -4,6 +4,7 @@ import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForGai.DoverennostList;
 import com.ssd.mvd.entity.modelForGai.Insurance;
 import com.ssd.mvd.entity.modelForGai.Tonirovka;
+
 import lombok.NoArgsConstructor;
 import java.util.List;
 import lombok.Data;
