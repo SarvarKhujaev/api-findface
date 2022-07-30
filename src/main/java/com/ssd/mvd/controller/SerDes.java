@@ -144,12 +144,10 @@ public class SerDes implements Runnable {
                 .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
-        System.out.println( psychologyCard.getModelForCarList().getModelForCarList().size() );
         psychologyCard.setTonirovka( new ArrayList<>() );
         psychologyCard.setInsurance( new ArrayList<>() );
         psychologyCard.setDoverennostList( new ArrayList<>() );
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
-            System.out.println( modelForCar.getPlateNumber() );
             psychologyCard.getInsurance().add( this.insurance( modelForCar.getPlateNumber() ) );
             psychologyCard.getTonirovka().add( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
             psychologyCard.getDoverennostList().add( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
@@ -205,6 +203,5 @@ public class SerDes implements Runnable {
     public void run () {
         while ( true ) {
             this.updateTokens();
-            System.out.println( "Token was updated" );
             try { Thread.sleep( 60 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
 }
