@@ -12,6 +12,7 @@ import lombok.Data;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Results {
+    private Integer result_code;
     @JsonDeserialize
     private List< PapilonData > results;
     @JsonDeserialize
