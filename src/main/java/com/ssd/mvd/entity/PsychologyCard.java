@@ -15,10 +15,6 @@ public class PsychologyCard {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
-    private List< Insurance > insurance;
-    private List< Tonirovka > tonirovka;
-    private List< DoverennostList > doverennostList;
-
     private List< PapilonData > papilonData;
     private List< Violation > violationList;
 

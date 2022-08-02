@@ -70,7 +70,8 @@ public class SerDes implements Runnable {
             psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
             psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
             psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
-            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
+            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
+                this.findAllDataAboutCar( psychologyCard );
             psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
             psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
             return psychologyCard;
@@ -100,10 +101,20 @@ public class SerDes implements Runnable {
                 .toString(), Pinpp.class ); } catch ( Exception e ) { return new Pinpp(); } }
 
     public Insurance insurance ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getArray().get(0).toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .get(0)
+                .toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
     public String getImageByPnfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp ).headers( this.getHeaders() ).asJson().getBody().getObject();
+        try { JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getObject();
             return object != null ? object.getString( "Data" ) : "image was not found";
         } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
@@ -144,20 +155,16 @@ public class SerDes implements Runnable {
                 .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
-        psychologyCard.setTonirovka( new ArrayList<>() );
-        psychologyCard.setInsurance( new ArrayList<>() );
-        psychologyCard.setDoverennostList( new ArrayList<>() );
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
-            psychologyCard.getInsurance().add( this.insurance( modelForCar.getPlateNumber() ) );
-            psychologyCard.getTonirovka().add( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
-            psychologyCard.getDoverennostList().add( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
+            modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
+            modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
+            modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) { return null; }
         PsychologyCard psychologyCard = new PsychologyCard();
-        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl ).subscribe( value -> {
-            if ( value != null ) psychologyCard.setViolationList( value );
-            else psychologyCard.setViolationList( new ArrayList<>() ); } );
+        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl )
+                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
@@ -188,15 +195,14 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() ).subscribe( value -> {
-            if ( value != null ) psychologyCard.setViolationList( value );
-            else psychologyCard.setViolationList( new ArrayList<>() ); } );
-        psychologyCard.setPinpp( SerDes.getSerDes().pinpp( data.getPerson().getPinpp() ) );
+        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
+                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+        psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
-        psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( data.getPerson().getPinpp() ) );
+        psychologyCard.setModelForCarList( this.getModelForCarList( data.getPerson().getPinpp() ) );
         if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
-        psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
+        psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 
     @Override

@@ -29,4 +29,8 @@ public class ModelForCar {
     private String Organization;
     private String RegistrationDate;
     private String TexPassportSerialNumber;
+
+    private Tonirovka tonirovka;
+    private Insurance insurance;
+    private DoverennostList doverennostList;
 }
