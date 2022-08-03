@@ -46,7 +46,12 @@ public class SerDes implements Runnable {
         this.getFields().put( "CurrentSystem" , "40" );
         this.getFields().put( "Login", "SharafIT_PSP" );
         this.getFields().put( "Password" , "Sh@r@fITP@$P" );
-        try { this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" ).fields( this.getFields() ).asJson().getBody().getObject().get( "access_token" ) ) );
+        try { this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" )
+                .fields( this.getFields() )
+                .asJson()
+                .getBody()
+                .getObject()
+                .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
         } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
@@ -119,7 +124,11 @@ public class SerDes implements Runnable {
         } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
     public Tonirovka getVehicleTonirovka ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno ).headers( this.getHeaders() ).asJson().getBody().toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
 
     public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )

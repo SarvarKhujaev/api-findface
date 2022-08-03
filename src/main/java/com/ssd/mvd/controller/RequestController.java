@@ -44,6 +44,8 @@ public class RequestController {
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
         return Mono.just( carTotalData ); } ); }
 
-    @MessageMapping ( value = "getWithFile" )
-    public Mono< Results > getWithFile ( byte[] file ) { return FindFaceComponent.getInstance().getPapilonList( file ); }
+    @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" )
+    public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( String data ) {
+        String[] strings = data.split( "_" );
+        return Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes().deserialize( strings[ 0 ], strings[ 1 ] ) ) ); }
 }
