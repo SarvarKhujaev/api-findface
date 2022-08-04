@@ -72,7 +72,7 @@ public class SerDes implements Runnable {
             psychologyCard.setPapilonData( results );
             psychologyCard.setViolationList( violationList );
             psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
-            psychologyCard.setPersonImage( this.getImageByPnfl( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPersonImage( this.getImageByPinfl( results.get( 0 ).getPersonal_code() ) );
             psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
             psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
             if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
@@ -96,7 +96,7 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "Data" )
                 .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
-        catch ( Exception e ) { throw new RuntimeException( e ); } }
+        catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
 
     public Pinpp pinpp ( String pinpp ) { this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
@@ -115,7 +115,7 @@ public class SerDes implements Runnable {
                 .get(0)
                 .toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
-    public String getImageByPnfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+    public String getImageByPinfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { JSONObject object = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp )
                 .headers( this.getHeaders() )
                 .asJson()
@@ -176,7 +176,7 @@ public class SerDes implements Runnable {
         FindFaceComponent.getInstance().getViolationListByPinfl( pinfl )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
-        psychologyCard.setPersonImage( this.getImageByPnfl( pinfl ) );
+        psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
         if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
@@ -205,12 +205,10 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        System.out.println( data.getPerson() );
         FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
-        System.out.println( data.getDocument() );
         psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );
-        psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
+        psychologyCard.setPersonImage( this.getImageByPinfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( data.getPerson().getPinpp() ) );
         if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
