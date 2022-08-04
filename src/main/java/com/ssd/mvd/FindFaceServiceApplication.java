@@ -11,5 +11,6 @@ public class FindFaceServiceApplication {
 
     public static void main( String[] args ) {
         new Thread( SerDes.getSerDes(), "serdes" ).start();
-        context = SpringApplication.run( FindFaceServiceApplication.class, args ); }
+        context = SpringApplication.run( FindFaceServiceApplication.class, args );
+    }
 }

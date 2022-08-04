@@ -58,7 +58,7 @@ public class SerDes implements Runnable {
     public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
         this.getFields().clear();
         this.getFields().put( "Pcadastre", pinfl );
-        this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { JSONObject object = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" )
                 .headers( this.getHeaders() )
                 .fields( this.getFields() ).asJson().getBody().getObject();
@@ -87,6 +87,7 @@ public class SerDes implements Runnable {
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
+        System.out.println( "Data: " + SerialNumber + " : " + BirthDate );
         try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
                 .headers( this.getHeaders() )
                 .fields( this.getFields() )
@@ -204,6 +205,7 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
+        System.out.println( data );
         FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
         psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );

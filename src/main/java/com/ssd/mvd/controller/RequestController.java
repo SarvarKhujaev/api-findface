@@ -47,5 +47,6 @@ public class RequestController {
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" )
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( String data ) {
         String[] strings = data.split( "_" );
+        System.out.println( strings );
         return Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes().deserialize( strings[ 0 ], strings[ 1 ] ) ) ); }
 }
