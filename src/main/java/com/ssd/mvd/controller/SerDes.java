@@ -96,7 +96,7 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "Data" )
                 .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
-        catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
+        catch ( Exception e ) { throw new RuntimeException( e ); } }
 
     public Pinpp pinpp ( String pinpp ) { this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
