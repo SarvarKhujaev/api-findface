@@ -205,8 +205,10 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-//        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
-//                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+        System.out.println( data.getPerson() );
+        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
+                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+        System.out.println( data.getDocument() );
         psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPnfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
