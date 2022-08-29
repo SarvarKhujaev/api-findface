@@ -1,18 +1,18 @@
-package com.ssd.mvd.entity;
+package com.ssd.mvd.entity.modelForFioOfPerson;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.ssd.mvd.entity.modelForGai.ModelForCar;
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.util.List;
 import lombok.Data;
 
+
 @Data
 @Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModelForCarList {
+public class PersonTotalDataByFIO {
     @JsonDeserialize
-    private List< ModelForCar > modelForCarList;
+    private List< Person > Data;
 }

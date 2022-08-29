@@ -1,20 +1,25 @@
 package com.ssd.mvd.controller;
 
 import com.google.gson.Gson;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
+import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.entity.modelForFioOfPerson.Person;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.util.*;
+import org.json.JSONObject;
+import org.json.JSONException;
+import reactor.core.publisher.Mono;
 
 @lombok.Data
 public class SerDes implements Runnable {
@@ -24,6 +29,7 @@ public class SerDes implements Runnable {
     private final Map< String, String > headers = new HashMap<>();
 
     private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU2NTgyOTkyLCJleHAiOjE2NTY2NjkzOTIsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.tyeEiazjrHMths2caBs4BvJmE5GLLxTnRa8-rKa1fHY";
+    private String tokenForFio = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIxMDEwMDAxIiwibmJmIjoxNjYxNjE1NTg3LCJleHAiOjE2NjI0Nzk1ODcsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.tQoWHNrOvvE9t8mFT302ENKt1pdbzMje04yI4dMcKCc";
     private String tokenForPassport = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjEiLCJMT0NBTCBBVVRIT1JJVFkiOiJBc2J0QXV0aDIuMFNlcnZlciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6WyIxMDEyMDAwIiwiMTAxMjAwMSIsIjEwMTIwMDIiLCIxMDEyMDAzIiwiMTAxMjAwNCJdLCJuYmYiOjE2NTcwMjQyNjcsImV4cCI6MTY1NzExMDY2NywiaXNzIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vYXNidC51ei8ifQ.OF9-vsxindRQgR_i9kBquFGePh8k6M7-5w2UskjQCd8";
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
@@ -43,7 +49,7 @@ public class SerDes implements Runnable {
         this.updateTokens(); }
 
     private void updateTokens () {
-        this.getFields().put( "CurrentSystem" , "40" );
+        this.getFields().put( "CurrentSystem", "40" );
         this.getFields().put( "Login", "SharafIT_PSP" );
         this.getFields().put( "Password" , "Sh@r@fITP@$P" );
         try { this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" )
@@ -53,6 +59,13 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
+//            this.setTokenForFio(
+//                    String.valueOf( Unirest.post( "http://172.250.1.203:9292/Auth/Agency/token" )
+//                            .fields( this.getFields() )
+//                            .asJson()
+//                            .getBody()
+//                            .getObject()
+//                            .get( "access_token" ) ) );
         } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
     public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
@@ -137,7 +150,7 @@ public class SerDes implements Runnable {
                 .asJson()
                 .getBody()
                 .getArray()
-                .get(0)
+                .get( 0 )
                 .toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
 
     public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
@@ -182,7 +195,7 @@ public class SerDes implements Runnable {
                 .getModelForCarList()
                 .getModelForCarList()
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
-        psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
+        psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         if ( psychologyCard.getModelForCadastr() != null
                 && psychologyCard.getModelForCadastr().getPermanentRegistration() != null
                 && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
@@ -229,9 +242,32 @@ public class SerDes implements Runnable {
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
+        if ( fio.getSurname() == null
+        ^ fio.getName() == null
+                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
+        this.getFields().clear();
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
+        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
+        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
+        try { return Mono.just(
+                    new PersonTotalDataByFIO(
+                            this.stringToArrayList(
+                                    Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                                            .headers( this.getHeaders() )
+                                            .fields( this.getFields() )
+                                            .asJson()
+                                            .getBody()
+                                            .getObject()
+                                            .get( "Data" )
+                                            .toString(),
+                                    Person[].class ) ) );
+        } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
+
     @Override
     public void run () {
         while ( true ) {
             this.updateTokens();
-            try { Thread.sleep( 60 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
+            try { Thread.sleep( 5 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
 }

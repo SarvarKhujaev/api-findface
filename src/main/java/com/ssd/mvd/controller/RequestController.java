@@ -5,6 +5,9 @@ import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Person;
 
 import java.util.List;
+
+import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,5 +52,12 @@ public class RequestController {
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" )
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( String data ) {
         String[] strings = data.split( "_" );
-        return Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes().deserialize( strings[ 0 ], strings[ 1 ] ) ) ); }
+        return Mono.just( SerDes.getSerDes()
+                .getPsychologyCard( SerDes.getSerDes()
+                        .deserialize( strings[ 0 ], strings[ 1 ] ) ) ); }
+
+    @MessageMapping ( value = "getPersonTotalDataByFIO" )
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) { return SerDes
+            .getSerDes()
+            .getPersonTotalDataByFIO ( fio ); }
 }
