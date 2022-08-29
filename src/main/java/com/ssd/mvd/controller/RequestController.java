@@ -34,7 +34,8 @@ public class RequestController {
                         .deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
-    public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() ).flatMap( carTotalData -> {
+    public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() )
+            .flatMap( carTotalData -> {
         carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
         carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
@@ -42,6 +43,7 @@ public class RequestController {
         carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
         carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
+        carTotalData.setGosNumber( platenumber.split( "@$" )[0] );
         return Mono.just( carTotalData ); } ); }
 
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" )

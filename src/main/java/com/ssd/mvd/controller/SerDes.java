@@ -71,13 +71,13 @@ public class SerDes implements Runnable {
             else passport = passport.replace( "-", "" );
             psychologyCard.setPapilonData( results );
             psychologyCard.setViolationList( violationList );
-            psychologyCard.setPinpp( SerDes.getSerDes().pinpp( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPinpp( this.pinpp( results.get( 0 ).getPersonal_code() ) );
             psychologyCard.setPersonImage( this.getImageByPinfl( results.get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
-            psychologyCard.setModelForCarList( SerDes.getSerDes().getModelForCarList( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
+            psychologyCard.setModelForCarList( this.getModelForCarList( results.get( 0 ).getPersonal_code() ) );
             if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
                 this.findAllDataAboutCar( psychologyCard );
-            psychologyCard.setModelForPassport( SerDes.getSerDes().deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
+            psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
             psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
@@ -178,14 +178,25 @@ public class SerDes implements Runnable {
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
-        if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
+        if ( psychologyCard.getModelForCarList() != null && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList()
+                .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( SerDes.getSerDes().deserialize( psychologyCard.getPinpp().getCadastre() ) );
         if ( psychologyCard.getModelForCadastr() != null
                 && psychologyCard.getModelForCadastr().getPermanentRegistration() != null
                 && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
-            psychologyCard.setModelForPassport( this.deserialize( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp(),
+            psychologyCard.setModelForPassport( this.deserialize( psychologyCard
+                            .getModelForCadastr()
+                            .getPermanentRegistration()
+                            .get( 0 )
+                            .getPPsp(),
                     psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen() ) ); }
+            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard
+                    .getModelForCadastr()
+                    .getPermanentRegistration()
+                    .get( 0 )
+                    .getPCitizen() ) ); }
         return psychologyCard; }
 
     public ModelForAddress getModelForAddress ( String pinfl ) {
@@ -211,7 +222,10 @@ public class SerDes implements Runnable {
         psychologyCard.setPersonImage( this.getImageByPinfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( data.getPerson().getPinpp() ) );
-        if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 ) this.findAllDataAboutCar( psychologyCard );
+        if ( psychologyCard.getModelForCarList() != null && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList()
+                .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
 
