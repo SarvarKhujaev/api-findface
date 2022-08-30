@@ -13,6 +13,7 @@ public class Person {
     private String NameLatin;
     private String BirthPlace;
     private String DateOfBirth;
+    private String personImage;
     private String SurnameLatin;
     private String NameCyrillic;
     private String PatronymLatin;

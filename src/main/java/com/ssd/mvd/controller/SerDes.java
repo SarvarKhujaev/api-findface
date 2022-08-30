@@ -59,13 +59,14 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-//            this.setTokenForFio(
-//                    String.valueOf( Unirest.post( "http://172.250.1.203:9292/Auth/Agency/token" )
-//                            .fields( this.getFields() )
-//                            .asJson()
-//                            .getBody()
-//                            .getObject()
-//                            .get( "access_token" ) ) );
+            this.setTokenForFio(
+                    String.valueOf( Unirest.post( "http://172.250.1.203:9292/Auth/Agency/token" )
+                            .header("Content-Type", "application/json")
+                            .body("{\r\n    \"Login\": \"SharafIT_PSP\",\r\n    \"Password\": \"Sh@r@fITP@$P\",\r\n    \"CurrentSystem\": \"40\"\r\n}")
+                            .asJson()
+                            .getBody()
+                            .getObject()
+                            .get( "access_token" ) ) );
         } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
     public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
@@ -251,18 +252,19 @@ public class SerDes implements Runnable {
         this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
         this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
         this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
-        try { return Mono.just(
-                    new PersonTotalDataByFIO(
-                            this.stringToArrayList(
-                                    Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
-                                            .headers( this.getHeaders() )
-                                            .fields( this.getFields() )
-                                            .asJson()
-                                            .getBody()
-                                            .getObject()
-                                            .get( "Data" )
-                                            .toString(),
-                                    Person[].class ) ) );
+        try { PersonTotalDataByFIO personTotalDataByFIO = new PersonTotalDataByFIO();
+            personTotalDataByFIO.setData( this.stringToArrayList(
+                    Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                            .headers( this.getHeaders() )
+                            .fields( this.getFields() )
+                            .asJson()
+                            .getBody()
+                            .getObject()
+                            .get( "Data" )
+                            .toString(),
+                    Person[].class ) );
+            personTotalDataByFIO.getData().forEach( person -> person.setPersonImage( this.getImageByPinfl( person.getPinpp() ) ) );
+            return Mono.just( personTotalDataByFIO );
         } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
 
     @Override
