@@ -7,9 +7,8 @@ import com.ssd.mvd.entity.PermanentRegistration;
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 @Jacksonized

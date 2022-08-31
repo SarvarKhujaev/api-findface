@@ -27,7 +27,8 @@ public class RequestController {
                     : new PsychologyCard( value ) ).onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
-    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes.getSerDes().getPsychologyCard( pinfl ) ); }
+    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes.getSerDes()
+            .getPsychologyCard( pinfl ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" )
     public Flux< PsychologyCard > getPersonalCadastor ( String id ) {

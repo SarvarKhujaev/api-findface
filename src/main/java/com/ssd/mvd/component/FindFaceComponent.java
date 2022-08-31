@@ -1,9 +1,12 @@
 package com.ssd.mvd.component;
 
 import java.util.List;
+import java.util.ArrayList;
+
 import com.ssd.mvd.entity.Results;
-import reactor.core.publisher.Mono;
 import com.ssd.mvd.FindFaceServiceApplication;
+
+import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 public class FindFaceComponent {
@@ -16,7 +19,16 @@ public class FindFaceComponent {
 
     public Mono< Results > getPapilonList( String base64url ) { return this.requester.route( "getFaceCard" ).data( base64url ).retrieveMono( Results.class ); }
 
-    public Mono< List > getViolationListByPinfl ( String pinfl ) { return pinfl != null ?
-            this.requester.route( "getViolationListByPinfl" )
-            .data( pinfl ).retrieveMono( List.class ) : null; }
+    public Mono< List > getViolationListByPinfl ( String pinfl ) {
+        try { return pinfl != null ?
+                this.requester
+                        .route( "getViolationListByPinfl" )
+                        .data( pinfl )
+                        .retrieveMono( List.class )
+                        .doOnError( throwable -> {
+                            System.out.println( "ERROR: " + throwable.getCause() );
+                            System.out.println( "ERROR: " + throwable.getMessage() ); } )
+                        .defaultIfEmpty( new ArrayList() )
+                : null;
+        } catch ( Exception e ) { return null; } }
 }

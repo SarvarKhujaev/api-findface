@@ -12,7 +12,6 @@ import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
-import com.ssd.mvd.entity.modelForFioOfPerson.Person;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
@@ -126,7 +125,7 @@ public class SerDes implements Runnable {
                 .asJson()
                 .getBody()
                 .getArray()
-                .get(0)
+                .get( 0 )
                 .toString(), Insurance.class ); } catch ( Exception e ) { return new Insurance(); } }
 
     public String getImageByPinfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
@@ -138,13 +137,6 @@ public class SerDes implements Runnable {
             return object != null ? object.getString( "Data" ) : "image was not found";
         } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
-    public Tonirovka getVehicleTonirovka ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno )
-                .headers( this.getHeaders() )
-                .asJson()
-                .getBody()
-                .toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
-
     public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )
                 .headers( this.getHeaders() )
@@ -154,8 +146,26 @@ public class SerDes implements Runnable {
                 .get( 0 )
                 .toString(), ModelForCar.class ); } catch ( Exception e ) { return new ModelForCar(); } }
 
+    public Tonirovka getVehicleTonirovka ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .toString(), Tonirovka.class ); } catch ( Exception e ) { return new Tonirovka(); } }
+
+    public ViolationsList getViolationList ( String gosno ) {
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { return new ViolationsList( this.stringToArrayList(
+                Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno )
+                .headers( this.getHeaders() )
+                .asJson()
+                .getBody()
+                .getArray()
+                .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
+
     public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ModelForCarList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl )
+        try { return new ModelForCarList( this.stringToArrayList(
+                Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl )
                 .headers( this.getHeaders() )
                 .asJson()
                 .getBody()
@@ -170,14 +180,6 @@ public class SerDes implements Runnable {
                 .getArray()
                 .toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
 
-    public ViolationsList getViolationList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new ViolationsList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno )
-                .headers( this.getHeaders() )
-                .asJson()
-                .getBody()
-                .getArray()
-                .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
-
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
             modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
@@ -187,7 +189,10 @@ public class SerDes implements Runnable {
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) { return null; }
         PsychologyCard psychologyCard = new PsychologyCard();
-        FindFaceComponent.getInstance().getViolationListByPinfl( pinfl )
+        FindFaceComponent
+                .getInstance()
+                .getViolationListByPinfl( pinfl )
+                .defaultIfEmpty( new ArrayList() )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
@@ -226,6 +231,24 @@ public class SerDes implements Runnable {
                     .get( "Data" )
                     .toString(), ModelForAddress.class ); } catch ( Exception e ) { return new ModelForAddress(); } }
 
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
+        if ( fio.getSurname() == null
+        ^ fio.getName() == null
+                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
+        this.getFields().clear();
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
+        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
+        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
+        try { return Mono.just( this.getGson()
+                .fromJson( Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                                .headers( this.getHeaders() )
+                                .fields( this.getFields() )
+                                .asString()
+                                .getBody(),
+                        PersonTotalDataByFIO.class ) );
+        } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
+
     public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
@@ -242,30 +265,6 @@ public class SerDes implements Runnable {
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         return psychologyCard; }
-
-    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
-        if ( fio.getSurname() == null
-        ^ fio.getName() == null
-                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
-        this.getFields().clear();
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
-        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
-        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
-        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
-        try { PersonTotalDataByFIO personTotalDataByFIO = new PersonTotalDataByFIO();
-            personTotalDataByFIO.setData( this.stringToArrayList(
-                    Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
-                            .headers( this.getHeaders() )
-                            .fields( this.getFields() )
-                            .asJson()
-                            .getBody()
-                            .getObject()
-                            .get( "Data" )
-                            .toString(),
-                    Person[].class ) );
-            personTotalDataByFIO.getData().forEach( person -> person.setPersonImage( this.getImageByPinfl( person.getPinpp() ) ) );
-            return Mono.just( personTotalDataByFIO );
-        } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
 
     @Override
     public void run () {
