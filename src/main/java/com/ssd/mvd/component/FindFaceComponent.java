@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ssd.mvd.entity.Results;
+import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.FindFaceServiceApplication;
 
 import reactor.core.publisher.Mono;
@@ -31,4 +32,9 @@ public class FindFaceComponent {
                         .defaultIfEmpty( new ArrayList() )
                 : null;
         } catch ( Exception e ) { return null; } }
+
+    public Mono< Family > getFamilyMembersData ( String pinfl ) { return this.requester
+            .route( "getFamilyMembersData" )
+            .data( pinfl )
+            .retrieveMono( Family.class ); }
 }

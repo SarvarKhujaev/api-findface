@@ -1,13 +1,13 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.entity.*;
+import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Person;
-
-import java.util.List;
-
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
+
+import java.util.List;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -61,4 +61,9 @@ public class RequestController {
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) { return SerDes
             .getSerDes()
             .getPersonTotalDataByFIO ( fio ); }
+
+    @MessageMapping ( value = "getFamilyMembersData" )
+    public Mono< Family > getFamilyMembersData ( String pinfl ) { return FindFaceComponent
+            .getInstance()
+            .getFamilyMembersData( pinfl ); }
 }

@@ -173,7 +173,8 @@ public class SerDes implements Runnable {
                 .toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
 
     public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return new DoverennostList( this.stringToArrayList( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno )
+        try { return new DoverennostList( this.stringToArrayList(
+                Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno )
                 .headers( this.getHeaders() )
                 .asJson()
                 .getBody()
@@ -249,7 +250,7 @@ public class SerDes implements Runnable {
                         PersonTotalDataByFIO.class ) );
         } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
 
-    public PsychologyCard getPsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data ) {
+    public PsychologyCard getPsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data ) {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
