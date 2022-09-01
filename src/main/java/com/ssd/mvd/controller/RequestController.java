@@ -1,7 +1,6 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.entity.*;
-import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
@@ -18,24 +17,40 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 public class RequestController {
     @MessageMapping ( value = "getPersonTotalData" )
     public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ?
-            FindFaceComponent.getInstance().getPapilonList( base64url )
-            .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
-            .onErrorStop()
-            .map( value -> value.getResults().get( 0 ).getCountry().equals( "УЗБЕКИСТАН" ) ?
-                    SerDes.getSerDes().getPsychologyCard( value.getResults().get( 0 ).getPassport().split( " " )[0],
-                            value.getResults(), value.getViolationList() )
-                    : new PsychologyCard( value ) ).onErrorStop() : Mono.just( new PsychologyCard() ); }
+            FindFaceComponent
+                    .getInstance()
+                    .getPapilonList( base64url )
+                    .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
+                    .onErrorStop()
+                    .map( value -> value
+                            .getResults()
+                            .get( 0 )
+                            .getCountry()
+                            .equals( "УЗБЕКИСТАН" ) ?
+                            SerDes
+                                    .getSerDes()
+                                    .getPsychologyCard( value
+                                                    .getResults()
+                                                    .get( 0 )
+                                                    .getPassport()
+                                                    .split( " " )[0], value )
+                            : new PsychologyCard( value ) )
+                            .onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
-    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes.getSerDes()
+    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes
+            .getSerDes()
             .getPsychologyCard( pinfl ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" )
     public Flux< PsychologyCard > getPersonalCadastor ( String id ) {
         List< Person > personList = SerDes.getSerDes().deserialize( id ).getPermanentRegistration();
         return personList != null ? Flux.fromStream( personList.stream() )
-                .flatMap( person -> Mono.just( SerDes.getSerDes().getPsychologyCard( SerDes.getSerDes()
-                        .deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
+                .flatMap( person -> Mono.just( SerDes
+                        .getSerDes()
+                        .getPsychologyCard( SerDes
+                            .getSerDes()
+                            .deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() )
@@ -44,7 +59,8 @@ public class RequestController {
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
         carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
         carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
-        carTotalData.setPsychologyCard( SerDes.getSerDes().getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
+        carTotalData.setPsychologyCard( SerDes.getSerDes()
+                .getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
         carTotalData.setInsurance( SerDes.getSerDes().insurance( platenumber ) );
         carTotalData.setCameraImage( platenumber.split( "@$" )[0] );
         carTotalData.setGosNumber( platenumber.split( "@$" )[0] );
@@ -53,8 +69,10 @@ public class RequestController {
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" )
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( String data ) {
         String[] strings = data.split( "_" );
-        return Mono.just( SerDes.getSerDes()
-                .getPsychologyCard( SerDes.getSerDes()
+        return Mono.just( SerDes
+                .getSerDes()
+                .getPsychologyCard( SerDes
+                        .getSerDes()
                         .deserialize( strings[ 0 ], strings[ 1 ] ) ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByFIO" )
@@ -63,7 +81,7 @@ public class RequestController {
             .getPersonTotalDataByFIO ( fio ); }
 
     @MessageMapping ( value = "getFamilyMembersData" )
-    public Mono< Family > getFamilyMembersData ( String pinfl ) { return FindFaceComponent
+    public Mono< Results > getFamilyMembersData ( String pinfl ) { return FindFaceComponent
             .getInstance()
             .getFamilyMembersData( pinfl ); }
 }

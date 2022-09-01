@@ -1,6 +1,8 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.entity.family.FamilyMember;
+
 import lombok.NoArgsConstructor;
 import java.util.List;
 import lombok.Data;
@@ -10,6 +12,10 @@ import lombok.Data;
 public class PsychologyCard {
     private Pinpp pinpp;
     private String personImage; // the image of the person
+
+    private FamilyMember daddyData;
+    private FamilyMember mommyData;
+    private FamilyMember childData;
 
     private List< PapilonData > papilonData;
     private List< Violation > violationList;

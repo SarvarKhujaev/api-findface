@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ssd.mvd.entity.Results;
-import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.FindFaceServiceApplication;
 
 import reactor.core.publisher.Mono;
@@ -18,7 +17,10 @@ public class FindFaceComponent {
 
     private FindFaceComponent () { this.requester = FindFaceServiceApplication.context.getBean( RSocketRequester.class ); }
 
-    public Mono< Results > getPapilonList( String base64url ) { return this.requester.route( "getFaceCard" ).data( base64url ).retrieveMono( Results.class ); }
+    public Mono< Results > getPapilonList( String base64url ) { return this.requester
+            .route( "getFaceCard" )
+            .data( base64url )
+            .retrieveMono( Results.class ); }
 
     public Mono< List > getViolationListByPinfl ( String pinfl ) {
         try { return pinfl != null ?
@@ -33,8 +35,8 @@ public class FindFaceComponent {
                 : null;
         } catch ( Exception e ) { return null; } }
 
-    public Mono< Family > getFamilyMembersData ( String pinfl ) { return this.requester
+    public Mono< Results > getFamilyMembersData ( String pinfl ) { return this.requester
             .route( "getFamilyMembersData" )
             .data( pinfl )
-            .retrieveMono( Family.class ); }
+            .retrieveMono( Results.class ); }
 }

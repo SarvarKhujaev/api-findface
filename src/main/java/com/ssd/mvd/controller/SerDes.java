@@ -9,6 +9,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.entity.modelForGai.*;
+import com.ssd.mvd.entity.family.FamilyMember;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 public class SerDes implements Runnable {
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
+
     private final Map< String, Object > fields = new HashMap<>();
     private final Map< String, String > headers = new HashMap<>();
 
@@ -79,16 +81,19 @@ public class SerDes implements Runnable {
             return object != null ? this.gson.fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
         } catch ( JSONException | UnirestException e ) { return new Data(); } }
 
-    public PsychologyCard getPsychologyCard ( String passport, List< PapilonData > results, List< Violation > violationList ) { // returns the card in case of Person
+    public PsychologyCard getPsychologyCard ( String passport, Results results ) { // returns the card in case of Person
         PsychologyCard psychologyCard = new PsychologyCard();
         try { if ( passport.length() == 9 ) passport = passport.replace( "-", "0" );
             else passport = passport.replace( "-", "" );
-            psychologyCard.setPapilonData( results );
-            psychologyCard.setViolationList( violationList );
-            psychologyCard.setPinpp( this.pinpp( results.get( 0 ).getPersonal_code() ) );
-            psychologyCard.setPersonImage( this.getImageByPinfl( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPapilonData( results.getResults() );
+            psychologyCard.setChildData( results.getChildData() );
+            psychologyCard.setMommyData( results.getDaddyData() );
+            psychologyCard.setDaddyData( results.getMommyData() );
+            psychologyCard.setViolationList( results.getViolationList() );
+            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
             psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
-            psychologyCard.setModelForCarList( this.getModelForCarList( results.get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
             if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
                 this.findAllDataAboutCar( psychologyCard );
             psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
@@ -113,7 +118,8 @@ public class SerDes implements Runnable {
         catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
 
     public Pinpp pinpp ( String pinpp ) { this.headers.put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
+        try { return this.getGson()
+                .fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
                 .headers( this.getHeaders() )
                 .asJson()
                 .getBody()
@@ -196,6 +202,16 @@ public class SerDes implements Runnable {
                 .getViolationListByPinfl( pinfl )
                 .defaultIfEmpty( new ArrayList() )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+
+        FindFaceComponent
+                .getInstance()
+                .getFamilyMembersData( pinfl )
+                .defaultIfEmpty( new Results() )
+                .subscribe( value -> {
+                    psychologyCard.setChildData( value != null ? value.getChildData() : new FamilyMember() );
+                    psychologyCard.setMommyData( value != null ? value.getMommyData() : new FamilyMember() );
+                    psychologyCard.setDaddyData( value != null ? value.getDaddyData() : new FamilyMember() ); } );
+
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
@@ -243,20 +259,32 @@ public class SerDes implements Runnable {
         this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
         this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
         try { return Mono.just( this.getGson()
-                .fromJson( Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
-                                .headers( this.getHeaders() )
-                                .fields( this.getFields() )
-                                .asString()
-                                .getBody(),
-                        PersonTotalDataByFIO.class ) );
+                    .fromJson( Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                                    .headers( this.getHeaders() )
+                                    .fields( this.getFields() )
+                                    .asString()
+                                    .getBody(),
+                            PersonTotalDataByFIO.class ) );
         } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
 
     public PsychologyCard getPsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data ) {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        FindFaceComponent.getInstance().getViolationListByPinfl( data.getPerson().getPinpp() )
+        FindFaceComponent
+                .getInstance()
+                .getViolationListByPinfl( data.getPerson().getPinpp() )
                 .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+
+        FindFaceComponent
+                .getInstance()
+                .getFamilyMembersData( data.getPerson().getPinpp() )
+                .defaultIfEmpty( new Results() )
+                .subscribe( value -> {
+                    psychologyCard.setChildData( value != null ? value.getChildData() : new FamilyMember() );
+                    psychologyCard.setMommyData( value != null ? value.getMommyData() : new FamilyMember() );
+                    psychologyCard.setDaddyData( value != null ? value.getDaddyData() : new FamilyMember() ); } );
+
         psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );

@@ -13,6 +13,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Family {
+    private String id;
+    private String result_message;
+
+    private Integer result_code;
     @JsonDeserialize
     private List< FamilyMember > items;
 }
