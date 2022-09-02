@@ -35,7 +35,9 @@ public class FindFaceComponent {
                 : null;
         } catch ( Exception e ) { return null; } }
 
-    public Mono< Results > getFamilyMembersData ( String pinfl ) { return this.requester
+    public Mono< Results > getFamilyMembersData ( String pinfl ) {
+        System.out.println( "Pinfl: " + pinfl );
+        return this.requester
             .route( "getFamilyMembersData" )
             .data( pinfl )
             .retrieveMono( Results.class ); }

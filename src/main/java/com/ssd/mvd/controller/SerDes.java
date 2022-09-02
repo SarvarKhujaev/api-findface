@@ -195,22 +195,22 @@ public class SerDes implements Runnable {
             modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
-        if ( pinfl == null ) { return null; }
+        if ( pinfl == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent
                 .getInstance()
                 .getViolationListByPinfl( pinfl )
                 .defaultIfEmpty( new ArrayList() )
-                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+                .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
 
         FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( pinfl )
                 .defaultIfEmpty( new Results() )
-                .subscribe( value -> {
-                    psychologyCard.setChildData( value != null ? value.getChildData() : new FamilyMember() );
-                    psychologyCard.setMommyData( value != null ? value.getMommyData() : new FamilyMember() );
-                    psychologyCard.setDaddyData( value != null ? value.getDaddyData() : new FamilyMember() ); } );
+                .subscribe( results -> {
+                    psychologyCard.setChildData( results != null ? results.getChildData() : new FamilyMember() );
+                    psychologyCard.setMommyData( results != null ? results.getMommyData() : new FamilyMember() );
+                    psychologyCard.setDaddyData( results != null ? results.getDaddyData() : new FamilyMember() ); } );
 
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
