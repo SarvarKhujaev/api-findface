@@ -200,13 +200,11 @@ public class SerDes implements Runnable {
         FindFaceComponent
                 .getInstance()
                 .getViolationListByPinfl( pinfl )
-                .defaultIfEmpty( new ArrayList() )
                 .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
 
         FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( pinfl )
-                .defaultIfEmpty( new Results() )
                 .subscribe( results -> {
                     psychologyCard.setChildData( results != null ? results.getChildData() : new FamilyMember() );
                     psychologyCard.setMommyData( results != null ? results.getMommyData() : new FamilyMember() );
