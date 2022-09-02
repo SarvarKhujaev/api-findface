@@ -206,6 +206,8 @@ public class SerDes implements Runnable {
                 .getInstance()
                 .getFamilyMembersData( pinfl )
                 .subscribe( results -> {
+                    System.out.println( "test: " + pinfl );
+                    System.out.println( results );
                     psychologyCard.setChildData( results != null ? results.getChildData() : new FamilyMember() );
                     psychologyCard.setMommyData( results != null ? results.getMommyData() : new FamilyMember() );
                     psychologyCard.setDaddyData( results != null ? results.getDaddyData() : new FamilyMember() ); } );
