@@ -29,9 +29,9 @@ public class SerDes implements Runnable {
     private final Map< String, Object > fields = new HashMap<>();
     private final Map< String, String > headers = new HashMap<>();
 
-    private String tokenForGai = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiMTAxMjAwMCIsIjEwMTIwMDEiLCIxMDEyMDAyIiwiMTAxMjAwMyIsIjEwMTIwMDQiXSwibmJmIjoxNjU2NTgyOTkyLCJleHAiOjE2NTY2NjkzOTIsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.tyeEiazjrHMths2caBs4BvJmE5GLLxTnRa8-rKa1fHY";
-    private String tokenForFio = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjQwIiwiTE9DQUwgQVVUSE9SSVRZIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIxMDEwMDAxIiwibmJmIjoxNjYxNjE1NTg3LCJleHAiOjE2NjI0Nzk1ODcsImlzcyI6IkFzYnRBdXRoMi4wU2VydmVyIiwiYXVkIjoiaHR0cDovL2FzYnQudXovIn0.tQoWHNrOvvE9t8mFT302ENKt1pdbzMje04yI4dMcKCc";
-    private String tokenForPassport = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiIiwiVXNlcklkIjoiMTAwMTAxMCIsIlN1YnN5c3RlbSI6IjEiLCJMT0NBTCBBVVRIT1JJVFkiOiJBc2J0QXV0aDIuMFNlcnZlciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6WyIxMDEyMDAwIiwiMTAxMjAwMSIsIjEwMTIwMDIiLCIxMDEyMDAzIiwiMTAxMjAwNCJdLCJuYmYiOjE2NTcwMjQyNjcsImV4cCI6MTY1NzExMDY2NywiaXNzIjoiQXNidEF1dGgyLjBTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vYXNidC51ei8ifQ.OF9-vsxindRQgR_i9kBquFGePh8k6M7-5w2UskjQCd8";
+    private String tokenForGai;
+    private String tokenForFio;
+    private String tokenForPassport;
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
 
@@ -170,7 +170,8 @@ public class SerDes implements Runnable {
                 .getArray()
                 .toString(), ViolationsInformation[].class ) ); } catch ( Exception e ) { return new ViolationsList( new ArrayList<>() ); } }
 
-    public ModelForCarList getModelForCarList ( String pinfl ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+    public ModelForCarList getModelForCarList ( String pinfl ) {
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new ModelForCarList( this.stringToArrayList(
                 Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl )
                 .headers( this.getHeaders() )
@@ -179,7 +180,8 @@ public class SerDes implements Runnable {
                 .getArray()
                 .toString(), ModelForCar[].class ) ); } catch ( Exception e ) { return new ModelForCarList(); } }
 
-    public DoverennostList getDoverennostList ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+    public DoverennostList getDoverennostList ( String gosno ) {
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { return new DoverennostList( this.stringToArrayList(
                 Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno )
                 .headers( this.getHeaders() )
@@ -213,7 +215,11 @@ public class SerDes implements Runnable {
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( pinfl ) );
-        if ( psychologyCard.getModelForCarList() != null && psychologyCard
+        if ( psychologyCard.getModelForCarList() != null
+                && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList() != null
+                && psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
