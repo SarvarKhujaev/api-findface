@@ -53,11 +53,13 @@ public class RequestController {
                             .deserialize( person.getPPsp(), person.getPDateBirth() ) ) ) ) : Flux.empty(); }
 
     @MessageMapping ( value = "getCarTotalData" )
-    public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() )
+    public Mono< CarTotalData > getCarTotalData ( String platenumber ) {
+        System.out.println( "Gos number: " + platenumber );
+        return Mono.just( new CarTotalData() )
             .flatMap( carTotalData -> {
-        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
+//        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
-        carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
+//        carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
         carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
         carTotalData.setPsychologyCard( SerDes.getSerDes()
                 .getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );
