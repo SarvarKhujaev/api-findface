@@ -22,19 +22,19 @@ public class RequestController {
                     .getPapilonList( base64url )
                     .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
                     .onErrorStop()
-                    .map( value -> value
+                    .map( results -> results
                             .getResults()
                             .get( 0 )
                             .getCountry()
                             .equals( "УЗБЕКИСТАН" ) ?
                             SerDes
                                     .getSerDes()
-                                    .getPsychologyCard( value
+                                    .getPsychologyCard( results
                                                     .getResults()
                                                     .get( 0 )
                                                     .getPassport()
-                                                    .split( " " )[0], value )
-                            : new PsychologyCard( value ) )
+                                                    .split( " " )[0], results )
+                            : new PsychologyCard( results ) )
                             .onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
@@ -55,7 +55,7 @@ public class RequestController {
     @MessageMapping ( value = "getCarTotalData" )
     public Mono< CarTotalData > getCarTotalData ( String platenumber ) { return Mono.just( new CarTotalData() )
             .flatMap( carTotalData -> {
-        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
+//        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
         carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
         carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
