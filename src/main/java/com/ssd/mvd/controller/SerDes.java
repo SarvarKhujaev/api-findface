@@ -87,12 +87,12 @@ public class SerDes implements Runnable {
             else passport = passport.replace( "-", "" );
             psychologyCard.setPapilonData( results.getResults() );
             psychologyCard.setChildData( results.getChildData() );
-            psychologyCard.setMommyData( results.getDaddyData() );
-            psychologyCard.setDaddyData( results.getMommyData() );
+            psychologyCard.setMommyData( results.getMommyData() );
+            psychologyCard.setDaddyData( results.getDaddyData() );
             psychologyCard.setViolationList( results.getViolationList() );
 //            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
 //            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
-//            psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
+            psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
 //            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
 //            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
 //                this.findAllDataAboutCar( psychologyCard );

@@ -19,6 +19,7 @@ public class FamilyMember {
     private String birth_date;
     private String cert_series;
     private String cert_number;
+    private String personal_image;
     private String cert_birth_date;
 
     // Fathers data
