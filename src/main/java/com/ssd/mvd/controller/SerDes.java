@@ -9,7 +9,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.entity.family.FamilyMember;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
@@ -42,10 +41,14 @@ public class SerDes implements Runnable {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
             @Override
-            public String writeValue( Object o ) { try { return this.objectMapper.writeValueAsString( o ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } }
+            public String writeValue( Object o ) {
+                try { return this.objectMapper.writeValueAsString( o ); }
+                catch ( JsonProcessingException e ) { throw new RuntimeException(e); } }
 
             @Override
-            public <T> T readValue( String s, Class<T> aClass ) { try { return this.objectMapper.readValue( s, aClass ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } } } );
+            public <T> T readValue( String s, Class<T> aClass ) {
+                try { return this.objectMapper.readValue( s, aClass ); }
+                catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
         this.updateTokens(); }
 
@@ -70,32 +73,6 @@ public class SerDes implements Runnable {
                             .get( "access_token" ) ) );
         } catch ( UnirestException e ) { throw new RuntimeException(e); } }
 
-    public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
-        this.getFields().clear();
-        this.getFields().put( "Pcadastre", pinfl );
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { JSONObject object = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" )
-                .headers( this.getHeaders() )
-                .fields( this.getFields() ).asJson().getBody().getObject();
-            return object != null ? this.gson.fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
-        } catch ( JSONException | UnirestException e ) { return new Data(); } }
-
-    public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
-        this.getFields().clear();
-        this.getFields().put( "BirthDate", BirthDate );
-        this.getFields().put( "SerialNumber", SerialNumber );
-        System.out.println( "Data: " + SerialNumber + " : " + BirthDate );
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson().fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
-                .headers( this.getHeaders() )
-                .fields( this.getFields() )
-                .asJson()
-                .getBody()
-                .getObject()
-                .get( "Data" )
-                .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
-        catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
-
     public Pinpp pinpp ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { return this.getGson()
                 .fromJson( Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
@@ -106,7 +83,8 @@ public class SerDes implements Runnable {
                 .toString(), Pinpp.class ); } catch ( Exception e ) { return new Pinpp(); } }
 
     public Insurance insurance ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp )
+        try { return this.getGson()
+                .fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp )
                 .headers( this.getHeaders() )
                 .asJson()
                 .getBody()
@@ -124,7 +102,8 @@ public class SerDes implements Runnable {
         } catch ( JSONException | UnirestException e ) { return "Error"; } }
 
     public ModelForCar getVehicleData ( String gosno ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { return this.getGson().fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )
+        try { return this.getGson()
+                .fromJson( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )
                 .headers( this.getHeaders() )
                 .asJson()
                 .getBody()
@@ -169,30 +148,6 @@ public class SerDes implements Runnable {
                 .getArray()
                 .toString(), Doverennost[].class ) ); } catch ( Exception e ) { return new DoverennostList( new ArrayList<>() ); } }
 
-    private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
-        psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
-            modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
-            modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
-            /*modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) );*/ } ); }
-
-    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
-        if ( fio.getSurname() == null
-        ^ fio.getName() == null
-                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
-        this.getFields().clear();
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
-        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
-        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
-        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
-        try { return Mono.just( this.getGson()
-                    .fromJson( Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
-                                    .headers( this.getHeaders() )
-                                    .fields( this.getFields() )
-                                    .asString()
-                                    .getBody(),
-                            PersonTotalDataByFIO.class ) );
-        } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
-
     private ModelForAddress getModelForAddress ( String pinfl ) {
         try { this.getFields().clear();
             this.getFields().put( "Pcitizen", pinfl );
@@ -205,6 +160,63 @@ public class SerDes implements Runnable {
                     .getObject()
                     .get( "Data" )
                     .toString(), ModelForAddress.class ); } catch ( Exception e ) { return new ModelForAddress(); } }
+
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
+        if ( fio.getSurname() == null
+                ^ fio.getName() == null
+                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
+        this.getFields().clear();
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
+        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
+        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
+        try { PersonTotalDataByFIO person = this.getGson()
+                    .fromJson( Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                                    .headers( this.getHeaders() )
+                                    .fields( this.getFields() )
+                                    .asString()
+                                    .getBody(),
+                            PersonTotalDataByFIO.class );
+            if ( person != null && person.getData().size() > 0 ) person.getData()
+                    .forEach( person1 -> person1.setPersonImage( this.getImageByPinfl( person1.getPinpp() ) ) );
+            return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
+        } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
+
+    public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
+        this.getFields().clear();
+        this.getFields().put( "Pcadastre", pinfl );
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
+        try { JSONObject object = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" )
+                .headers( this.getHeaders() )
+                .fields( this.getFields() )
+                .asJson()
+                .getBody()
+                .getObject();
+            return object != null ? this.gson.fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
+        } catch ( JSONException | UnirestException e ) { return new Data(); } }
+
+    public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
+        this.getFields().clear();
+        this.getFields().put( "BirthDate", BirthDate );
+        this.getFields().put( "SerialNumber", SerialNumber );
+        System.out.println( "Data: " + SerialNumber + " : " + BirthDate );
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
+        try { return this.getGson()
+                .fromJson( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
+                        .headers( this.getHeaders() )
+                        .fields( this.getFields() )
+                        .asJson()
+                        .getBody()
+                        .getObject()
+                        .get( "Data" )
+                        .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
+        catch ( Exception e ) { return new com.ssd.mvd.entity.modelForPassport.Data(); } }
+
+    private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
+        psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
+            modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
+            modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
+            /*modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) );*/ } ); }
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         psychologyCard.setChildData( results.getChildData() );
@@ -249,19 +261,29 @@ public class SerDes implements Runnable {
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         if ( psychologyCard.getModelForCadastr() != null
-                && psychologyCard.getModelForCadastr().getPermanentRegistration() != null
-                && psychologyCard.getModelForCadastr().getPermanentRegistration().size() > 0 ) {
-            psychologyCard.setModelForPassport( this.deserialize( psychologyCard
+                && psychologyCard
+                .getModelForCadastr()
+                .getPermanentRegistration() != null
+                && psychologyCard
+                .getModelForCadastr()
+                .getPermanentRegistration().size() > 0 ) {
+            psychologyCard.setModelForPassport( this.deserialize(
+                    psychologyCard
                             .getModelForCadastr()
                             .getPermanentRegistration()
                             .get( 0 )
                             .getPPsp(),
-                    psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard
-                    .getModelForCadastr()
-                    .getPermanentRegistration()
-                    .get( 0 )
-                    .getPCitizen() ) ); }
+                    psychologyCard
+                            .getModelForCadastr()
+                            .getPermanentRegistration()
+                            .get( 0 )
+                            .getPDateBirth() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress(
+                    psychologyCard
+                        .getModelForCadastr()
+                        .getPermanentRegistration()
+                        .get( 0 )
+                        .getPCitizen() ) ); }
         return psychologyCard; }
 
     public PsychologyCard getPsychologyCard ( String passport, Results results ) { // returns the card in case of Person
@@ -271,14 +293,32 @@ public class SerDes implements Runnable {
             this.setFamilyData( results, psychologyCard );
             psychologyCard.setPapilonData( results.getResults() );
             psychologyCard.setViolationList( results.getViolationList() );
-            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
+            psychologyCard.setPinpp( this.pinpp(
+                    results
+                    .getResults()
+                    .get( 0 )
+                    .getPersonal_code() ) );
+            psychologyCard.setModelForCadastr( this.deserialize(
+                    psychologyCard
+                    .getPinpp()
+                    .getCadastre() ) );
             psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
-            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
-                this.findAllDataAboutCar( psychologyCard );
+            psychologyCard.setModelForCarList( this.getModelForCarList(
+                    results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ) );
+            if ( psychologyCard.getModelForCarList() != null
+                    && psychologyCard
+                    .getModelForCarList()
+                    .getModelForCarList()
+                    .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
             psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress(
+                    psychologyCard
+                            .getModelForPassport()
+                            .getPerson()
+                            .getPCitizen() ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
