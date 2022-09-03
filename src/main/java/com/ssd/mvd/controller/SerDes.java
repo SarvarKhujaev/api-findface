@@ -96,7 +96,7 @@ public class SerDes implements Runnable {
             if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
                 this.findAllDataAboutCar( psychologyCard );
             psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress( results.getResults().get( 0 ).getPersonal_code() ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
