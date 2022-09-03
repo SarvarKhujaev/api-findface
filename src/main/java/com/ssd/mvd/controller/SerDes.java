@@ -47,8 +47,7 @@ public class SerDes implements Runnable {
             @Override
             public <T> T readValue( String s, Class<T> aClass ) { try { return this.objectMapper.readValue( s, aClass ); } catch (JsonProcessingException e) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
-//        this.updateTokens();
-    }
+        this.updateTokens(); }
 
     private void updateTokens () {
         this.getFields().put( "CurrentSystem", "40" );
