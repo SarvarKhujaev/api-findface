@@ -26,13 +26,13 @@ public class Person {
     private String PatronymCyrillic;
 
     @JsonDeserialize
-    private Sex sex;
+    private Sex Sex;
     @JsonDeserialize
-    private Region region;
+    private Region Region;
     @JsonDeserialize
-    private Country country;
+    private Country Country;
     @JsonDeserialize
-    private Document document;
+    private Document Document;
     @JsonDeserialize
-    private District district;
+    private District District;
 }

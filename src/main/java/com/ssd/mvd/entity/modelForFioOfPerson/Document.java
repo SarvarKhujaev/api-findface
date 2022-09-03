@@ -14,11 +14,11 @@ import lombok.Data;
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class Document {
     @JsonDeserialize
-    private DocumentType documentType;
+    private DocumentType DocumentType;
     @JsonDeserialize
-    private DateIssue dateIssue;
+    private DateIssue DateIssue;
     @JsonDeserialize
-    private DateValid dateValid;
+    private DateValid DateValid;
 
     private String SerialNumber;
     private String IssuedBy;
