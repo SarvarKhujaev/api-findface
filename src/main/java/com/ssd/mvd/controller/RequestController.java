@@ -59,7 +59,7 @@ public class RequestController {
             .flatMap( carTotalData -> {
 //        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
-//        carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
+        carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
         carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );
         carTotalData.setPsychologyCard( SerDes.getSerDes()
                 .getPsychologyCard( carTotalData.getModelForCar().getPinpp() ) );

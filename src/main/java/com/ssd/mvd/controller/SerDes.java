@@ -89,14 +89,14 @@ public class SerDes implements Runnable {
             psychologyCard.setMommyData( results.getMommyData() );
             psychologyCard.setDaddyData( results.getDaddyData() );
             psychologyCard.setViolationList( results.getViolationList() );
-//            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
-//            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
+            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
+            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
             psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
-//            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
-//            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
-//                this.findAllDataAboutCar( psychologyCard );
-//            psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
-//            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
+            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
+            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
+                this.findAllDataAboutCar( psychologyCard );
+            psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
+            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
@@ -193,7 +193,7 @@ public class SerDes implements Runnable {
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
             modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
             modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
-            modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
+            /*modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) );*/ } ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
