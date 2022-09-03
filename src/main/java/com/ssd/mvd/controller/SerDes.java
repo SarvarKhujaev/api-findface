@@ -90,14 +90,14 @@ public class SerDes implements Runnable {
             psychologyCard.setMommyData( results.getDaddyData() );
             psychologyCard.setDaddyData( results.getMommyData() );
             psychologyCard.setViolationList( results.getViolationList() );
-            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
-            psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
-            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
-            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
-                this.findAllDataAboutCar( psychologyCard );
-            psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
+//            psychologyCard.setPinpp( this.pinpp( results.getResults().get( 0 ).getPersonal_code() ) );
+//            psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
+//            psychologyCard.setPersonImage( this.getImageByPinfl( results.getResults().get( 0 ).getPersonal_code() ) );
+//            psychologyCard.setModelForCarList( this.getModelForCarList( results.getResults().get( 0 ).getPersonal_code() ) );
+//            if ( psychologyCard.getModelForCarList() != null && psychologyCard.getModelForCarList().getModelForCarList().size() > 0 )
+//                this.findAllDataAboutCar( psychologyCard );
+//            psychologyCard.setModelForPassport( this.deserialize( passport, psychologyCard.getPinpp().getBirthDate() ) );
+//            psychologyCard.setModelForAddress( this.getModelForAddress( psychologyCard.getModelForPassport().getPerson().getPCitizen() ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
