@@ -1,6 +1,7 @@
 package com.ssd.mvd.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.entity.family.FamilyMember;
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
@@ -20,9 +21,9 @@ public class Results {
     private List< Violation > violationList;
 
     @JsonDeserialize
-    private FamilyMember daddyData;
+    private Family daddyData;
     @JsonDeserialize
-    private FamilyMember mommyData;
+    private Family mommyData;
     @JsonDeserialize
-    private FamilyMember childData;
+    private Family childData;
 }

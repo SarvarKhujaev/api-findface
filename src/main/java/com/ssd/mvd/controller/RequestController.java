@@ -38,9 +38,10 @@ public class RequestController {
                             .onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
-    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) { return Mono.just( SerDes
+    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( String pinfl ) {
+        return pinfl != null && pinfl.length() > 0 ? Mono.just( SerDes
             .getSerDes()
-            .getPsychologyCard( pinfl ) ); }
+            .getPsychologyCard( pinfl ) ) : Mono.empty(); }
 
     @MessageMapping ( value = "getPersonalCadastor" )
     public Flux< PsychologyCard > getPersonalCadastor ( String id ) {
@@ -57,7 +58,7 @@ public class RequestController {
         System.out.println( "Gos number: " + platenumber );
         return Mono.just( new CarTotalData() )
             .flatMap( carTotalData -> {
-//        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
+        carTotalData.setDoverennostList( SerDes.getSerDes().getDoverennostList( platenumber ) );
         carTotalData.setViolationsList( SerDes.getSerDes().getViolationList( platenumber ) );
         carTotalData.setTonirovka( SerDes.getSerDes().getVehicleTonirovka( platenumber ) );
         carTotalData.setModelForCar( SerDes.getSerDes().getVehicleData( platenumber ) );

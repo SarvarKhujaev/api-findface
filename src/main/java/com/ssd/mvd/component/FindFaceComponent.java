@@ -17,7 +17,7 @@ public class FindFaceComponent {
 
     private FindFaceComponent () { this.requester = FindFaceServiceApplication.context.getBean( RSocketRequester.class ); }
 
-    public Mono< Results > getPapilonList( String base64url ) { return this.requester
+    public Mono< Results > getPapilonList ( String base64url ) { return this.requester
             .route( "getFaceCard" )
             .data( base64url )
             .retrieveMono( Results.class ); }
@@ -33,7 +33,7 @@ public class FindFaceComponent {
                             System.out.println( "ERROR: " + throwable.getMessage() ); } )
                         .defaultIfEmpty( new ArrayList() )
                 : null;
-        } catch ( Exception e ) { return null; } }
+        } catch ( Exception e ) { return Mono.empty(); } }
 
     public Mono< Results > getFamilyMembersData ( String pinfl ) {
         System.out.println( "Pinfl: " + pinfl );

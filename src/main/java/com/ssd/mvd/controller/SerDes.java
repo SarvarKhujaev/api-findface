@@ -216,7 +216,7 @@ public class SerDes implements Runnable {
         psychologyCard.getModelForCarList().getModelForCarList().forEach( modelForCar -> {
             modelForCar.setInsurance( this.insurance( modelForCar.getPlateNumber() ) );
             modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
-            /*modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) );*/ } ); }
+            modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
     private void setPersonPrivateData ( PsychologyCard psychologyCard ) {
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
@@ -250,30 +250,47 @@ public class SerDes implements Runnable {
         psychologyCard.setMommyData( results.getMommyData() );
         psychologyCard.setDaddyData( results.getDaddyData() );
 
-        if ( psychologyCard.getChildData() != null ) psychologyCard
+        if ( psychologyCard.getChildData() != null
+                && !psychologyCard.getChildData().getItems().isEmpty()
+                && psychologyCard.getChildData().getItems().size() > 0 ) psychologyCard
                 .getChildData()
-                .setPersonal_image( this.getImageByPinfl( psychologyCard.getChildData().getPnfl() ) );
+                .getItems()
+                .forEach( familyMember -> this.getImageByPinfl( familyMember.getPnfl() ) );
 
-        if ( psychologyCard.getDaddyData() != null ) psychologyCard
+        if ( psychologyCard.getDaddyData() != null
+                && !psychologyCard.getDaddyData().getItems().isEmpty()
+                && psychologyCard.getDaddyData().getItems().size() > 0 ) psychologyCard
                 .getDaddyData()
-                .setPersonal_image( this.getImageByPinfl( psychologyCard.getDaddyData().getPnfl() ) );
+                .getItems()
+                .forEach( familyMember -> this.getImageByPinfl( familyMember.getPnfl() ) );
 
-        if ( psychologyCard.getMommyData() != null ) psychologyCard
+        if ( psychologyCard.getMommyData() != null
+                && !psychologyCard.getMommyData().getItems().isEmpty()
+                && psychologyCard.getMommyData().getItems().size() > 0 ) psychologyCard
                 .getMommyData()
-                .setPersonal_image( this.getImageByPinfl( psychologyCard.getMommyData().getPnfl() ) ); }
+                .getItems()
+                .forEach( familyMember -> this.getImageByPinfl( familyMember.getPnfl() ) ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
-        if ( pinfl == null ) return null;
+        if ( pinfl == null ^ pinfl.equals( "null" ) ^ pinfl.length() == 0 ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
-        FindFaceComponent
-                .getInstance()
-                .getViolationListByPinfl( pinfl )
-                .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
+        try { FindFaceComponent
+                    .getInstance()
+                    .getViolationListByPinfl( pinfl )
+                    .doOnError( throwable -> {
+                        System.out.println( "ERROR before sending request: " + throwable.getCause() );
+                        System.out.println( "ERROR before sending request: " + throwable.getMessage() ); } )
+                    .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
+        } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
 
-        FindFaceComponent
-                .getInstance()
-                .getFamilyMembersData( pinfl )
-                .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+        try { FindFaceComponent
+                    .getInstance()
+                    .getFamilyMembersData( pinfl )
+                    .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+        } catch ( Exception e ) {
+            psychologyCard.setDaddyData( null );
+            psychologyCard.setMommyData( null );
+            psychologyCard.setChildData( null ); }
 
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
@@ -327,22 +344,29 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        FindFaceComponent
-                .getInstance()
-                .getViolationListByPinfl( data.getPerson().getPinpp() )
-                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+        try {
+            FindFaceComponent
+                    .getInstance()
+                    .getViolationListByPinfl( data.getPerson().getPinpp() )
+                    .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
+        } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
 
-        FindFaceComponent
+        try { FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( data.getPerson().getPinpp() )
                 .defaultIfEmpty( new Results() )
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+        } catch ( Exception e ) {
+            psychologyCard.setDaddyData( null );
+            psychologyCard.setMommyData( null );
+            psychologyCard.setChildData( null ); }
 
         psychologyCard.setPinpp( this.pinpp( data.getPerson().getPinpp() ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
-        if ( psychologyCard.getModelForCarList() != null && psychologyCard
+        if ( psychologyCard.getModelForCarList() != null
+                && psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
