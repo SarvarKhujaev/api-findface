@@ -40,5 +40,6 @@ public class FindFaceComponent {
         return this.requester
             .route( "getFamilyMembersData" )
             .data( pinfl )
-            .retrieveMono( Results.class ); }
+            .retrieveMono( Results.class )
+                .defaultIfEmpty( new Results() ); }
 }

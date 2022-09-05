@@ -22,19 +22,19 @@ public class RequestController {
                     .getPapilonList( base64url )
                     .filter( value -> value.getResults() != null && value.getResults().size() > 0 )
                     .onErrorStop()
-                    .map( value -> value
+                    .map( results -> results
                             .getResults()
                             .get( 0 )
                             .getCountry()
                             .equals( "УЗБЕКИСТАН" ) ?
                             SerDes
                                     .getSerDes()
-                                    .getPsychologyCard( value
+                                    .getPsychologyCard( results
                                                     .getResults()
                                                     .get( 0 )
                                                     .getPassport()
-                                                    .split( " " )[0], value )
-                            : new PsychologyCard( value ) )
+                                                    .split( " " )[0], results )
+                            : new PsychologyCard( results ) )
                             .onErrorStop() : Mono.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" )
