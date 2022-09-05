@@ -248,24 +248,27 @@ public class SerDes implements Runnable {
         psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
         psychologyCard.setMommyPinfl( results.getMommyPinfl() );
 
+        System.out.println( "Data for Mommy: " + psychologyCard.getMommyPinfl() + " : " + psychologyCard.getMommyData() );
+        System.out.println( "Data for Daddy: " + psychologyCard.getDaddyPinfl() + " : " + psychologyCard.getDaddyData() );
+
         if ( psychologyCard.getChildData() != null
                 && psychologyCard.getChildData().getItems() != null
                 && !psychologyCard.getChildData().getItems().isEmpty()
                 && psychologyCard.getChildData().getItems().size() > 0 ) psychologyCard
-                .getChildData()
-                .getItems()
-                .forEach( familyMember -> this.getImageByPinfl( familyMember.getPnfl() ));
+                    .getChildData()
+                    .getItems()
+                    .forEach( familyMember -> familyMember
+                            .setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ) );
 
         if ( psychologyCard.getDaddyData() != null
                 && psychologyCard.getDaddyData().getItems() != null
                 && !psychologyCard.getDaddyData().getItems().isEmpty()
                 && psychologyCard.getDaddyData().getItems().size() > 0 ) psychologyCard
-                .getDaddyData()
-                .getItems()
-                .forEach( familyMember -> {
-                    System.out.println( "Pinfl for Daddy: " + familyMember.getPnfl() );
-                    this.getImageByPinfl( familyMember.getPnfl() );
-                } );
+                    .getDaddyData()
+                    .getItems()
+                    .forEach( familyMember -> {
+                        System.out.println( "Pinfl for Daddy: " + familyMember.getPnfl() );
+                        familyMember.setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ); } );
 
         if ( psychologyCard.getMommyData() != null
                 && psychologyCard.getMommyData().getItems() != null
@@ -275,8 +278,7 @@ public class SerDes implements Runnable {
                 .getItems()
                 .forEach( familyMember -> {
                     System.out.println( "Pinfl for MommyData: " + familyMember.getPnfl() );
-                    this.getImageByPinfl( familyMember.getPnfl() );
-                } ); }
+                    familyMember.setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ); } ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
@@ -297,6 +299,7 @@ public class SerDes implements Runnable {
                     .getFamilyMembersData( pinfl )
                     .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
         } catch ( Exception e ) {
+            System.out.println( "Error while getting family members" );
             psychologyCard.setDaddyData( null );
             psychologyCard.setMommyData( null );
             psychologyCard.setChildData( null ); }
