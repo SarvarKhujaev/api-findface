@@ -249,10 +249,8 @@ public class SerDes implements Runnable {
         psychologyCard.setChildData( results.getChildData() );
         psychologyCard.setMommyData( results.getMommyData() );
         psychologyCard.setDaddyData( results.getDaddyData() );
-
-        System.out.println( psychologyCard.getChildData() );
-        System.out.println( psychologyCard.getDaddyData() );
-        System.out.println( psychologyCard.getMommyData() );
+        psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
+        psychologyCard.setMommyPinfl( results.getMommyPinfl() );
 
         if ( psychologyCard.getChildData() != null
                 && psychologyCard.getChildData().getItems() != null
@@ -260,10 +258,7 @@ public class SerDes implements Runnable {
                 && psychologyCard.getChildData().getItems().size() > 0 ) psychologyCard
                 .getChildData()
                 .getItems()
-                .forEach( familyMember -> {
-                    System.out.println( "Pinfl: " + familyMember.getPnfl() );
-                    this.getImageByPinfl( familyMember.getPnfl() );
-                } );
+                .forEach( familyMember -> this.getImageByPinfl( familyMember.getPnfl() ));
 
         if ( psychologyCard.getDaddyData() != null
                 && psychologyCard.getDaddyData().getItems() != null

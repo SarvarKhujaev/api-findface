@@ -13,6 +13,9 @@ public class PsychologyCard {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
+    private String daddyPinfl;
+    private String mommyPinfl;
+
     private Family daddyData;
     private Family mommyData;
     private Family childData;

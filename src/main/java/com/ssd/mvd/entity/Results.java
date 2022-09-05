@@ -20,6 +20,9 @@ public class Results {
     @JsonDeserialize
     private List< Violation > violationList;
 
+    private String daddyPinfl;
+    private String mommyPinfl;
+
     @JsonDeserialize
     private Family daddyData;
     @JsonDeserialize
