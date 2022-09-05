@@ -294,7 +294,9 @@ public class SerDes implements Runnable {
                     .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
         } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
 
-        try { FindFaceComponent
+        try {
+            System.out.println( "Pinfl before: " + pinfl );
+            FindFaceComponent
                     .getInstance()
                     .getFamilyMembersData( pinfl )
                     .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
