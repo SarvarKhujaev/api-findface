@@ -227,23 +227,19 @@ public class SerDes implements Runnable {
                 && psychologyCard
                 .getModelForCadastr()
                 .getPermanentRegistration().size() > 0 ) {
-            psychologyCard.setModelForPassport( this.deserialize(
-                    psychologyCard
-                            .getModelForCadastr()
+            psychologyCard.getModelForCadastr()
                             .getPermanentRegistration()
-                            .get( 0 )
-                            .getPPsp(),
-                    psychologyCard
-                            .getModelForCadastr()
-                            .getPermanentRegistration()
-                            .get( 0 )
-                            .getPDateBirth() ) );
-            psychologyCard.setModelForAddress( this.getModelForAddress(
-                    psychologyCard
-                            .getModelForCadastr()
-                            .getPermanentRegistration()
-                            .get( 0 )
-                            .getPCitizen() ) ); } }
+                                    .forEach( person -> {
+                                        if ( person
+                                                .getPDateBirth()
+                                                .equals( psychologyCard
+                                                        .getPinpp()
+                                                        .getBirthDate() ) ) {
+                                            psychologyCard.setModelForPassport( this.deserialize(
+                                                    person.getPPsp(),
+                                                            person.getPDateBirth() ) );
+                                            psychologyCard.setModelForAddress(
+                                                    this.getModelForAddress( person.getPCitizen() ) ); } } ); } }
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         psychologyCard.setChildData( results.getChildData() );
