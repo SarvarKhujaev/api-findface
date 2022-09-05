@@ -283,7 +283,7 @@ public class SerDes implements Runnable {
                 } ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
-        if ( pinfl == null ^ pinfl.equals( "null" ) ^ pinfl.length() == 0 ) return null;
+        if ( pinfl == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
         try { FindFaceComponent
                     .getInstance()
