@@ -250,6 +250,10 @@ public class SerDes implements Runnable {
         psychologyCard.setMommyData( results.getMommyData() );
         psychologyCard.setDaddyData( results.getDaddyData() );
 
+        System.out.println( results.getChildData() );
+        System.out.println( results.getDaddyData() );
+        System.out.println( results.getMommyData() );
+
         if (
                 psychologyCard.getChildData() != null
                 && psychologyCard.getChildData().getItems() != null
