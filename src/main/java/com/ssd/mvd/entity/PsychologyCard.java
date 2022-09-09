@@ -1,6 +1,7 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.entity.family.Family;
 
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class PsychologyCard {
 
     private List< PapilonData > papilonData;
     private List< Violation > violationList;
+    private List< Foreigner > foreignerList;
 
     private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
     private ModelForAddress modelForAddress;

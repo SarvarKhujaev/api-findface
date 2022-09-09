@@ -16,6 +16,10 @@ services:
             PRODUCER_PORT: ${PRODUCER_PORT}
             LOAD_BALANCER: ${LOAD_BALANCER}
 
+            ERROR_LOGS: ${ERROR_LOGS}
+            KAFKA_BROKER: ${KAFKA_BROKER}
+            GROUP_ID_FOR_KAFKA: ${GROUP_ID_FOR_KAFKA}
+
         deploy:
             replicas: 1
             placement:
