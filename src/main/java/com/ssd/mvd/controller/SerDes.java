@@ -1,7 +1,6 @@
 package com.ssd.mvd.controller;
 
 import java.util.*;
-
 import org.json.JSONObject;
 import org.json.JSONException;
 import reactor.core.publisher.Mono;
@@ -59,7 +58,7 @@ public class SerDes implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
-        /*this.updateTokens(); */}
+        this.updateTokens(); }
 
     private void updateTokens () {
         this.getFields().put( "CurrentSystem", "40" );
@@ -89,7 +88,7 @@ public class SerDes implements Runnable {
         this.getNotification().setMethodName( methodName );
         this.getNotification().setCallingTime( new Date() );
         this.getNotification().setJsonNode( this.getResponse().getBody() );
-        /*KafkaDataControl.getInstance().writeToKafka( this.getGson().toJson( this.getNotification() ) );*/ }
+        KafkaDataControl.getInstance().writeToKafka( this.getGson().toJson( this.getNotification() ) ); }
 
     public Pinpp pinpp ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try {
@@ -446,6 +445,26 @@ public class SerDes implements Runnable {
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
+    public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard, String token ) {
+        try { this.getHeaders().put( "Authorization", "Bearer " + token );
+            psychologyCard.setForeignerList(
+                    this.stringToArrayList(
+                            Unirest
+                                    .get( "http://ms.ssd.uz/train-ticket-consumer/api/v1/photo?passportNumber=" +
+                                            psychologyCard.getPapilonData().get( 0 ).getPassport() )
+                                    .headers( this.getHeaders() )
+                                    .asJson()
+                                    .getBody()
+                                    .getObject()
+                                    .get( "data" )
+                                    .toString(), Foreigner[].class ) );
+        } catch ( Exception e ) {
+            this.sendNotification( "getPsychologyCard",
+                    psychologyCard.getPapilonData().get( 0 ).getPassport(),
+                    "Data was not found" );
+            return psychologyCard; }
+        return psychologyCard; }
+
     public PsychologyCard getPsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data ) {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
@@ -477,27 +496,6 @@ public class SerDes implements Runnable {
                 .getModelForCarList()
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
-        return psychologyCard; }
-
-    public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard ) {
-        try { String passport = psychologyCard.getPapilonData().get( 0 ).getPassport();
-            if ( passport.length() == 9 ) passport = passport.replace( "-", "0" );
-            else passport = passport.replace( "-", "" );
-
-            psychologyCard.setForeignerList(
-                    this.stringToArrayList(
-                            Unirest
-                                    .get( "http://ms.ssd.uz/train-ticket-consumer/api/v1/photo?passportNumber=" + passport )
-                                    .asJson()
-                                    .getBody()
-                                    .getObject()
-                                    .get( "data" )
-                                    .toString(), Foreigner[].class ) );
-        } catch ( Exception e ) {
-            this.sendNotification( "getPsychologyCard",
-                    psychologyCard.getPapilonData().get( 0 ).getPassport(),
-                    "Data was not found" );
-            return psychologyCard; }
         return psychologyCard; }
 
     @Override

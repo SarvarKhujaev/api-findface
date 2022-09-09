@@ -15,8 +15,13 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 
 @RestController
 public class RequestController {
+    private static String token;
+
     @MessageMapping ( value = "getPersonTotalData" )
-    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) { return base64url != null && base64url.length() > 0 ?
+    public Mono< PsychologyCard > getPersonTotalData ( String base64url ) {
+        token = base64url.split( "@" )[ 1 ];
+        base64url = base64url.split( "@" )[ 0 ];
+        return base64url != null && base64url.length() > 0 ?
             FindFaceComponent
                     .getInstance()
                     .getPapilonList( base64url )
@@ -30,7 +35,9 @@ public class RequestController {
                             SerDes
                                     .getSerDes()
                                     .getPsychologyCard( results )
-                            : new PsychologyCard( results ) )
+                            : SerDes
+                                .getSerDes()
+                                .getPsychologyCard( new PsychologyCard( results ), token ) )
                             .onErrorStop()
             : Mono.just( new PsychologyCard() ); }
 
