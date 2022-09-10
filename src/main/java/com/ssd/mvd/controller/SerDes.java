@@ -456,26 +456,26 @@ public class SerDes implements Runnable {
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
-//        try { FindFaceComponent
-//                    .getInstance()
-//                    .getViolationListByPinfl( pinfl )
-//                    .doOnError( throwable -> {
-//                        System.out.println( "ERROR before sending request: " + throwable.getCause() );
-//                        System.out.println( "ERROR before sending request: " + throwable.getMessage() ); } )
-//                    .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
-//        } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
-//
-//        try {
-//            System.out.println( "Pinfl before: " + pinfl );
-//            FindFaceComponent
-//                    .getInstance()
-//                    .getFamilyMembersData( pinfl )
-//                    .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-//        } catch ( Exception e ) {
-//            System.out.println( "Error while getting family members" );
-//            psychologyCard.setDaddyData( null );
-//            psychologyCard.setMommyData( null );
-//            psychologyCard.setChildData( null ); }
+        try { FindFaceComponent
+                    .getInstance()
+                    .getViolationListByPinfl( pinfl )
+                    .doOnError( throwable -> {
+                        System.out.println( "ERROR before sending request: " + throwable.getCause() );
+                        System.out.println( "ERROR before sending request: " + throwable.getMessage() ); } )
+                    .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
+        } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
+
+        try {
+            System.out.println( "Pinfl before: " + pinfl );
+            FindFaceComponent
+                    .getInstance()
+                    .getFamilyMembersData( pinfl )
+                    .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+        } catch ( Exception e ) {
+            System.out.println( "Error while getting family members" );
+            psychologyCard.setDaddyData( null );
+            psychologyCard.setMommyData( null );
+            psychologyCard.setChildData( null ); }
 
         psychologyCard.setPinpp( this.pinpp( pinfl ) );
         psychologyCard.setPersonImage( this.getImageByPinfl( pinfl ) );
