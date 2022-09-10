@@ -548,7 +548,7 @@ public class SerDes implements Runnable {
                     .get( 0 )
                     .getPassport()
                     .split( " " )[ 0 ] );
-            this.getHeaders().put( "Authorization", "Bearer " + token );
+            this.getHeaders().put( "Authorization", token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList(
                             Unirest
