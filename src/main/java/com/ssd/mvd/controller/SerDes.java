@@ -546,7 +546,11 @@ public class SerDes implements Runnable {
                     this.stringToArrayList(
                             Unirest
                                     .get( this.getApiForTrainTicketConsumerService() +
-                                            psychologyCard.getPapilonData().get( 0 ).getPassport() )
+                                            psychologyCard
+                                                    .getPapilonData()
+                                                    .get( 0 )
+                                                    .getPassport()
+                                                    .split( " " )[ 0 ] )
                                     .headers( this.getHeaders() )
                                     .asJson()
                                     .getBody()
