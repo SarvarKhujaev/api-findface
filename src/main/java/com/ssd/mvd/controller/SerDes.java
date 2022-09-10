@@ -154,6 +154,20 @@ public class SerDes implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
+        System.out.println( "Pinpp: " + this.getApiForPinpp() );
+        System.out.println( "Cadastr: " + this.getApiForCadastr() );
+        System.out.println( "getApiForFIOToken: " + this.getApiForFIOToken() );
+        System.out.println( "getApiForGaiToken: " + this.getApiForGaiToken() );
+        System.out.println( "getApiForInsurance: " + this.getApiForInsurance() );
+        System.out.println( "getApiForPersonImage: " + this.getApiForPersonImage() );
+        System.out.println( "getApiForVehicleData: " + this.getApiForVehicleData() );
+        System.out.println( "getApiForViolationList: " + this.getApiForViolationList() );
+        System.out.println( "getApiForPassportModel: " + this.getApiForPassportModel() );
+        System.out.println( "getApiForModelForCarList: " + this.getApiForModelForCarList() );
+        System.out.println( "getApiForModelForAddress: " + this.getApiForModelForAddress() );
+        System.out.println( "getApiForDoverennostList: " + this.getApiForDoverennostList() );
+        System.out.println( "getApiForPersonDataFromZaks: " + this.getApiForPersonDataFromZaks() );
+        System.out.println( "getApiForTrainTicketConsumerService: " + this.getApiForTrainTicketConsumerService() );
         this.updateTokens(); }
 
     private void updateTokens () {
