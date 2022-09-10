@@ -541,7 +541,14 @@ public class SerDes implements Runnable {
         } catch ( Exception e ) { return psychologyCard; } }
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard, String token ) {
-        try { this.getHeaders().put( "Authorization", "Bearer " + token );
+        try {
+            System.out.println( "TOKEN: " + token );
+            System.out.println( "PASSPORT_SERIES: " + psychologyCard
+                    .getPapilonData()
+                    .get( 0 )
+                    .getPassport()
+                    .split( " " )[ 0 ] );
+            this.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList(
                             Unirest
