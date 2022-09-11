@@ -470,7 +470,7 @@ public class SerDes implements Runnable {
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
-        try { FindFaceComponent
+        try { if ( pinfl != null && !pinfl.isEmpty() ) FindFaceComponent
                     .getInstance()
                     .getViolationListByPinfl( pinfl )
                     .doOnError( throwable -> {
@@ -481,7 +481,7 @@ public class SerDes implements Runnable {
 
         try {
             System.out.println( "Pinfl before: " + pinfl );
-            FindFaceComponent
+            if ( pinfl != null && !pinfl.isEmpty() ) FindFaceComponent
                     .getInstance()
                     .getFamilyMembersData( pinfl )
                     .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
@@ -542,12 +542,6 @@ public class SerDes implements Runnable {
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard, String token ) {
         try {
-            System.out.println( "TOKEN: " + token );
-            System.out.println( "PASSPORT_SERIES: " + psychologyCard
-                    .getPapilonData()
-                    .get( 0 )
-                    .getPassport()
-                    .split( " " )[ 0 ] );
             this.getHeaders().put( "Authorization", token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList(
@@ -575,7 +569,8 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        try { FindFaceComponent
+        try { if ( data.getPerson().getPinpp() != null
+                && !data.getPerson().getPinpp().isEmpty() ) FindFaceComponent
                     .getInstance()
                     .getViolationListByPinfl( data.getPerson().getPinpp() )
                     .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );

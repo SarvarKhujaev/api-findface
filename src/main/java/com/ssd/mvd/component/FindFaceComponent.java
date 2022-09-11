@@ -23,7 +23,7 @@ public class FindFaceComponent {
             .retrieveMono( Results.class ); }
 
     public Mono< List > getViolationListByPinfl ( String pinfl ) {
-        try { return pinfl != null ?
+        try { return pinfl != null && !pinfl.isEmpty() ?
                 this.requester
                         .route( "getViolationListByPinfl" )
                         .data( pinfl )
@@ -32,14 +32,16 @@ public class FindFaceComponent {
                             System.out.println( "ERROR: " + throwable.getCause() );
                             System.out.println( "ERROR: " + throwable.getMessage() ); } )
                         .defaultIfEmpty( new ArrayList() )
-                : null;
+                : Mono.just( new ArrayList() );
         } catch ( Exception e ) { return Mono.empty(); } }
 
     public Mono< Results > getFamilyMembersData ( String pinfl ) {
-        System.out.println( "Pinfl in getFamilyMembersData: " + pinfl );
-        return this.requester
-            .route( "getFamilyMembersData" )
-            .data( pinfl )
-            .retrieveMono( Results.class )
-                .defaultIfEmpty( new Results() ); }
+        if ( pinfl != null && !pinfl.isEmpty() ) {
+            System.out.println( "Pinfl in getFamilyMembersData: " + pinfl );
+            return this.requester
+                    .route( "getFamilyMembersData" )
+                    .data( pinfl )
+                    .retrieveMono( Results.class )
+                    .defaultIfEmpty( new Results() ); }
+        else return Mono.just( new Results() ); }
 }
