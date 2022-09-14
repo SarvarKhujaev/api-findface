@@ -323,7 +323,7 @@ public class SerDes implements Runnable {
             this.sendNotification( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() );
             return new Data(); } }
 
-    public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
+    public com.ssd.mvd.entity.modelForPassport.Data deserialize ( String SerialNumber, String BirthDate ) {
         this.getFields().clear();
         HttpResponse< JsonNode > response1;
         this.getFields().put( "BirthDate", BirthDate );
@@ -477,6 +477,9 @@ public class SerDes implements Runnable {
             if ( psychologyCard.getModelForCarList() != null
                     && psychologyCard
                     .getModelForCarList()
+                    .getModelForCarList() != null
+                    && psychologyCard
+                    .getModelForCarList()
                     .getModelForCarList()
                     .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
             this.setPersonPrivateData( psychologyCard );
@@ -529,6 +532,9 @@ public class SerDes implements Runnable {
         psychologyCard.setModelForCarList( this.getModelForCarList( data.getPerson().getPinpp() ) );
         psychologyCard.setModelForAddress( this.getModelForAddress( data.getPerson().getPCitizen() ) );
         if ( psychologyCard.getModelForCarList() != null
+                && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList() != null
                 && psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
