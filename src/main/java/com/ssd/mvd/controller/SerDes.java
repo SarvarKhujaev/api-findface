@@ -1,8 +1,6 @@
 package com.ssd.mvd.controller;
 
 import java.util.*;
-
-import com.ssd.mvd.entity.modelForCadastr.Person;
 import org.json.JSONObject;
 import org.json.JSONException;
 import reactor.core.publisher.Mono;
@@ -20,7 +18,6 @@ import com.ssd.mvd.entity.*;
 import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.kafka.KafkaDataControl;
-import com.ssd.mvd.FindFaceServiceApplication;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
@@ -33,99 +30,6 @@ public class SerDes implements Runnable {
     private String tokenForGai;
     private String tokenForFio;
     private String tokenForPassport;
-
-    // возврщает токен для сервисы ЗАГС через который введется поиск человека по Ф.И.О
-    private final String apiForFIOToken = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_FIO_TOKEN" );
-
-    // возвращает данные о человеке по его уникальному ПИНФЛ, внутри которого находиться Имя, Фамилия и т.д
-    private final String apiForPinpp = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_PINPP" );
-
-    // возвращает фото человека по его ПИНФЛ в формате base64
-    private String apiForPersonImage = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_PERSON_IMAGE" );
-
-    // возвращает паспортные данные человека по его году рождения и серии паспорта
-    private String apiForPassportModel = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_PASSPORT_MODEL" );
-
-    // по ПИНФЛ возвращает данные о всех людях прописанных в одном кадастре
-    private String apiForCadastr = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_CADASTR" );
-
-    // возвращает данные о постоянном месте жительства по ПИНФЛ
-    private String apiForModelForAddress = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_MODEL_FOR_ADDRESS" );
-
-    // по Фамилии, Имени и Отчеству возвращает данные о человеке
-    // при запросе ообязательно нужно уточнить фамилию,
-    // кроме того надо вторым аргументом указать имя, либо отчество
-    private String apiForPersonDataFromZaks = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_PERSON_DATA_FROM_ZAKS" );
-
-    // в случае если на фотографии находиться иностранец, то запрос отправляется на сервис Шамсиддина
-    // который возвращает список с данными о передвижении этого иностранца
-    private String apiForTrainTicketConsumerService = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_TRAIN_TICKET_CONSUMER_SERVICE" );
-
-    // используется для получения токена от сервиса ГАИ, срок использования 1 день
-    private String apiForGaiToken = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_GAI_TOKEN" );
-
-    // по гос номеру машины возвращает данные о тонировке, если такая имеется
-    private String apiForTonirovka = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_TONIROVKA" );
-
-    // по гос номеру машины возвращает данные о страховке, если такая имеется
-    private String apiForInsurance = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_FOR_INSURANCE" );
-
-    // по гос номеру машины возвращает данные о самой машине
-    private String apiForVehicleData = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_VEHICLE_DATA" );
-
-    // по гос номеру машины возвращает данные о штрафах, если таковые имеются
-    private String apiForViolationList = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_VIOLATION_LIST" );
-
-    // по ПИНФЛ человека возвращает данные о всех машинах записанных на его имя, если такие имеются
-    private String apiForModelForCarList = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_MODEL_FOR_CAR_LIST" );
-
-    // по ПИНФЛ человека возвращает данные о всех доверенностях на машину, если такие имеются
-    private String apiForDoverennostList = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.API_FOR_DOVERENNOST_LIST" );
 
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
@@ -154,27 +58,14 @@ public class SerDes implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
-        System.out.println( "Pinpp: " + this.getApiForPinpp() );
-        System.out.println( "Cadastr: " + this.getApiForCadastr() );
-        System.out.println( "getApiForFIOToken: " + this.getApiForFIOToken() );
-        System.out.println( "getApiForGaiToken: " + this.getApiForGaiToken() );
-        System.out.println( "getApiForInsurance: " + this.getApiForInsurance() );
-        System.out.println( "getApiForPersonImage: " + this.getApiForPersonImage() );
-        System.out.println( "getApiForVehicleData: " + this.getApiForVehicleData() );
-        System.out.println( "getApiForViolationList: " + this.getApiForViolationList() );
-        System.out.println( "getApiForPassportModel: " + this.getApiForPassportModel() );
-        System.out.println( "getApiForModelForCarList: " + this.getApiForModelForCarList() );
-        System.out.println( "getApiForModelForAddress: " + this.getApiForModelForAddress() );
-        System.out.println( "getApiForDoverennostList: " + this.getApiForDoverennostList() );
-        System.out.println( "getApiForPersonDataFromZaks: " + this.getApiForPersonDataFromZaks() );
-        System.out.println( "getApiForTrainTicketConsumerService: " + this.getApiForTrainTicketConsumerService() );
         this.updateTokens(); }
 
     private void updateTokens () {
+        System.out.println( "Updating tokens..." );
         this.getFields().put( "CurrentSystem", "40" );
         this.getFields().put( "Login", "SharafIT_PSP" );
         this.getFields().put( "Password" , "Sh@r@fITP@$P" );
-        try { this.setTokenForGai( String.valueOf( Unirest.post( this.getApiForGaiToken() )
+        try { this.setTokenForGai( String.valueOf( Unirest.post( "http://172.250.1.65:7101/Agency/token" )
                 .fields( this.getFields() )
                 .asJson()
                 .getBody()
@@ -182,7 +73,7 @@ public class SerDes implements Runnable {
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
             this.setTokenForFio(
-                    String.valueOf( Unirest.post( this.getApiForFIOToken() )
+                    String.valueOf( Unirest.post( "http://172.250.1.203:9292/Auth/Agency/token" )
                             .header("Content-Type", "application/json")
                             .body("{\r\n    \"Login\": \"SharafIT_PSP\",\r\n    \"Password\": \"Sh@r@fITP@$P\",\r\n    \"CurrentSystem\": \"40\"\r\n}")
                             .asJson()
@@ -194,19 +85,46 @@ public class SerDes implements Runnable {
     private void sendNotification ( String methodName, String params, String reason ) {
         this.getNotification().setPinfl( params );
         this.getNotification().setReason( reason );
-        System.out.println( this.getResponse().getBody() );
         this.getNotification().setMethodName( methodName );
         this.getNotification().setCallingTime( new Date() );
         this.getNotification().setJsonNode( this.getResponse().getBody() );
+        if ( this.getResponse() != null ) System.out.println( this.getResponse().getBody()
+                + " Status: " + this.getResponse().getStatus() );
         KafkaDataControl.getInstance().writeToKafka( this.getGson().toJson( this.getNotification() ) ); }
 
-    public Insurance insurance ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try {
-            System.out.println( "Pinpp in insurance: " + pinpp );
+    public Pinpp pinpp ( String pinpp ) {
+        HttpResponse< JsonNode > response1;
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
+        try { System.out.println( "Pinpp: " + pinpp );
+            response1 = Unirest.get( "http://172.250.1.67:7145/PersonInformation?pinpp=" + pinpp )
+                    .headers( this.getHeaders() )
+                    .asJson();
+            this.setResponse( response1 );
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.pinpp( pinpp ); }
             return this.getGson()
-                .fromJson( Unirest.get( this.getApiForInsurance() + pinpp )
-                        .headers( this.getHeaders() )
-                        .asJson()
+                .fromJson( response1
+                        .getBody()
+                        .getObject()
+                        .toString(), Pinpp.class ); }
+        catch ( Exception e ) {
+            this.sendNotification ( "pinpp", pinpp, "Error in service: " + e.getMessage() );
+            return new Pinpp(); } }
+
+    public Insurance insurance ( String pinpp ) {
+        HttpResponse< JsonNode > response1;
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { System.out.println( "Pinpp in insurance: " + pinpp );
+            response1 = Unirest.get( "http://172.250.1.67:7145/api/Vehicle/InsuranceInformation?platenumber=" + pinpp )
+                    .headers( this.getHeaders() )
+                    .asJson();
+            this.setResponse( response1 );
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.insurance( pinpp ); }
+            return this.getGson()
+                .fromJson( response1
                         .getBody()
                         .getArray()
                         .get( 0 )
@@ -215,14 +133,38 @@ public class SerDes implements Runnable {
             this.sendNotification( "insurance", pinpp, "Error: " + e.getMessage() );
             return new Insurance(); } }
 
+    public String getImageByPinfl ( String pinpp ) {
+        HttpResponse< JsonNode > response1;
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+        try { System.out.println( "Pinpp: " + pinpp );
+            response1 = Unirest.get( "http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=" + pinpp )
+                    .headers( this.getHeaders() )
+                    .asJson();
+            this.setResponse( response1 );
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return getImageByPinfl( pinpp ); }
+            JSONObject object = response1
+                .getBody()
+                .getObject();
+            return object != null ? object.getString( "Data" ) : "image was not found";
+        } catch ( JSONException | UnirestException e ) {
+            this.sendNotification( "getImageByPinfl", pinpp, "Error: " + e.getMessage() );
+            return "Error"; } }
+
     public ModelForCar getVehicleData ( String gosno ) {
+        HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { System.out.println( "Gosno in getVehicleData: " + gosno );
-            this.setResponse( Unirest.get( this.getApiForVehicleData() + gosno )
+            response1 = Unirest.get( "http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=" + gosno )
                     .headers( this.getHeaders() )
-                    .asJson() );
+                    .asJson();
+            this.setResponse( response1 );
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getVehicleData( gosno ); }
             if ( this.getResponse().getStatus() == 200 ) return this.getGson()
-                .fromJson( this.getResponse()
+                .fromJson( response1
                         .getBody()
                         .getArray()
                         .get( 0 )
@@ -235,13 +177,17 @@ public class SerDes implements Runnable {
             return new ModelForCar(); } }
 
     public Tonirovka getVehicleTonirovka ( String gosno ) {
+        HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try {
-            System.out.println( "Gosno in getVehicleTonirovka: " + gosno );
+        try { System.out.println( "Gosno in getVehicleTonirovka: " + gosno );
+            response1 = Unirest.get( "http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=" + gosno )
+                    .headers( this.getHeaders() )
+                    .asJson();
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getVehicleTonirovka( gosno ); }
             return this.getGson()
-                .fromJson( Unirest.get( this.getApiForTonirovka() + gosno )
-                        .headers( this.getHeaders() )
-                        .asJson()
+                .fromJson( response1
                         .getBody()
                         .toString(), Tonirovka.class );
         } catch ( Exception e ) {
@@ -251,9 +197,12 @@ public class SerDes implements Runnable {
     public ViolationsList getViolationList ( String gosno ) {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { System.out.println( "Gosno in getViolationList: " + gosno );
-            this.setResponse( Unirest.get( this.getApiForViolationList() + gosno )
+            this.setResponse( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/ViolationsInformation?PlateNumber=" + gosno )
                     .headers( this.getHeaders() )
                     .asJson() );
+            if ( this.getResponse().getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getViolationList( gosno ); }
             if ( this.getResponse().getStatus() == 200 ) return new ViolationsList( this.stringToArrayList(
                 this.getResponse()
                         .getBody()
@@ -269,9 +218,12 @@ public class SerDes implements Runnable {
     public ModelForCarList getModelForCarList ( String pinfl ) {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { System.out.println( "Pinfl in getModelForCarList: " + pinfl );
-            this.setResponse( Unirest.get( this.getApiForModelForCarList() + pinfl )
+            this.setResponse( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/PersonVehiclesInformation?pinpp=" + pinfl )
                     .headers( this.getHeaders() )
                     .asJson() );
+            if ( this.getResponse().getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getModelForCarList( pinfl ); }
             if ( this.getResponse().getStatus() == 200 ) return new ModelForCarList( this.stringToArrayList(
                 this.getResponse()
                         .getBody()
@@ -287,10 +239,14 @@ public class SerDes implements Runnable {
     public DoverennostList getDoverennostList ( String gosno ) {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { System.out.println( "Gosno in getDoverennostList: " + gosno );
+            this.setResponse( Unirest.get( "http://172.250.1.67:7145/api/Vehicle/AttorneyInformation?platenumber=" + gosno )
+                    .headers( this.getHeaders() )
+                    .asJson() );
+            if ( this.getResponse().getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getDoverennostList( gosno ); }
             return new DoverennostList( this.stringToArrayList(
-                    Unirest.get( this.getApiForDoverennostList() + gosno )
-                            .headers( this.getHeaders() )
-                            .asJson()
+                    this.getResponse()
                             .getBody()
                             .getArray()
                             .toString(), Doverennost[].class ) ); }
@@ -298,42 +254,20 @@ public class SerDes implements Runnable {
             this.sendNotification( "getDoverennostList", gosno, "Error: " + e.getMessage() );
             return new DoverennostList( new ArrayList<>() ); } }
 
-    public Pinpp pinpp ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try {
-            System.out.println( "Pinpp: " + pinpp );
-            return this.getGson()
-                    .fromJson( Unirest.get( this.getApiForPinpp() + pinpp )
-                            .headers( this.getHeaders() )
-                            .asJson()
-                            .getBody()
-                            .getObject()
-                            .toString(), Pinpp.class ); }
-        catch ( Exception e ) {
-            this.sendNotification ( "pinpp", pinpp, "Error in service: " + e.getMessage() );
-            return new Pinpp(); } }
-
-    public String getImageByPinfl ( String pinpp ) { this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { System.out.println( "Pinpp: " + pinpp );
-            JSONObject object = Unirest.get( this.getApiForPersonImage() + pinpp )
-                    .headers( this.getHeaders() )
-                    .asJson()
-                    .getBody()
-                    .getObject();
-            return object != null ? object.getString( "Data" ) : "image was not found";
-        } catch ( JSONException | UnirestException e ) {
-            this.sendNotification( "getImageByPinfl", pinpp, "Error: " + e.getMessage() );
-            return "Error"; } }
-
     private ModelForAddress getModelForAddress ( String pinfl ) {
-        try { System.out.println( "Pinfl in getModelForAddress: " + pinfl );
+        try { System.out.println( "Gosno in getModelForAddress: " + pinfl );
             this.getFields().clear();
             this.getFields().put( "Pcitizen", pinfl );
             this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
+            this.setResponse( Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetAddress" )
+                    .headers( this.getHeaders() )
+                    .field( "Pcitizen", pinfl )
+                    .asJson() );
+            if ( this.getResponse().getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getModelForAddress( pinfl ); }
             return this.getGson()
-                    .fromJson( Unirest.post( this.getApiForModelForAddress() )
-                            .headers( this.getHeaders() )
-                            .field( "Pcitizen", pinfl )
-                            .asJson()
+                    .fromJson( this.getResponse()
                             .getBody()
                             .getObject()
                             .get( "Data" )
@@ -347,16 +281,21 @@ public class SerDes implements Runnable {
                 ^ fio.getName() == null
                 && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
         this.getFields().clear();
+        HttpResponse< String > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
         this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
         this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
         this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
-        try { PersonTotalDataByFIO person = this.getGson()
-                .fromJson( Unirest.post( this.getApiForPersonDataFromZaks() )
-                                .headers( this.getHeaders() )
-                                .fields( this.getFields() )
-                                .asString()
-                                .getBody(),
+        try {
+            response1 = Unirest.post( "http://172.250.1.203:9292/Zags/api/v1/ZagsReference/GetPersonInfo" )
+                    .headers( this.getHeaders() )
+                    .fields( this.getFields() )
+                    .asString();
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getPersonTotalDataByFIO( fio ); }
+            PersonTotalDataByFIO person = this.getGson()
+                .fromJson( response1.getBody(),
                         PersonTotalDataByFIO.class );
             if ( person != null && person.getData().size() > 0 ) person.getData()
                     .forEach( person1 -> person1.setPersonImage( this.getImageByPinfl( person1.getPinpp() ) ) );
@@ -365,37 +304,49 @@ public class SerDes implements Runnable {
 
     public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
         this.getFields().clear();
+        HttpResponse< JsonNode > response1;
         this.getFields().put( "Pcadastre", pinfl );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try {  System.out.println( "Pinfl in deserialize 256: " + pinfl );
-            JSONObject object = Unirest.post( this.getApiForCadastr() )
-                        .headers( this.getHeaders() )
-                        .fields( this.getFields() )
-                        .asJson()
+        try {  System.out.println( "Gosno in deserialize 256: " + pinfl );
+            response1 = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/PersonsInCadastre" )
+                    .headers( this.getHeaders() )
+                    .fields( this.getFields() )
+                    .asJson();
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.deserialize( pinfl ); }
+            JSONObject object = response1
                         .getBody()
                         .getObject();
             return object != null ? this.getGson().fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
         } catch ( JSONException | UnirestException e ) {
-            this.sendNotification( "deserialize 286", pinfl, "Error: " + e.getMessage() );
+            this.sendNotification( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() );
             return new Data(); } }
 
     public com.ssd.mvd.entity.modelForPassport.Data  deserialize ( String SerialNumber, String BirthDate ) {
         this.getFields().clear();
+        HttpResponse< JsonNode > response1;
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
         System.out.println( "Data: " + SerialNumber + " : " + BirthDate );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { return this.getGson()
-                .fromJson( Unirest.post( this.getApiForPassportModel() )
-                        .headers( this.getHeaders() )
-                        .fields( this.getFields() )
-                        .asJson()
+        try {
+            response1 = Unirest.post( "http://172.250.1.67:7121/api/CensusOut/GetPerson" )
+                    .headers( this.getHeaders() )
+                    .fields( this.getFields() )
+                    .asJson();
+            this.setResponse( response1 );
+            if ( response1.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.deserialize( SerialNumber, BirthDate ); }
+            return this.getGson()
+                .fromJson( response1
                         .getBody()
                         .getObject()
                         .get( "Data" )
                         .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
         catch ( Exception e ) {
-            this.sendNotification( "deserialize 310", SerialNumber + "_" + BirthDate, "Error: " + e.getMessage() );
+            this.sendNotification( "deserialize Passport Data", SerialNumber + "_" + BirthDate, "Error: " + e.getMessage() );
             return new com.ssd.mvd.entity.modelForPassport.Data(); } }
 
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
@@ -412,25 +363,20 @@ public class SerDes implements Runnable {
                 .getPermanentRegistration() != null
                 && psychologyCard
                 .getModelForCadastr()
-                .getPermanentRegistration().size() > 0 )
-                for ( Person person : psychologyCard.getModelForCadastr()
-                        .getPermanentRegistration() ) {
-                                        System.out.println( "BirthDate in setPersonPrivateData: "
-                                                + person.getPDateBirth() );
+                .getPermanentRegistration().size() > 0 ) psychologyCard.getModelForCadastr()
+                            .getPermanentRegistration()
+                                    .forEach( person -> {
                                         if ( person
                                                 .getPDateBirth()
                                                 .equals( psychologyCard
                                                         .getPinpp()
                                                         .getBirthDate() ) ) {
-                                            System.out.println( "BirthDate in setPersonPrivateData after search: "
-                                                    + person.getPDateBirth() );
                                             psychologyCard.setModelForPassport (
                                                     this.deserialize (
                                                             person.getPPsp(),
                                                             person.getPDateBirth() ) );
                                             psychologyCard.setModelForAddress(
-                                                    this.getModelForAddress( person.getPCitizen() ) );
-                                            break; } }; }
+                                                    this.getModelForAddress( person.getPCitizen() ) ); } } ); }
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         psychologyCard.setChildData( results.getChildData() );
@@ -470,7 +416,7 @@ public class SerDes implements Runnable {
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
-        try { if ( pinfl != null && !pinfl.isEmpty() ) FindFaceComponent
+        try { FindFaceComponent
                     .getInstance()
                     .getViolationListByPinfl( pinfl )
                     .doOnError( throwable -> {
@@ -481,7 +427,7 @@ public class SerDes implements Runnable {
 
         try {
             System.out.println( "Pinfl before: " + pinfl );
-            if ( pinfl != null && !pinfl.isEmpty() ) FindFaceComponent
+            FindFaceComponent
                     .getInstance()
                     .getFamilyMembersData( pinfl )
                     .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
@@ -531,9 +477,6 @@ public class SerDes implements Runnable {
             if ( psychologyCard.getModelForCarList() != null
                     && psychologyCard
                     .getModelForCarList()
-                    .getModelForCarList() != null
-                    && psychologyCard
-                    .getModelForCarList()
                     .getModelForCarList()
                     .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
             this.setPersonPrivateData( psychologyCard );
@@ -541,17 +484,12 @@ public class SerDes implements Runnable {
         } catch ( Exception e ) { return psychologyCard; } }
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard, String token ) {
-        try {
-            this.getHeaders().put( "Authorization", token );
+        try { this.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList(
                             Unirest
-                                    .get( this.getApiForTrainTicketConsumerService() +
-                                            psychologyCard
-                                                    .getPapilonData()
-                                                    .get( 0 )
-                                                    .getPassport()
-                                                    .split( " " )[ 0 ] )
+                                    .get( "http://ms.ssd.uz/train-ticket-consumer/api/v1/photo?passportNumber=" +
+                                            psychologyCard.getPapilonData().get( 0 ).getPassport() )
                                     .headers( this.getHeaders() )
                                     .asJson()
                                     .getBody()
@@ -569,8 +507,8 @@ public class SerDes implements Runnable {
         PsychologyCard psychologyCard = new PsychologyCard();
         if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
-        try { if ( data.getPerson().getPinpp() != null
-                && !data.getPerson().getPinpp().isEmpty() ) FindFaceComponent
+        try {
+            FindFaceComponent
                     .getInstance()
                     .getViolationListByPinfl( data.getPerson().getPinpp() )
                     .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
@@ -593,9 +531,6 @@ public class SerDes implements Runnable {
         if ( psychologyCard.getModelForCarList() != null
                 && psychologyCard
                 .getModelForCarList()
-                .getModelForCarList() != null
-                && psychologyCard
-                .getModelForCarList()
                 .getModelForCarList()
                 .size() > 0 ) this.findAllDataAboutCar( psychologyCard );
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
@@ -605,6 +540,6 @@ public class SerDes implements Runnable {
     public void run () {
         while ( true ) {
             this.updateTokens();
-            System.out.println( "Updating tokens..." );
             try { Thread.sleep( 60 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
 }
+
