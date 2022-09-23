@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
     app:
-        image: ${CI_REGISTRY}/${CI_PROJECT_PATH}:latest
+        image: $CI_REGISTRY/$CI_PROJECT_PATH:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
         networks:
             - proxy_network
         ports:
@@ -38,9 +38,7 @@ services:
             API_FOR_MODEL_FOR_CAR_LIST: ${API_FOR_MODEL_FOR_CAR_LIST}
 
         deploy:
-            replicas: 1
-            placement:
-                constraints: [node.labels.mgmt != true ]
+            replicas: ${REPLICAS}
 
 networks:
     proxy_network:
