@@ -311,7 +311,7 @@ public class SerDes implements Runnable {
             return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
         } catch ( Exception e ) { return Mono.just( new PersonTotalDataByFIO() ); } }
 
-    public com.ssd.mvd.entity.modelForCadastr.Data deserialize ( String pinfl ) {
+    public Data deserialize ( String pinfl ) {
         this.getFields().clear();
         HttpResponse< JsonNode > response1;
         this.getFields().put( "Pcadastre", pinfl );
