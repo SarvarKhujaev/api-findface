@@ -92,4 +92,7 @@ public class RequestController {
     public Mono< Results > getFamilyMembersData ( String pinfl ) { return FindFaceComponent
             .getInstance()
             .getFamilyMembersData( pinfl ); }
+
+    @MessageMapping ( value = "ping" )
+    public Mono< Boolean > ping () { return Mono.just( true ); }
 }

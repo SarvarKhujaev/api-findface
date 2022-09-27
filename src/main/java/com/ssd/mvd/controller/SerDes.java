@@ -53,11 +53,6 @@ public class SerDes implements Runnable {
     public <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.gson.fromJson( object, clazz ) ); }
 
     private SerDes () {
-        System.out.println( FindFaceServiceApplication
-                .context
-                .getEnvironment()
-                .getProperty( "variables.API_PARAMS" ) );
-        System.out.println( this.getConfig().getAPI_FOR_CADASTR() );
         Unirest.setObjectMapper( new ObjectMapper() {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
