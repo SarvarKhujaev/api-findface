@@ -408,7 +408,8 @@ public class SerDes implements Runnable {
                 && psychologyCard.getDaddyData().getItems().size() > 0 ) psychologyCard
                     .getDaddyData()
                     .getItems()
-                    .forEach( familyMember -> familyMember.setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ) );
+                    .forEach( familyMember -> familyMember
+                            .setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ) );
 
         if ( psychologyCard.getMommyData() != null
                 && psychologyCard.getMommyData().getItems() != null
@@ -416,7 +417,8 @@ public class SerDes implements Runnable {
                 && psychologyCard.getMommyData().getItems().size() > 0 ) psychologyCard
                 .getMommyData()
                 .getItems()
-                .forEach( familyMember -> familyMember.setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ) ); }
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getImageByPinfl( familyMember.getPnfl() ) ) ); }
 
     public PsychologyCard getPsychologyCard ( String pinfl ) {
         if ( pinfl == null ) return null;
@@ -493,10 +495,8 @@ public class SerDes implements Runnable {
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard, String token ) {
         try { this.getHeaders().put( "Authorization", "Bearer " + token );
-            psychologyCard.setForeignerList(
-                    this.stringToArrayList(
-                            Unirest
-                                    .get( this.getConfig().getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
+            psychologyCard.setForeignerList( this.stringToArrayList( Unirest.get( this.getConfig()
+                                    .getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
                                             psychologyCard
                                                     .getPapilonData()
                                                     .get( 0 )
