@@ -73,6 +73,7 @@ public class SerDes implements Runnable {
         this.getFields().put( "Login", this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
         this.getFields().put( "Password" , this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
         this.getFields().put( "CurrentSystem", this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
+        System.out.println( this.getConfig().getAPI_FOR_GAI_TOKEN() );
         try { this.setTokenForGai( String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_GAI_TOKEN() )
                 .fields( this.getFields() )
                 .asJson()
@@ -80,6 +81,7 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
+            System.out.println( this.getConfig().getAPI_FOR_FIO_TOKEN() );
             this.setTokenForFio(
                     String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
                             .header("Content-Type", "application/json" )
@@ -90,7 +92,9 @@ public class SerDes implements Runnable {
                             .getBody()
                             .getObject()
                             .get( "access_token" ) ) );
-        } catch ( UnirestException e ) { throw new RuntimeException(e); } }
+        } catch ( UnirestException e ) {
+            System.out.println( e.getMessage() );
+            this.updateTokens(); } }
 
     private void sendNotification ( String methodName, String params, String reason ) {
         this.getNotification().setPinfl( params );
