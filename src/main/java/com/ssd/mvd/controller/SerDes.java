@@ -35,7 +35,12 @@ public class SerDes implements Runnable {
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
 
-    private Config config;
+    private final Config config = this.getGson()
+            .fromJson ( FindFaceServiceApplication
+                            .context
+                            .getEnvironment()
+                            .getProperty( "variables.API_PARAMS" ),
+                    Config.class );
 
     private HttpResponse< JsonNode > response;
     private Notification notification = new Notification();
@@ -48,16 +53,6 @@ public class SerDes implements Runnable {
     public <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.gson.fromJson( object, clazz ) ); }
 
     private SerDes () {
-        System.out.println( FindFaceServiceApplication
-                .context
-                .getEnvironment()
-                .getProperty( "variables.API_PARAMS" ) );
-        this.setConfig( this.getGson()
-                .fromJson ( FindFaceServiceApplication
-                                .context
-                                .getEnvironment()
-                                .getProperty( "variables.API_PARAMS" ),
-                        Config.class ) );
         Unirest.setObjectMapper( new ObjectMapper() {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
