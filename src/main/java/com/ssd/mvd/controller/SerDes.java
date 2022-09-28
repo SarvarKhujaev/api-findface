@@ -35,12 +35,7 @@ public class SerDes implements Runnable {
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
 
-    private final Config config = this.getGson()
-            .fromJson ( FindFaceServiceApplication
-                            .context
-                            .getEnvironment()
-                            .getProperty( "variables.API_PARAMS" ),
-                    Config.class );
+    private Config config;
 
     private HttpResponse< JsonNode > response;
     private Notification notification = new Notification();
@@ -53,6 +48,16 @@ public class SerDes implements Runnable {
     public <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.gson.fromJson( object, clazz ) ); }
 
     private SerDes () {
+        System.out.println( FindFaceServiceApplication
+                .context
+                .getEnvironment()
+                .getProperty( "variables.API_PARAMS" ) );
+        this.setConfig( this.getGson()
+                .fromJson ( FindFaceServiceApplication
+                                .context
+                                .getEnvironment()
+                                .getProperty( "variables.API_PARAMS" ),
+                        Config.class ) );
         Unirest.setObjectMapper( new ObjectMapper() {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
@@ -73,7 +78,6 @@ public class SerDes implements Runnable {
         this.getFields().put( "Login", this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
         this.getFields().put( "Password" , this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
         this.getFields().put( "CurrentSystem", this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
-        System.out.println( this.getConfig().getAPI_FOR_GAI_TOKEN() );
         try { this.setTokenForGai( String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_GAI_TOKEN() )
                 .fields( this.getFields() )
                 .asJson()
@@ -81,7 +85,6 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-            System.out.println( this.getConfig().getAPI_FOR_FIO_TOKEN() );
             this.setTokenForFio(
                     String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
                             .header("Content-Type", "application/json" )
