@@ -1,5 +1,12 @@
 package com.ssd.mvd.kafka;
 
+import lombok.Data;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Collections;
+import java.time.LocalDateTime;
+import java.util.logging.Logger;
 import com.ssd.mvd.FindFaceServiceApplication;
 
 import org.apache.kafka.clients.admin.AdminClient;
@@ -12,14 +19,6 @@ import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
-import java.util.logging.Logger;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Properties;
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
-
 @Data
 public class KafkaDataControl {
     private final AdminClient client;
@@ -27,20 +26,27 @@ public class KafkaDataControl {
     private static KafkaDataControl instance = new KafkaDataControl();
     private final Logger logger = Logger.getLogger( KafkaDataControl.class.toString() );
 
-    public final String PATH = FindFaceServiceApplication
+    public static KafkaDataControl getInstance () { return instance != null ? instance : ( instance = new KafkaDataControl() ); }
+
+    private final String PATH = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.KAFKA_BROKER" );
 
-    public final String ID = FindFaceServiceApplication
+    private final String ID = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.GROUP_ID_FOR_KAFKA" );
 
-    public final String activeTask = FindFaceServiceApplication
+    private final String activeTask = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.ERROR_LOGS" );
+
+    private final String serviceStorageTopic = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.ADMIN_PANEL" );
 
     private Properties setProperties () {
         Properties properties = new Properties();
@@ -56,8 +62,6 @@ public class KafkaDataControl {
                 .build() ) );
         this.logger.info( "Topic: " + imei + " was created" ); }
 
-    public static KafkaDataControl getInstance () { return instance != null ? instance : ( instance = new KafkaDataControl() ); }
-
     private KafkaTemplate< String, String > kafkaTemplate () {
         Map< String, Object > map = new HashMap<>();
         map.put( ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.PATH );
@@ -69,6 +73,7 @@ public class KafkaDataControl {
         this.kafkaTemplate = this.kafkaTemplate();
         this.logger.info( "KafkaDataControl was created" );
         this.client = KafkaAdminClient.create( this.setProperties() );
+        this.getNewTopic( this.getServiceStorageTopic() );
         this.getNewTopic( this.getActiveTask() ); }
 
     public void writeToKafka ( String card ) {
@@ -78,6 +83,15 @@ public class KafkaDataControl {
                 logger.info( "Kafka got notification: " + card ); }
 
             @Override
-            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); }
-        } ); }
+            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
+
+    public void writeToKafkaServiceUsage ( String serviceUsage ) {
+        this.kafkaTemplate.send( this.getServiceStorageTopic(), serviceUsage )
+                .addCallback( new ListenableFutureCallback<>() {
+            @Override
+            public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
+                logger.info( "New user exposed your service: " + serviceUsage ); }
+
+            @Override
+            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
 }
