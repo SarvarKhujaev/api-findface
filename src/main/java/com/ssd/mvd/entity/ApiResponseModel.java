@@ -7,5 +7,5 @@ import lombok.Builder;
 public class ApiResponseModel {
     private Boolean success;
     private Status status;
-    private Data data;
+    private User user;
 }

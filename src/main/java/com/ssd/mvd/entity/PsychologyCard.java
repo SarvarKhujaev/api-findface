@@ -31,7 +31,7 @@ public class PsychologyCard {
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
     private com.ssd.mvd.entity.modelForPassport.Data modelForPassport;
 
-    public PsychologyCard ( Results value ) {
-        this.setPapilonData( value.getResults() );
-        this.setViolationList( value.getViolationList() ); }
+    public PsychologyCard ( Results results ) {
+        this.setPapilonData( results.getResults() );
+        this.setViolationList( results.getViolationList() ); }
 }
