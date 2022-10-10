@@ -4,6 +4,8 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -46,7 +48,7 @@ public class SerDes implements Runnable {
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
 
-    public <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
+    private <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
 
     private SerDes () {
         Unirest.setObjectMapper( new ObjectMapper() {
@@ -62,7 +64,8 @@ public class SerDes implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.getHeaders().put( "accept", "application/json" );
-        this.updateTokens(); }
+//        this.updateTokens();
+    }
 
     private void updateTokens () {
         log.info( "Updating tokens..." );
@@ -429,11 +432,14 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getPersonTotalDataByFIO( fio ); }
             PersonTotalDataByFIO person = this.getGson()
-                    .fromJson( response1.getBody(), PersonTotalDataByFIO.class );
+                    .fromJson( response1.getBody(),
+                            PersonTotalDataByFIO.class );
             if ( person != null && person.getData().size() > 0 ) {
                 person.getData()
                         .forEach( person1 -> person1.setPersonImage( this.getImageByPinfl( person1.getPinpp() ) ) );
                 Mono.just( new UserRequest( person, fio ) )
+                        .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                                error.getMessage(), object ) ) )
                         .subscribe( userRequest -> KafkaDataControl
                                 .getInstance()
                                 .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) ); }
@@ -444,12 +450,12 @@ public class SerDes implements Runnable {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
         try { FindFaceComponent
-                    .getInstance()
-                    .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
-                    .doOnError( throwable -> {
-                        log.error( "ERROR before sending request: " + throwable.getCause() );
-                        log.error( "ERROR before sending request: " + throwable.getMessage() ); } )
-                    .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
+                .getInstance()
+                .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) ) )
+                .onErrorReturn( new ArrayList() )
+                .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
         } catch ( Exception e ) { psychologyCard.setViolationList( new ArrayList<>() ); }
 
         try {
@@ -470,6 +476,8 @@ public class SerDes implements Runnable {
         this.findAllDataAboutCar( psychologyCard );
         this.setPersonPrivateData( psychologyCard );
         Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
+                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) ) )
                 .subscribe( userRequest -> KafkaDataControl
                         .getInstance()
                         .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
@@ -492,6 +500,8 @@ public class SerDes implements Runnable {
                     .get( "data" )
                     .toString(), Foreigner[].class ) );
             Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
+                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                            error.getMessage(), object ) ) )
                     .subscribe( userRequest -> KafkaDataControl
                             .getInstance()
                             .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
@@ -531,6 +541,8 @@ public class SerDes implements Runnable {
             this.findAllDataAboutCar( psychologyCard );
             this.setPersonPrivateData( psychologyCard );
             Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
+                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                            error.getMessage(), object ) ) )
                     .subscribe( userRequest -> KafkaDataControl
                             .getInstance()
                             .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
@@ -551,7 +563,6 @@ public class SerDes implements Runnable {
         try { FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( data.getPerson().getPinpp() )
-                .defaultIfEmpty( new Results() )
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
         } catch ( Exception e ) {
             psychologyCard.setDaddyData( null );
@@ -565,14 +576,32 @@ public class SerDes implements Runnable {
         psychologyCard.setModelForCadastr( this.deserialize( psychologyCard.getPinpp().getCadastre() ) );
         this.findAllDataAboutCar( psychologyCard );
         Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
+                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) ) )
                 .subscribe( userRequest -> KafkaDataControl
                         .getInstance()
                         .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
         return psychologyCard; }
 
+    public String base64ToLink ( String base64 ) {
+        this.getFields().clear();
+        this.getFields().put( "photo", base64 );
+        this.getFields().put( "serviceName", "psychologyCard" );
+        try { log.info( "Converting image to Link in: base64ToLink method"  );
+            return Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+                            .fields( this.getFields() )
+                            .asJson()
+                            .getBody()
+                            .getObject()
+                            .get( "path" )
+                            .toString(); }
+        catch ( UnirestException e ) {
+            this.sendNotification( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
+            return "error"; } }
+
     @Override
     public void run () {
         while ( true ) {
             this.updateTokens();
-            try { Thread.sleep( 60 * 60 * 1000 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
+            try { TimeUnit.HOURS.sleep( 3 ); } catch (InterruptedException e ) { e.printStackTrace(); } } }
 }

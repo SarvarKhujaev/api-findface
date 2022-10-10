@@ -92,4 +92,9 @@ public class Config {
             .context
             .getEnvironment()
             .getProperty( "variables.API_FOR_TRAIN_TICKET_CONSUMER_SERVICE" );
+
+    private final String BASE64_IMAGE_TO_LINK_CONVERTER_API = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.BASE64_IMAGE_TO_LINK_CONVERTER_API" );
 }

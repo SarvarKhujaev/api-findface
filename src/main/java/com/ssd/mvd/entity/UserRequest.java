@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public class UserRequest {
-    private Date createdAt;
+    private Long createdAt;
     private PersonInfo personInfo;
 
     private String userPassportNumber;
@@ -16,14 +16,14 @@ public class UserRequest {
     private final String microserviceName = "api-findface";
 
     public UserRequest ( PersonTotalDataByFIO personTotalDataByFIO, FIO fio ) {
-        this.setCreatedAt( new Date() );
+        this.setCreatedAt( new Date().getTime() );
         this.setPersonInfo( new PersonInfo( personTotalDataByFIO ) );
 
         this.setIntegratedServiceName( "ZAKS" );
         this.setUserPassportNumber( fio.getUser().getPassportNumber() ); }
 
     public UserRequest ( PsychologyCard psychologyCard, ApiResponseModel apiResponseModel ) {
-        this.setCreatedAt( new Date() );
+        this.setCreatedAt( new Date().getTime() );
         this.setPersonInfo( new PersonInfo( psychologyCard ) );
 
         this.setIntegratedServiceName( "OVIR" );
