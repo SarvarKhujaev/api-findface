@@ -14,6 +14,7 @@ variables:
 
     ERROR_LOGS : ${ERROR_LOGS}
     ADMIN_PANEL : adminpanel_integratedServicesUserLog_0.0.1
+    BASE64_IMAGE_TO_LINK_CONVERTER_API: https://ms.ssd.uz/files/api/v1/image/base64
 
     KAFKA_BROKER : ${KAFKA_BROKER}
     GROUP_ID_FOR_KAFKA : ${GROUP_ID_FOR_KAFKA}
