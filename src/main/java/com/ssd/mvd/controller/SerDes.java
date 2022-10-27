@@ -105,16 +105,20 @@ public class SerDes implements Runnable {
 
     private final Function< String, String > base64ToLink = base64 -> {
         this.getFields().clear();
+        HttpResponse< JsonNode > response;
         this.getFields().put( "photo", base64 );
         this.getFields().put( "serviceName", "psychologyCard" );
         try { log.info( "Converting image to Link in: base64ToLink method"  );
-            return Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+            response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
                     .fields( this.getFields() )
-                    .asJson()
+                    .asJson();
+            return response.getStatus() == 200
+                    ? response
                     .getBody()
                     .getObject()
-                    .get( "data" )
-                    .toString(); }
+                    .get( "Data" )
+                    .toString()
+                    : "not found"; }
         catch ( UnirestException e ) {
             this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
             return "error"; } };
@@ -314,7 +318,6 @@ public class SerDes implements Runnable {
             response1 = Unirest.get( this.getConfig().getAPI_FOR_FOR_INSURANCE() + pinpp )
                     .headers( this.getHeaders() )
                     .asJson();
-            this.setResponse( response1 );
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
                 return this.insurance( pinpp ); }
@@ -616,7 +619,7 @@ public class SerDes implements Runnable {
                                 .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) ); }
             return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
         } catch ( Exception e ) {
-            this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(),
+            this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS(),
                     e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
