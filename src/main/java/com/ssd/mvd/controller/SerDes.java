@@ -459,7 +459,7 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() );
             return new DoverennostList( new ArrayList<>() ); } }
 
-    private final Predicate< HttpResponse< JsonNode > > check500Error = response -> response.getStatus() == 500
+    private final Predicate< HttpResponse< ? > > check500Error = response -> response.getStatus() == 500
             ^ response.getStatus() == 501
             ^ response.getStatus() == 502
             ^ response.getStatus() == 503;
@@ -579,13 +579,14 @@ public class SerDes implements Runnable {
 
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
         if ( fio.getSurname() == null
-                ^ fio.getName() == null
+                && fio.getName() == null
                 && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
         this.getFields().clear();
         HttpResponse< String > httpResponse;
+        System.out.println( "\n\nFio: \n" + fio );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
-        this.getFields().put( "Surname", fio.getSurname().toUpperCase( Locale.ROOT ) );
         this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Surname", fio.getSurname() != null ? fio.getSurname().toUpperCase( Locale.ROOT ) : null );
         this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
         try { httpResponse = Unirest.post( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
                 .headers( this.getHeaders() )
@@ -595,10 +596,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getPersonTotalDataByFIO( fio ); }
 
-            if ( httpResponse.getStatus() == 500
-                    ^ httpResponse.getStatus() == 501
-                    ^ httpResponse.getStatus() == 502
-                    ^ httpResponse.getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS(),
+            if ( this.check500Error.test( httpResponse ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS(),
                     httpResponse.getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
