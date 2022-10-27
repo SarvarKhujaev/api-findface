@@ -67,10 +67,13 @@ public class PersonInfo {
                     ? psychologyCard
                     .getPinpp()
                     .getCadastre() : "unknown" );
-            this.setPhoto( psychologyCard
-                    .getPersonImage() != null
-                    ? psychologyCard
-                    .getPersonImage() : "not found" ); }
+            this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( psychologyCard
+                            .getPapilonData()
+                            .get( 0 )
+                            .getPhoto() ) ); }
 
         else {
             this.setPassportNumber ( psychologyCard

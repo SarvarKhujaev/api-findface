@@ -4,9 +4,9 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -23,6 +23,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.entity.modelForGai.*;
+import com.ssd.mvd.entity.family.Family;
 import com.ssd.mvd.entityForLogging.Item;
 import com.ssd.mvd.kafka.KafkaDataControl;
 import com.ssd.mvd.entityForLogging.ErrorLog;
@@ -160,10 +161,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getPinpp().apply( pinpp ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_PINPP(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_PINPP(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
@@ -195,10 +193,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getDeserialize().apply( pinfl ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog(
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog(
                             this.getConfig().getAPI_FOR_CADASTR(),
                             this.getResponse().getStatusText(),
                             IntegratedServiceApis.OVIR.getName(),
@@ -228,10 +223,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return getGetImageByPinfl().apply( pinpp ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_IMAGE(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_IMAGE(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
@@ -260,10 +252,7 @@ public class SerDes implements Runnable {
             if ( this.getResponse().getStatus() == 401 ) {
                 this.updateTokens();
                 return this.getGetModelForAddress().apply( pinfl ); }
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
@@ -297,10 +286,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.deserialize( SerialNumber, BirthDate ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_PASSPORT_MODEL(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_PASSPORT_MODEL(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
@@ -321,40 +307,6 @@ public class SerDes implements Runnable {
                     "Error: " + e.getMessage() );
             return new com.ssd.mvd.entity.modelForPassport.Data(); } }
 
-    private final Function< String, Insurance > insurance = pinpp -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp in insurance: " + pinpp );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_FOR_INSURANCE() + pinpp )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            this.setResponse( response1 );
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.insurance( pinpp ); }
-
-            if ( response1.getStatus() == 500
-                    ^ response1.getStatus() == 501
-                    ^ response1.getStatus() == 502
-                    ^ response1.getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(),
-                    response1.getStatusText(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-
-            return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .getArray()
-                            .get( 0 )
-                            .toString(), Insurance.class );
-        } catch ( Exception e ) {
-            this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(),
-                    e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "insurance", pinpp, "Error: " + e.getMessage() );
-            return new Insurance(); } };
-
     public Insurance insurance ( String pinpp ) {
         HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
@@ -367,10 +319,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.insurance( pinpp ); }
 
-            if ( response1.getStatus() == 500
-                    ^ response1.getStatus() == 501
-                    ^ response1.getStatus() == 502
-                    ^ response1.getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(),
+            if ( this.check500Error.test( response1 ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(),
                     response1.getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -401,10 +350,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getVehicleData( gosno ); }
 
-            if ( response1.getStatus() == 500
-                    ^ response1.getStatus() == 501
-                    ^ response1.getStatus() == 502
-                    ^ response1.getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(),
+            if ( this.check500Error.test( response1 ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(),
                     response1.getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -437,10 +383,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getVehicleTonirovka( gosno ); }
 
-            if ( response1.getStatus() == 500
-                    ^ response1.getStatus() == 501
-                    ^ response1.getStatus() == 502
-                    ^ response1.getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_TONIROVKA(),
+            if ( this.check500Error.test( response1 ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_TONIROVKA(),
                     response1.getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -467,10 +410,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getViolationList( gosno ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -501,10 +441,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getDoverennostList( gosno ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_DOVERENNOST_LIST(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_DOVERENNOST_LIST(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -522,6 +459,11 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() );
             return new DoverennostList( new ArrayList<>() ); } }
 
+    private final Predicate< HttpResponse< JsonNode > > check500Error = response -> response.getStatus() == 500
+            ^ response.getStatus() == 501
+            ^ response.getStatus() == 502
+            ^ response.getStatus() == 503;
+
     private ModelForCarList getModelForCarList ( String pinfl ) {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
         try { log.info( "Pinfl in getModelForCarList: " + pinfl );
@@ -532,10 +474,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getModelForCarList( pinfl ); }
 
-            if ( this.getResponse().getStatus() == 500
-                    ^ this.getResponse().getStatus() == 501
-                    ^ this.getResponse().getStatus() == 502
-                    ^ this.getResponse().getStatus() == 503 ) this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(),
+            if ( this.check500Error.test( this.getResponse() ) ) this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(),
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
@@ -556,15 +495,17 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getModelForCarList", pinfl, "Error: " + e.getMessage() );
             return new ModelForCarList(); } }
 
+    private final Predicate< PsychologyCard > checkCarData = psychologyCard -> psychologyCard.getModelForCarList() != null
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList() != null
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList()
+            .size() > 0;
+
     private void findAllDataAboutCar ( PsychologyCard psychologyCard ) {
-        if ( psychologyCard.getModelForCarList() != null
-                && psychologyCard
-                .getModelForCarList()
-                .getModelForCarList() != null
-                && psychologyCard
-                .getModelForCarList()
-                .getModelForCarList()
-                .size() > 0 ) psychologyCard
+        if ( this.checkCarData.test( psychologyCard ) ) psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
                 .forEach( modelForCar -> {
@@ -572,16 +513,18 @@ public class SerDes implements Runnable {
             modelForCar.setTonirovka( this.getVehicleTonirovka( modelForCar.getPlateNumber() ) );
             modelForCar.setDoverennostList( this.getDoverennostList( modelForCar.getPlateNumber() ) ); } ); }
 
+    private final Predicate< PsychologyCard > checkPrivateData = psychologyCard -> psychologyCard.getModelForCadastr() != null
+            && psychologyCard
+            .getModelForCadastr()
+            .getPermanentRegistration() != null
+            && psychologyCard
+            .getModelForCadastr()
+            .getPermanentRegistration().size() > 0;
+
     private void setPersonPrivateData ( PsychologyCard psychologyCard ) {
         psychologyCard.setModelForCadastr( this.getDeserialize()
                 .apply( psychologyCard.getPinpp().getCadastre() ) );
-        if ( psychologyCard.getModelForCadastr() != null
-                && psychologyCard
-                .getModelForCadastr()
-                .getPermanentRegistration() != null
-                && psychologyCard
-                .getModelForCadastr()
-                .getPermanentRegistration().size() > 0 ) psychologyCard
+        if ( this.checkPrivateData.test( psychologyCard ) ) psychologyCard
                 .getModelForCadastr()
                 .getPermanentRegistration()
                 .forEach( person -> {
@@ -591,11 +534,15 @@ public class SerDes implements Runnable {
                                     .getPinpp()
                                     .getBirthDate() ) ) {
                         psychologyCard.setModelForPassport (
-                                this.deserialize (
-                                        person.getPPsp(),
+                                this.deserialize ( person.getPPsp(),
                                         person.getPDateBirth() ) );
                         psychologyCard.setModelForAddress(
                                 this.getGetModelForAddress().apply( person.getPCitizen() ) ); } } ); }
+
+    private final Predicate< Family > checkFamily = family -> family != null
+            && family.getItems() != null
+            && !family.getItems().isEmpty()
+            && family.getItems().size() > 0;
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         // личные данные человека чьи данные были переданы на данный сервис
@@ -609,30 +556,21 @@ public class SerDes implements Runnable {
         psychologyCard.setDaddyData( results.getDaddyData() );
         psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
-        if ( psychologyCard.getChildData() != null
-                && psychologyCard.getChildData().getItems() != null
-                && !psychologyCard.getChildData().getItems().isEmpty()
-                && psychologyCard.getChildData().getItems().size() > 0 ) psychologyCard
+        if ( this.checkFamily.test( psychologyCard.getChildData() ) ) psychologyCard
                     .getChildData()
                     .getItems()
                     .forEach( familyMember -> familyMember
                             .setPersonal_image( this.getGetImageByPinfl()
                                     .apply( familyMember.getPnfl() ) ) );
 
-        if ( psychologyCard.getDaddyData() != null
-                && psychologyCard.getDaddyData().getItems() != null
-                && !psychologyCard.getDaddyData().getItems().isEmpty()
-                && psychologyCard.getDaddyData().getItems().size() > 0 ) psychologyCard
+        if ( this.checkFamily.test( psychologyCard.getDaddyData() ) ) psychologyCard
                     .getDaddyData()
                     .getItems()
                     .forEach( familyMember -> familyMember
                             .setPersonal_image( this.getGetImageByPinfl()
                                     .apply( familyMember.getPnfl() ) ) );
 
-        if ( psychologyCard.getMommyData() != null
-                && psychologyCard.getMommyData().getItems() != null
-                && !psychologyCard.getMommyData().getItems().isEmpty()
-                && psychologyCard.getMommyData().getItems().size() > 0 ) psychologyCard
+        if ( this.checkFamily.test( psychologyCard.getMommyData() ) ) psychologyCard
                 .getMommyData()
                 .getItems()
                 .forEach( familyMember -> familyMember
