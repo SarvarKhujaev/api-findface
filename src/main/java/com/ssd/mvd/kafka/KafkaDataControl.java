@@ -38,15 +38,20 @@ public class KafkaDataControl {
             .getEnvironment()
             .getProperty( "variables.GROUP_ID_FOR_KAFKA" );
 
-    private final String activeTask = FindFaceServiceApplication
+    private final String ERROR_LOGS = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.ERROR_LOGS" );
 
-    private final String serviceStorageTopic = FindFaceServiceApplication
+    private final String ADMIN_PANEL = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.ADMIN_PANEL" );
+
+    private final String ADMIN_PANEL_ERROR_LOG = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.ADMIN_PANEL_ERROR_LOG" );
 
     private Properties setProperties () {
         Properties properties = new Properties();
@@ -69,29 +74,42 @@ public class KafkaDataControl {
         map.put( ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class );
         return new KafkaTemplate<>( new DefaultKafkaProducerFactory<>( map ) ); }
 
-    private KafkaDataControl() {
+    private KafkaDataControl () {
         this.kafkaTemplate = this.kafkaTemplate();
         this.logger.info( "KafkaDataControl was created" );
         this.client = KafkaAdminClient.create( this.setProperties() );
-        this.getNewTopic( this.getServiceStorageTopic() );
-        this.getNewTopic( this.getActiveTask() ); }
+        this.getNewTopic( this.getADMIN_PANEL_ERROR_LOG() );
+        this.getNewTopic( this.getADMIN_PANEL() );
+        this.getNewTopic( this.getERROR_LOGS() ); }
 
-    public void writeToKafka ( String card ) {
-        this.kafkaTemplate.send( this.getActiveTask(), card ).addCallback( new ListenableFutureCallback<>() {
+    public void writeToKafka ( String error ) {
+        this.getKafkaTemplate().send( this.getERROR_LOGS(), error ).addCallback(new ListenableFutureCallback<>() {
             @Override
             public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
-                logger.info( "Kafka got notification: " + card ); }
+                logger.info( "Kafka got ERROR: " + error ); }
 
             @Override
             public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
 
+    public void writeToKafkaErrorLog ( String error ) {
+        this.getKafkaTemplate().send( this.getADMIN_PANEL_ERROR_LOG(), error )
+                .addCallback( new ListenableFutureCallback<>() {
+            @Override
+            public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
+                logger.info( "Kafka got ADMIN_PANEL_ERROR_LOG: " + error ); }
+
+            @Override
+            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: "
+                    + LocalDateTime.now() ); } } ); }
+
     public void writeToKafkaServiceUsage ( String serviceUsage ) {
-        this.kafkaTemplate.send( this.getServiceStorageTopic(), serviceUsage )
+        this.getKafkaTemplate().send( this.getADMIN_PANEL(), serviceUsage )
                 .addCallback( new ListenableFutureCallback<>() {
             @Override
             public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
                 logger.info( "New user exposed your service: " + serviceUsage ); }
 
             @Override
-            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
+            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: "
+                    + LocalDateTime.now() ); } } ); }
 }

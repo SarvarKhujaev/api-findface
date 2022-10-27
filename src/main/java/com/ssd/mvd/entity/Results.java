@@ -1,27 +1,22 @@
 package com.ssd.mvd.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.ssd.mvd.entity.family.Family;
-import com.ssd.mvd.entity.family.FamilyMember;
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import java.util.List;
 import lombok.Data;
+
+import com.ssd.mvd.entity.family.Family;
+import java.util.List;
 
 @Data
 @Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor
 public class Results {
-    private Integer result_code;
-    @JsonDeserialize
-    private List< PapilonData > results;
-    @JsonDeserialize
-    private List< Violation > violationList;
-
     private String daddyPinfl;
     private String mommyPinfl;
+    private Integer result_code;
 
     @JsonDeserialize
     private Family daddyData;
@@ -29,4 +24,9 @@ public class Results {
     private Family mommyData;
     @JsonDeserialize
     private Family childData;
+
+    @JsonDeserialize
+    private List< PapilonData > results;
+    @JsonDeserialize
+    private List< Violation > violationList;
 }

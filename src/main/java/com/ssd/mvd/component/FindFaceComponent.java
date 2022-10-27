@@ -57,5 +57,5 @@ public class FindFaceComponent {
                                 error.getMessage(), object ) ) )
                         .onErrorReturn( new ArrayList() )
                 : Mono.just( new ArrayList() ); }
-        catch ( Exception e ) { return Mono.empty(); } }
+        catch ( Exception e ) { return Mono.just( new ArrayList() ); } }
 }

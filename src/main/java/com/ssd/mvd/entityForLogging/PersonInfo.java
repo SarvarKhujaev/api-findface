@@ -1,6 +1,7 @@
-package com.ssd.mvd.entity;
+package com.ssd.mvd.entityForLogging;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
+import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.controller.SerDes;
 
 import lombok.AllArgsConstructor;
@@ -84,7 +85,8 @@ public class PersonInfo {
 
             this.setPhoto( SerDes
                     .getSerDes()
-                    .base64ToLink( psychologyCard
+                    .getBase64ToLink()
+                    .apply( psychologyCard
                             .getPapilonData()
                             .get( 0 )
                             .getPhoto() ) ); } }
@@ -98,7 +100,8 @@ public class PersonInfo {
             this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );
             this.setPhoto( SerDes
                     .getSerDes()
-                    .base64ToLink( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
+                    .getBase64ToLink()
+                    .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
             this.setFullname( personTotalDataByFIO.getData().get( 0 ).getNameLatin()
                     + " "
                     + personTotalDataByFIO.getData().get( 0 ).getSurnameLatin()
