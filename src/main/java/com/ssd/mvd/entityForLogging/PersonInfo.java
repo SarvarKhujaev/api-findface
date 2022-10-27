@@ -67,7 +67,8 @@ public class PersonInfo {
                     ? psychologyCard
                     .getPinpp()
                     .getCadastre() : "unknown" );
-            if ( psychologyCard.getPapilonData() != null ) this.setPhoto( SerDes
+            if ( psychologyCard.getPapilonData() != null
+                    && psychologyCard.getPapilonData().size() > 0 ) this.setPhoto( SerDes
                     .getSerDes()
                     .getBase64ToLink()
                     .apply( psychologyCard
