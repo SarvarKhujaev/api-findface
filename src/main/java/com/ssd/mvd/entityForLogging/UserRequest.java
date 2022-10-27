@@ -22,7 +22,7 @@ public class UserRequest {
         this.setPersonInfo( new PersonInfo( personTotalDataByFIO ) );
 
         this.setIntegratedServiceName( "ZAKS" );
-        this.setUserPassportNumber( fio.getUser().getPassportNumber() ); }
+        this.setUserPassportNumber( fio.getUser() != null ? fio.getUser().getPassportNumber() : "unknown" ); }
 
     public UserRequest ( PsychologyCard psychologyCard, ApiResponseModel apiResponseModel ) {
         this.setCreatedAt( new Date().getTime() );
