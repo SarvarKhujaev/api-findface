@@ -79,9 +79,10 @@ public class KafkaDataControl {
         this.logger.info( "KafkaDataControl was created" );
         this.client = KafkaAdminClient.create( this.setProperties() );
         this.getNewTopic( this.getADMIN_PANEL_ERROR_LOG() );
-        this.getNewTopic( this.getADMIN_PANEL() );
+        this.getNewTopic( this.getADMIN_PANEL() ); // topic for Shamsiddin
         this.getNewTopic( this.getERROR_LOGS() ); }
 
+    // записывает все ошибки в работе серивса
     public void writeToKafka ( String error ) {
         this.getKafkaTemplate().send( this.getERROR_LOGS(), error ).addCallback(new ListenableFutureCallback<>() {
             @Override
@@ -91,6 +92,7 @@ public class KafkaDataControl {
             @Override
             public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
 
+    // записывает случае когда серивсы выдают ошибки
     public void writeToKafkaErrorLog ( String error ) {
         this.getKafkaTemplate().send( this.getADMIN_PANEL_ERROR_LOG(), error )
                 .addCallback( new ListenableFutureCallback<>() {
@@ -102,6 +104,7 @@ public class KafkaDataControl {
             public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: "
                     + LocalDateTime.now() ); } } ); }
 
+    // регистрирует каждого оператора который запрашивает данные у сервиса
     public void writeToKafkaServiceUsage ( String serviceUsage ) {
         this.getKafkaTemplate().send( this.getADMIN_PANEL(), serviceUsage )
                 .addCallback( new ListenableFutureCallback<>() {
