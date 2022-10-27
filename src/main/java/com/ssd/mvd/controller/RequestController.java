@@ -91,7 +91,8 @@ public class RequestController {
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
         List< Person > personList = SerDes
                 .getSerDes()
-                .deserialize( apiResponseModel.getStatus().getMessage() )
+                .getDeserialize()
+                .apply( apiResponseModel.getStatus().getMessage() )
                 .getPermanentRegistration();
         return personList != null
                 && !personList.isEmpty() ?

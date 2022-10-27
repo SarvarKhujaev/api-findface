@@ -1,7 +1,9 @@
-package com.ssd.mvd.entity;
+package com.ssd.mvd.entityForLogging;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.entity.ApiResponseModel;
+import com.ssd.mvd.entity.PsychologyCard;
 
 import java.util.Date;
 import lombok.Data;
