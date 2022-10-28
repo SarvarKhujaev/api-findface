@@ -26,12 +26,18 @@ public class RequestController {
     @MessageMapping ( value = "getFamilyMembersData" )
     public Mono< Results > getFamilyMembersData ( String pinfl ) { return FindFaceComponent
             .getInstance()
-            .getFamilyMembersData( pinfl ); }
+            .getFamilyMembersData( pinfl )
+            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                    error.getMessage(), object ) ) )
+            .onErrorReturn( new Results() ); }
 
     @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) { return SerDes
             .getSerDes()
-            .getPersonTotalDataByFIO ( fio ); }
+            .getPersonTotalDataByFIO ( fio )
+            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                    error.getMessage(), object ) ) )
+            .onErrorReturn( new PersonTotalDataByFIO() ); }
 
     @MessageMapping ( value = "getCarTotalData" ) // возвращает данные по номеру машины
     public Mono< CarTotalData > getCarTotalData ( ApiResponseModel apiResponseModel ) {
@@ -40,16 +46,20 @@ public class RequestController {
                 .flatMap( carTotalData -> {
                     carTotalData.setDoverennostList( SerDes
                             .getSerDes()
-                            .getDoverennostList( apiResponseModel.getStatus().getMessage() ) );
+                            .getGetDoverennostList()
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     carTotalData.setViolationsList( SerDes
                             .getSerDes()
-                            .getViolationList( apiResponseModel.getStatus().getMessage() ) );
+                            .getGetViolationList()
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     carTotalData.setTonirovka( SerDes
                             .getSerDes()
-                            .getVehicleTonirovka( apiResponseModel.getStatus().getMessage() ) );
+                            .getGetVehicleTonirovka()
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     carTotalData.setModelForCar( SerDes
                             .getSerDes()
-                            .getVehicleData( apiResponseModel.getStatus().getMessage() ) );
+                            .getGetVehicleData()
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     if ( carTotalData.getModelForCar() != null
                             && carTotalData.getModelForCar().getPinpp() != null )
                         carTotalData.setPsychologyCard( SerDes
@@ -60,10 +70,12 @@ public class RequestController {
                                             .builder()
                                             .message( carTotalData.getModelForCar().getPinpp() )
                                             .build() )
+                                    .user( apiResponseModel.getUser() )
                                     .build() ) );
                     carTotalData.setInsurance( SerDes
                             .getSerDes()
-                            .insurance( apiResponseModel.getStatus().getMessage() ) );
+                            .getInsurance()
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     carTotalData.setCameraImage( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
                     carTotalData.setGosNumber( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
                     return Mono.just( carTotalData ); } )
