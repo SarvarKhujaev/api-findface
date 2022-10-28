@@ -29,5 +29,6 @@ public class UserRequest {
         this.setPersonInfo( new PersonInfo( psychologyCard ) );
 
         this.setIntegratedServiceName( "OVIR" );
-        this.setUserPassportNumber( apiResponseModel.getUser().getPassportNumber() ); }
+        this.setUserPassportNumber( apiResponseModel.getUser() != null
+        ? apiResponseModel.getUser().getPassportNumber() : "unknown" ); }
 }
