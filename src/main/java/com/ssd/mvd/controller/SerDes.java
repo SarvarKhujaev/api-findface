@@ -1,5 +1,6 @@
 package com.ssd.mvd.controller;
 
+import jdk.jfr.ContentType;
 import org.json.JSONObject;
 import org.json.JSONException;
 
@@ -96,7 +97,8 @@ public class SerDes implements Runnable {
                             .getObject()
                             .get( "access_token" ) ) );
         } catch ( UnirestException e ) {
-            this.sendErrorLog( e.getMessage(),
+            this.sendErrorLog( "updateToken", "access_token", "Error: " + e.getMessage() );
+            this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
             log.error( e.getMessage() );
@@ -109,16 +111,19 @@ public class SerDes implements Runnable {
         this.getFields().put( "serviceName", "psychologyCard" );
         try { log.info( "Converting image to Link in: base64ToLink method"  );
             response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
-                    .fields( this.getFields() )
+                    .header("Content-Type", "application/json")
+                    .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
                     .asJson();
+            System.out.println( response.getBody() );
             return response.getStatus() == 200
                     ? response
                     .getBody()
                     .getObject()
-                    .get( "Data" )
+                    .get( "data" )
                     .toString()
                     : "not found"; }
         catch ( UnirestException e ) {
+            System.out.println( e.getMessage() );
             this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
             return "error"; } };
 
