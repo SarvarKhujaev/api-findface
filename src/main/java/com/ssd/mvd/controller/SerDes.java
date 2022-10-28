@@ -608,6 +608,7 @@ public class SerDes implements Runnable {
 
     public PsychologyCard getPsychologyCard ( ApiResponseModel apiResponseModel ) {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
+        System.out.println( "\n\n\n\n" + apiResponseModel + "\n\n\n\n" );
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent
                 .getInstance()
@@ -624,9 +625,8 @@ public class SerDes implements Runnable {
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
 
         psychologyCard.setPinpp( this.getPinpp().apply( apiResponseModel.getStatus().getMessage() ) );
-        psychologyCard.setPersonImage( this.getGetImageByPinfl()
-                .apply( apiResponseModel.getStatus().getMessage() ) );
         psychologyCard.setModelForCarList( this.getModelForCarList( apiResponseModel.getStatus().getMessage() ) );
+        psychologyCard.setPersonImage( this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) );
         this.setPersonPrivateData.accept( psychologyCard );
         this.findAllDataAboutCar.accept( psychologyCard );
         Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
