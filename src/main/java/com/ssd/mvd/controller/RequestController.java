@@ -50,9 +50,17 @@ public class RequestController {
                     carTotalData.setModelForCar( SerDes
                             .getSerDes()
                             .getVehicleData( apiResponseModel.getStatus().getMessage() ) );
-                    carTotalData.setPsychologyCard( SerDes
+                    if ( carTotalData.getModelForCar() != null
+                            && carTotalData.getModelForCar().getPinpp() != null )
+                        carTotalData.setPsychologyCard( SerDes
                             .getSerDes()
-                            .getPsychologyCard( apiResponseModel ) );
+                            .getPsychologyCard( ApiResponseModel
+                                    .builder()
+                                    .status( Status
+                                            .builder()
+                                            .message( carTotalData.getModelForCar().getPinpp() )
+                                            .build() )
+                                    .build() ) );
                     carTotalData.setInsurance( SerDes
                             .getSerDes()
                             .insurance( apiResponseModel.getStatus().getMessage() ) );
