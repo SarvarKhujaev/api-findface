@@ -608,13 +608,11 @@ public class SerDes implements Runnable {
 
     public PsychologyCard getPsychologyCard ( ApiResponseModel apiResponseModel ) {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
-        System.out.println( "\n\n\n\n" + apiResponseModel + "\n\n\n\n" );
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent
                 .getInstance()
                 .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
+                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
                 .onErrorReturn( new ArrayList() )
                 .subscribe( list -> psychologyCard.setViolationList( list != null ? list : new ArrayList<>() ) );
 
