@@ -109,6 +109,7 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
+        log.info( apiResponseModel.getStatus().getMessage() );
         List< Person > personList = SerDes
                 .getSerDes()
                 .getDeserialize()

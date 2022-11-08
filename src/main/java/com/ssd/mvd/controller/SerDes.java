@@ -1,6 +1,5 @@
 package com.ssd.mvd.controller;
 
-import jdk.jfr.ContentType;
 import org.json.JSONObject;
 import org.json.JSONException;
 
