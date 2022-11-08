@@ -130,8 +130,8 @@ public class RequestController {
                     : Flux.just( new PsychologyCard() ); }
 
     @MessageMapping ( value = "getTestPersonalCadastor" ) // возвращает данные по Пинфл
-    public Flux< PsychologyCard > getTestPersonTotalDataByPinfl ( String test ) {
-        System.out.println( test );
+    public Flux< PsychologyCard > getTestPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
+        System.out.println( apiResponseModel.getStatus().getMessage() );
         return Flux.range( 1, 5 )
                 .flatMap(integer -> Mono.just( new PsychologyCard() ) ); }
 
