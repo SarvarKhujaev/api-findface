@@ -109,14 +109,15 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
+        log.info( apiResponseModel.getStatus().getMessage() );
         List< Person > personList = SerDes
                 .getSerDes()
                 .getDeserialize()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .getPermanentRegistration();
         return personList != null
-                && !personList.isEmpty() ?
-                Flux.fromStream( personList.stream() )
+                && !personList.isEmpty()
+                ? Flux.fromStream( personList.stream() )
                     .flatMap( person -> Mono.just( SerDes
                             .getSerDes()
                             .getPsychologyCard( SerDes

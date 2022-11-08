@@ -1,6 +1,5 @@
 package com.ssd.mvd.controller;
 
-import jdk.jfr.ContentType;
 import org.json.JSONObject;
 import org.json.JSONException;
 
@@ -196,7 +195,7 @@ public class SerDes implements Runnable {
                 this.updateTokens();
                 return this.getDeserialize().apply( pinfl ); }
 
-            if ( this.check500Error.test( this.getResponse() ) ) this.saveErrorLog(
+            if ( this.check500Error.test( response1 ) ) this.saveErrorLog(
                             this.getResponse().getStatusText(),
                             IntegratedServiceApis.OVIR.getName(),
                             IntegratedServiceApis.OVIR.getDescription() );
@@ -204,7 +203,8 @@ public class SerDes implements Runnable {
             JSONObject object = response1
                     .getBody()
                     .getObject();
-            return object != null ? this.getGson().fromJson( object.get( "Data" ).toString(), Data.class ) : new Data();
+            return object != null
+                    ? this.getGson().fromJson( object.get( "Data" ).toString() , Data.class ) : new Data();
         } catch ( JSONException | UnirestException e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
