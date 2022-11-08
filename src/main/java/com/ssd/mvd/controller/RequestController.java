@@ -116,8 +116,8 @@ public class RequestController {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .getPermanentRegistration();
         return personList != null
-                && !personList.isEmpty() ?
-                Flux.fromStream( personList.stream() )
+                && !personList.isEmpty()
+                ? Flux.fromStream( personList.stream() )
                     .flatMap( person -> Mono.just( SerDes
                             .getSerDes()
                             .getPsychologyCard( SerDes
