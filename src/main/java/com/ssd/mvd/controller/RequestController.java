@@ -116,8 +116,8 @@ public class RequestController {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .getPermanentRegistration();
         return personList != null
-                && !personList.isEmpty()
-                ? Flux.fromStream( personList.stream() )
+                && !personList.isEmpty() ?
+                Flux.fromStream( personList.stream() )
                     .flatMap( person -> Mono.just( SerDes
                             .getSerDes()
                             .getPsychologyCard( SerDes
@@ -128,6 +128,12 @@ public class RequestController {
                             error.getMessage(), object ) )
                     .onErrorReturn( new PsychologyCard() )
                     : Flux.just( new PsychologyCard() ); }
+
+    @MessageMapping ( value = "getTestPersonalCadastor" ) // возвращает данные по Пинфл
+    public Flux< PsychologyCard > getTestPersonTotalDataByPinfl ( String test ) {
+        System.out.println( test );
+        return Flux.range( 1, 5 )
+                .flatMap(integer -> Mono.just( new PsychologyCard() ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
