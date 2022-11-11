@@ -550,22 +550,28 @@ public class SerDes implements Runnable {
         psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
         if ( this.checkFamily.test( psychologyCard.getChildData() ) ) psychologyCard
-                    .getChildData()
-                    .getItems()
-                    .forEach( familyMember -> familyMember
-                            .setPersonal_image( this.getGetImageByPinfl()
-                                    .apply( familyMember.getPnfl() ) ) );
+                .getChildData()
+                .getItems()
+                .parallelStream()
+                .parallel()
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
         if ( this.checkFamily.test( psychologyCard.getDaddyData() ) ) psychologyCard
-                    .getDaddyData()
-                    .getItems()
-                    .forEach( familyMember -> familyMember
-                            .setPersonal_image( this.getGetImageByPinfl()
-                                    .apply( familyMember.getPnfl() ) ) );
+                .getDaddyData()
+                .getItems()
+                .parallelStream()
+                .parallel()
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
         if ( this.checkFamily.test( psychologyCard.getMommyData() ) ) psychologyCard
                 .getMommyData()
                 .getItems()
+                .parallelStream()
+                .parallel()
                 .forEach( familyMember -> familyMember
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) ); }
@@ -577,9 +583,12 @@ public class SerDes implements Runnable {
         this.getFields().clear();
         HttpResponse< String > httpResponse;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
-        this.getFields().put( "Name", fio.getName() != null ? fio.getName().toUpperCase( Locale.ROOT ) : null );
-        this.getFields().put( "Surname", fio.getSurname() != null ? fio.getSurname().toUpperCase( Locale.ROOT ) : null );
-        this.getFields().put( "Patronym", fio.getPatronym() != null ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Name", fio.getName() != null
+                ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Surname", fio.getSurname() != null
+                ? fio.getSurname().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Patronym", fio.getPatronym() != null
+                ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
         try { httpResponse = Unirest.post( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
                 .headers( this.getHeaders() )
                 .fields( this.getFields() )
@@ -630,6 +639,12 @@ public class SerDes implements Runnable {
                 .getFamilyMembersData( apiResponseModel.getStatus().getMessage() )
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
 
+        Mono.just( this.getPinpp().apply( apiResponseModel.getStatus().getMessage() ) )
+                .subscribe( psychologyCard::setPinpp );
+        Mono.just( this.getModelForCarList.apply( apiResponseModel.getStatus().getMessage() ) )
+                .subscribe( psychologyCard::setModelForCarList );
+        Mono.just( this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) )
+                .subscribe( psychologyCard::setPersonImage );
         psychologyCard.setPinpp( this.getPinpp().apply( apiResponseModel.getStatus().getMessage() ) );
         psychologyCard.setModelForCarList( this.getModelForCarList.apply( apiResponseModel.getStatus().getMessage() ) );
         psychologyCard.setPersonImage( this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) );
@@ -647,8 +662,9 @@ public class SerDes implements Runnable {
                                               String token,
                                               ApiResponseModel apiResponseModel ) {
         try { this.getHeaders().put( "Authorization", "Bearer " + token );
-            psychologyCard.setForeignerList( this.stringToArrayList( Unirest.get( this.getConfig()
-                            .getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
+            psychologyCard.setForeignerList(
+                    this.stringToArrayList( Unirest.get(
+                            this.getConfig().getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
                             psychologyCard
                                     .getPapilonData()
                                     .get( 0 )
@@ -678,28 +694,37 @@ public class SerDes implements Runnable {
     public PsychologyCard getPsychologyCard ( Results results,
                                               ApiResponseModel apiResponseModel ) { // returns the card in case of Person
         PsychologyCard psychologyCard = new PsychologyCard();
-        try { this.setFamilyData( results, psychologyCard );
+        try {
+            this.setFamilyData( results, psychologyCard );
             psychologyCard.setPapilonData( results.getResults() );
             psychologyCard.setViolationList( results.getViolationList() );
-            psychologyCard.setPinpp( this.getPinpp()
+            Mono.just( this.getPinpp()
                     .apply( results
                             .getResults()
                             .get( 0 )
-                            .getPersonal_code() ) );
-            psychologyCard.setModelForCadastr( this.getDeserialize()
-                    .apply( psychologyCard
-                            .getPinpp()
-                            .getCadastre() ) );
-            psychologyCard.setPersonImage( this.getGetImageByPinfl()
-                    .apply( results
-                        .getResults()
-                        .get( 0 )
-                        .getPersonal_code() ) );
-            psychologyCard.setModelForCarList( this.getModelForCarList.apply(
-                    results
-                            .getResults()
-                            .get( 0 )
-                            .getPersonal_code() ) );
+                            .getPersonal_code() ) )
+                            .subscribe( psychologyCard::setPinpp );
+
+            Mono.just( this.getDeserialize()
+                            .apply( psychologyCard
+                                    .getPinpp()
+                                    .getCadastre() ) )
+                    .subscribe( psychologyCard::setModelForCadastr );
+
+            Mono.just( this.getGetImageByPinfl()
+                            .apply( results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ) )
+                    .subscribe( psychologyCard::setPersonImage );
+
+            Mono.just( this.getModelForCarList.apply(
+                            results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ) )
+                    .subscribe( psychologyCard::setModelForCarList );
+
             this.findAllDataAboutCar.accept( psychologyCard );
             this.setPersonPrivateData.accept( psychologyCard );
             Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
@@ -732,14 +757,16 @@ public class SerDes implements Runnable {
                 .onErrorReturn( new Results() )
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
 
-        psychologyCard.setPinpp( this.getPinpp().apply( data.getPerson().getPinpp() ) );
-        psychologyCard.setPersonImage( this.getGetImageByPinfl()
-                .apply( data.getPerson().getPinpp() ) );
-        psychologyCard.setModelForCarList( this.getModelForCarList.apply( data.getPerson().getPinpp() ) );
-        psychologyCard.setModelForAddress( this.getGetModelForAddress()
-                .apply( data.getPerson().getPCitizen() ) );
-        psychologyCard.setModelForCadastr( this.getDeserialize()
-                .apply( psychologyCard.getPinpp().getCadastre() ) );
+        Mono.just( this.getPinpp().apply( data.getPerson().getPinpp() ) )
+                        .subscribe( psychologyCard::setPinpp );
+        Mono.just( this.getGetImageByPinfl().apply( data.getPerson().getPinpp() ) )
+                .subscribe( psychologyCard::setPersonImage );
+        Mono.just( this.getModelForCarList.apply( data.getPerson().getPinpp() ) )
+                .subscribe( psychologyCard::setModelForCarList );
+        Mono.just( this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
+                .subscribe( psychologyCard::setModelForAddress );
+        Mono.just( this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) )
+                .subscribe( psychologyCard::setModelForCadastr );
         this.findAllDataAboutCar.accept( psychologyCard );
         Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
