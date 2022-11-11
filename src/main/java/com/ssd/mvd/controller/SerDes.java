@@ -274,18 +274,17 @@ public class SerDes implements Runnable {
         HttpResponse< JsonNode > response1;
         this.getFields().put( "BirthDate", BirthDate );
         this.getFields().put( "SerialNumber", SerialNumber );
-        log.info( "Data: " + SerialNumber + " : " + BirthDate );
+        log.info( "PassportNumber: " + SerialNumber + " : Birthdate " + BirthDate );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
         try { response1 = Unirest.post( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
                 .headers( this.getHeaders() )
                 .fields( this.getFields() )
                 .asJson();
-            this.setResponse( response1 );
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
                 return this.deserialize( SerialNumber, BirthDate ); }
 
-            if ( this.check500Error.test( this.getResponse() ) ) this.saveErrorLog(
+            if ( this.check500Error.test( response1 ) ) this.saveErrorLog(
                     this.getResponse().getStatusText(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
@@ -308,7 +307,7 @@ public class SerDes implements Runnable {
     private final Function< String, Insurance > insurance = pinpp -> {
         HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp in insurance: " + pinpp );
+        try { log.info( "Gosno in insurance: " + pinpp );
             response1 = Unirest.get( this.getConfig().getAPI_FOR_FOR_INSURANCE() + pinpp )
                     .headers( this.getHeaders() )
                     .asJson();
@@ -499,6 +498,8 @@ public class SerDes implements Runnable {
         if ( this.checkCarData.test( psychologyCard ) ) psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
+                .parallelStream()
+                .parallel()
                 .forEach( modelForCar -> {
                     modelForCar.setInsurance( this.insurance.apply( modelForCar.getPlateNumber() ) );
                     modelForCar.setTonirovka( this.getVehicleTonirovka.apply( modelForCar.getPlateNumber() ) );
@@ -518,17 +519,18 @@ public class SerDes implements Runnable {
         if ( this.checkPrivateData.test( psychologyCard ) ) psychologyCard
                 .getModelForCadastr()
                 .getPermanentRegistration()
+                .parallelStream()
+                .parallel()
+                .filter( person -> person
+                        .getPDateBirth()
+                        .equals( psychologyCard
+                                .getPinpp()
+                                .getBirthDate() ) )
                 .forEach( person -> {
-                    if ( person
-                            .getPDateBirth()
-                            .equals( psychologyCard
-                                    .getPinpp()
-                                    .getBirthDate() ) ) {
-                        psychologyCard.setModelForPassport (
-                                this.deserialize ( person.getPPsp(),
-                                        person.getPDateBirth() ) );
-                        psychologyCard.setModelForAddress(
-                                this.getGetModelForAddress().apply( person.getPCitizen() ) ); } } ); };
+                    psychologyCard.setModelForPassport (
+                            this.deserialize ( person.getPPsp(), person.getPDateBirth() ) );
+                    psychologyCard.setModelForAddress(
+                            this.getGetModelForAddress().apply( person.getPCitizen() ) ); } ); };
 
     private final Predicate< Family > checkFamily = family -> family != null
             && family.getItems() != null
