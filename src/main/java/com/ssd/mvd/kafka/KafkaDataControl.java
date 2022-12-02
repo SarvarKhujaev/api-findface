@@ -1,39 +1,32 @@
 package com.ssd.mvd.kafka;
 
 import lombok.Data;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Collections;
-import java.time.LocalDateTime;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.function.Supplier;
+import java.util.function.Consumer;
 import com.ssd.mvd.FindFaceServiceApplication;
 
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
+import reactor.core.publisher.Mono;
+import reactor.kafka.sender.KafkaSender;
+import reactor.kafka.sender.SenderOptions;
 
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.util.concurrent.ListenableFutureCallback;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 @Data
 public class KafkaDataControl {
-    private final AdminClient client;
-    private final KafkaTemplate< String, String > kafkaTemplate;
     private static KafkaDataControl instance = new KafkaDataControl();
     private final Logger logger = Logger.getLogger( KafkaDataControl.class.toString() );
 
     public static KafkaDataControl getInstance () { return instance != null ? instance : ( instance = new KafkaDataControl() ); }
 
-    private final String PATH = FindFaceServiceApplication
+    private final String KAFKA_BROKER = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.KAFKA_BROKER" );
 
-    private final String ID = FindFaceServiceApplication
+    private final String GROUP_ID_FOR_KAFKA = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.GROUP_ID_FOR_KAFKA" );
@@ -53,66 +46,52 @@ public class KafkaDataControl {
             .getEnvironment()
             .getProperty( "variables.ADMIN_PANEL_ERROR_LOG" );
 
-    private Properties setProperties () {
-        Properties properties = new Properties();
-        properties.put( AdminClientConfig.CLIENT_ID_CONFIG, this.ID );
-        properties.put( AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, this.PATH );
-        return properties; }
+    private final Supplier< Map< String, Object > > getKafkaSenderOptions = () -> Map.of(
+            ProducerConfig.ACKS_CONFIG, "1",
+            ProducerConfig.CLIENT_ID_CONFIG, this.getGROUP_ID_FOR_KAFKA(),
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.getKAFKA_BROKER(),
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class );
 
-    public void getNewTopic ( String imei ) {
-        this.getClient().createTopics( Collections.singletonList( TopicBuilder
-                .name( imei )
-                .partitions(5 )
-                .replicas(3 )
-                .build() ) );
-        this.logger.info( "Topic: " + imei + " was created" ); }
+    private final KafkaSender< String, String > kafkaSender = KafkaSender.create(
+            SenderOptions.< String, String >create( this.getGetKafkaSenderOptions().get() )
+                    .maxInFlight( 1024 ) );
 
-    private KafkaTemplate< String, String > kafkaTemplate () {
-        Map< String, Object > map = new HashMap<>();
-        map.put( ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.PATH );
-        map.put( ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class );
-        map.put( ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class );
-        return new KafkaTemplate<>( new DefaultKafkaProducerFactory<>( map ) ); }
-
-    private KafkaDataControl () {
-        this.kafkaTemplate = this.kafkaTemplate();
-        this.logger.info( "KafkaDataControl was created" );
-        this.client = KafkaAdminClient.create( this.setProperties() );
-        this.getNewTopic( this.getADMIN_PANEL_ERROR_LOG() );
-        this.getNewTopic( this.getADMIN_PANEL() ); // topic for Shamsiddin
-        this.getNewTopic( this.getERROR_LOGS() ); }
+    private KafkaDataControl () { this.getLogger().info( "KafkaDataControl was created" ); }
 
     // записывает все ошибки в работе серивса
-    public void writeToKafka ( String error ) {
-        this.getKafkaTemplate().send( this.getERROR_LOGS(), error ).addCallback(new ListenableFutureCallback<>() {
-            @Override
-            public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
-                logger.info( "Kafka got ERROR: " + error ); }
-
-            @Override
-            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: " + LocalDateTime.now() ); } } ); }
+    private final Consumer< String > writeErrorLog = errorLog -> this.getKafkaSender()
+            .createOutbound()
+            .send( Mono.just( new ProducerRecord<>( this.getERROR_LOGS(),
+                    errorLog ) ) )
+            .then()
+            .doOnError( error -> logger.info( error.getMessage() ) )
+            .doOnSuccess( success -> logger.info( "Kafka got error: " +
+                    errorLog +
+                    " at: " + new Date() ) )
+            .subscribe();
 
     // записывает случае когда серивсы выдают ошибки
-    public void writeToKafkaErrorLog ( String error ) {
-        this.getKafkaTemplate().send( this.getADMIN_PANEL_ERROR_LOG(), error )
-                .addCallback( new ListenableFutureCallback<>() {
-            @Override
-            public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
-                logger.info( "Kafka got ADMIN_PANEL_ERROR_LOG: " + error ); }
-
-            @Override
-            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: "
-                    + LocalDateTime.now() ); } } ); }
+    private final Consumer< String > writeToKafkaErrorLog = errorLog -> this.getKafkaSender()
+            .createOutbound()
+            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL_ERROR_LOG(),
+                    errorLog ) ) )
+            .then()
+            .doOnError( error -> logger.info( error.getMessage() ) )
+            .doOnSuccess( success -> logger.info( "Kafka got error for ADMIN_PANEL_ERROR_LOG: " +
+                    errorLog +
+                    " at: " + new Date() ) )
+            .subscribe();
 
     // регистрирует каждого оператора который запрашивает данные у сервиса
-    public void writeToKafkaServiceUsage ( String serviceUsage ) {
-        this.getKafkaTemplate().send( this.getADMIN_PANEL(), serviceUsage )
-                .addCallback( new ListenableFutureCallback<>() {
-            @Override
-            public void onSuccess( org.springframework.kafka.support.SendResult< String, String > result ) {
-                logger.info( "New user exposed your service: " + serviceUsage ); }
-
-            @Override
-            public void onFailure( Throwable ex ) { logger.warning("Kafka does not work since: "
-                    + LocalDateTime.now() ); } } ); }
+    private final Consumer< String > writeToKafkaServiceUsage = serviceUsage -> this.getKafkaSender()
+            .createOutbound()
+            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL(),
+                    serviceUsage ) ) )
+            .then()
+            .doOnError( error -> logger.info( error.getMessage() ) )
+            .doOnSuccess( success -> logger.info( "New user exposed your service: "
+                    + serviceUsage +
+                    " at: " + new Date() ) )
+            .subscribe();
 }
