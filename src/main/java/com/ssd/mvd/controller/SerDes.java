@@ -133,9 +133,10 @@ public class SerDes implements Runnable {
         this.getNotification().setReason( reason );
         this.getNotification().setMethodName( methodName );
         this.getNotification().setCallingTime( new Date() );
-        this.getNotification().setJsonNode( this.getResponse().getBody() );
-        if ( this.getResponse() != null ) log.info( this.getResponse().getBody()
-                + " Status: " + this.getResponse().getStatus() );
+        if ( this.getResponse() != null ) {
+            this.getNotification().setJsonNode( this.getResponse().getBody() );
+            log.info( this.getResponse().getBody()
+                    + " Status: " + this.getResponse().getStatus() ); }
         KafkaDataControl.getInstance().writeToKafka( this.getGson().toJson( this.getNotification() ) ); }
 
     private void saveErrorLog ( String errorMessage,
@@ -196,9 +197,9 @@ public class SerDes implements Runnable {
                 return this.getDeserialize().apply( pinfl ); }
 
             if ( this.check500Error.test( response1 ) ) this.saveErrorLog(
-                            this.getResponse().getStatusText(),
-                            IntegratedServiceApis.OVIR.getName(),
-                            IntegratedServiceApis.OVIR.getDescription() );
+                    this.getResponse().getStatusText(),
+                    IntegratedServiceApis.OVIR.getName(),
+                    IntegratedServiceApis.OVIR.getDescription() );
 
             JSONObject object = response1
                     .getBody()
@@ -215,7 +216,7 @@ public class SerDes implements Runnable {
     private final Function< String, String > getImageByPinfl = pinpp -> {
         HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp: " + pinpp );
+        try { log.info( "Pinpp in getImageByPinfl: " + pinpp );
             response1 = Unirest.get( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinpp )
                     .headers( this.getHeaders() )
                     .asJson();
@@ -499,13 +500,13 @@ public class SerDes implements Runnable {
                 .getModelForCarList()
                 .getModelForCarList()
                 .parallelStream()
-                .parallel()
                 .forEach( modelForCar -> {
-                    modelForCar.setInsurance( this.insurance.apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setTonirovka( this.getVehicleTonirovka.apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setDoverennostList( this.getDoverennostList.apply( modelForCar.getPlateNumber() ) ); } ); };
+                    modelForCar.setInsurance( this.getInsurance().apply( modelForCar.getPlateNumber() ) );
+                    modelForCar.setTonirovka( this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ) );
+                    modelForCar.setDoverennostList( this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) ); } ); };
 
-    private final Predicate< PsychologyCard > checkPrivateData = psychologyCard -> psychologyCard.getModelForCadastr() != null
+    private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
+            psychologyCard.getModelForCadastr() != null
             && psychologyCard
             .getModelForCadastr()
             .getPermanentRegistration() != null
@@ -520,7 +521,6 @@ public class SerDes implements Runnable {
                 .getModelForCadastr()
                 .getPermanentRegistration()
                 .parallelStream()
-                .parallel()
                 .filter( person -> person
                         .getPDateBirth()
                         .equals( psychologyCard
@@ -534,8 +534,7 @@ public class SerDes implements Runnable {
 
     private final Predicate< Family > checkFamily = family -> family != null
             && family.getItems() != null
-            && !family.getItems().isEmpty()
-            && family.getItems().size() > 0;
+            && !family.getItems().isEmpty();
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         // личные данные человека чьи данные были переданы на данный сервис
@@ -553,7 +552,6 @@ public class SerDes implements Runnable {
                 .getChildData()
                 .getItems()
                 .parallelStream()
-                .parallel()
                 .forEach( familyMember -> familyMember
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) );
@@ -562,7 +560,6 @@ public class SerDes implements Runnable {
                 .getDaddyData()
                 .getItems()
                 .parallelStream()
-                .parallel()
                 .forEach( familyMember -> familyMember
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) );
@@ -571,7 +568,6 @@ public class SerDes implements Runnable {
                 .getMommyData()
                 .getItems()
                 .parallelStream()
-                .parallel()
                 .forEach( familyMember -> familyMember
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) ); }

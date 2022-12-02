@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.component.FindFaceComponent;
@@ -67,7 +66,8 @@ public class RequestController {
                             .subscribe( carTotalData::setModelForCar );
 
                     if ( carTotalData.getModelForCar() != null
-                            && carTotalData.getModelForCar().getPinpp() != null )
+                            && carTotalData.getModelForCar().getPinpp() != null
+                            && !carTotalData.getModelForCar().getPinpp().isEmpty() )
                         carTotalData.setPsychologyCard( SerDes
                             .getSerDes()
                             .getPsychologyCard( ApiResponseModel
@@ -125,16 +125,12 @@ public class RequestController {
         return personList != null
                 && !personList.isEmpty() ?
                 Flux.fromStream( personList.stream() )
-                        .parallel()
-                        .runOn( Schedulers.parallel() )
-                        .flatMap( person -> Mono.just( SerDes
+                        .map( person -> SerDes
                                 .getSerDes()
                                 .getPsychologyCard( SerDes
                                         .getSerDes()
                                         .deserialize( person.getPPsp(), person.getPDateBirth() ),
-                                        apiResponseModel ) ) )
-                        .sequential()
-                        .publishOn( Schedulers.single() )
+                                        apiResponseModel ) )
                         .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                                 error.getMessage(), object ) )
                         .onErrorReturn( new PsychologyCard() )
