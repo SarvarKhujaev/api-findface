@@ -137,15 +137,19 @@ public class SerDes implements Runnable {
             this.getNotification().setJsonNode( this.getResponse().getBody() );
             log.info( this.getResponse().getBody()
                     + " Status: " + this.getResponse().getStatus() ); }
-        KafkaDataControl.getInstance().writeToKafka( this.getGson().toJson( this.getNotification() ) ); }
+        KafkaDataControl
+                .getInstance()
+                .getWriteErrorLog()
+                .accept( this.getGson().toJson( this.getNotification() ) ); }
 
     private void saveErrorLog ( String errorMessage,
                                 String integratedService,
                                 String integratedServiceDescription ) {
         KafkaDataControl
                 .getInstance()
-                .writeToKafkaErrorLog( this.getGson()
-                        .toJson( ErrorLog
+                .getWriteToKafkaErrorLog()
+                .accept( this.getGson().toJson(
+                        ErrorLog
                                 .builder()
                                 .errorMessage( errorMessage )
                                 .createdAt( new Date().getTime() )
@@ -610,7 +614,8 @@ public class SerDes implements Runnable {
                                 error.getMessage(), object ) ) )
                         .subscribe( userRequest -> KafkaDataControl
                                 .getInstance()
-                                .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) ); }
+                                .getWriteToKafkaServiceUsage()
+                                .accept( this.getGson().toJson( userRequest ) ) ); }
             return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
         } catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
@@ -651,7 +656,8 @@ public class SerDes implements Runnable {
                         error.getMessage(), object ) ) )
                 .subscribe( userRequest -> KafkaDataControl
                         .getInstance()
-                        .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
+                        .getWriteToKafkaServiceUsage()
+                        .accept( this.getGson().toJson( userRequest ) ) );
         return psychologyCard; }
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard,
@@ -676,7 +682,8 @@ public class SerDes implements Runnable {
                             error.getMessage(), object ) ) )
                     .subscribe( userRequest -> KafkaDataControl
                             .getInstance()
-                            .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
+                            .getWriteToKafkaServiceUsage()
+                            .accept( this.getGson().toJson( userRequest ) ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -728,7 +735,8 @@ public class SerDes implements Runnable {
                             error.getMessage(), object ) ) )
                     .subscribe( userRequest -> KafkaDataControl
                             .getInstance()
-                            .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
+                            .getWriteToKafkaServiceUsage()
+                            .accept( this.getGson().toJson( userRequest ) ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
@@ -769,7 +777,8 @@ public class SerDes implements Runnable {
                         error.getMessage(), object ) ) )
                 .subscribe( userRequest -> KafkaDataControl
                         .getInstance()
-                        .writeToKafkaServiceUsage( this.getGson().toJson( userRequest ) ) );
+                        .getWriteToKafkaServiceUsage()
+                        .accept( this.getGson().toJson( userRequest ) ) );
         return psychologyCard; }
 
     @Override
