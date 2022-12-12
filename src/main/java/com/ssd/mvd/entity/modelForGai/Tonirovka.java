@@ -1,8 +1,9 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.constants.ErrorResponse;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Data
 @NoArgsConstructor
@@ -16,4 +17,8 @@ public class Tonirovka {
     private String permissionLicense;
     private String whoGavePermission;
     private String organWhichGavePermission;
+
+    private ErrorResponse errorResponse;
+
+    public Tonirovka ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

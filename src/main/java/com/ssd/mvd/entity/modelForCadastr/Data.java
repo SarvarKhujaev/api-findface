@@ -1,6 +1,8 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ssd.mvd.constants.ErrorResponse;
+
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -15,4 +17,8 @@ public class Data {
     private List< Person > PermanentRegistration;
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
+
+    private ErrorResponse errorResponse;
+
+    public Data ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }
