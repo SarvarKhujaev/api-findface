@@ -2,6 +2,7 @@ package com.ssd.mvd.entity.modelForFioOfPerson;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.ssd.mvd.constants.ErrorResponse;
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -19,4 +20,8 @@ public class PersonTotalDataByFIO {
     private String AnswereComment;
     @JsonDeserialize
     private List< Person > Data;
+
+    private ErrorResponse errorResponse;
+
+    public PersonTotalDataByFIO ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

@@ -1,13 +1,14 @@
 package com.ssd.mvd.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.entity.family.Family;
+
 import lombok.extern.jackson.Jacksonized;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.Data;
-
-import com.ssd.mvd.entity.family.Family;
 import java.util.List;
+import lombok.Data;
 
 @Data
 @Jacksonized
@@ -25,8 +26,12 @@ public class Results {
     @JsonDeserialize
     private Family childData;
 
+    private ErrorResponse errorResponse;
+
     @JsonDeserialize
     private List< PapilonData > results;
     @JsonDeserialize
     private List< Violation > violationList;
+
+    public Results ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

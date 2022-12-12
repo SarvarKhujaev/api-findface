@@ -1,5 +1,6 @@
 package com.ssd.mvd.entity;
 
+import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.modelForGai.*;
 import java.util.List;
 import lombok.Data;
@@ -19,4 +20,10 @@ public class CarTotalData {
 
     private List< String > patruls; // link to list of Patruls who is gonna deal with this Card
     private List< ReportForCard > reportForCards;
+
+    private ErrorResponse errorResponse;
+
+    public CarTotalData () {}
+
+    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

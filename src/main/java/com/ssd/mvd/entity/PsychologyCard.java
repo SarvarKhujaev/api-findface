@@ -2,6 +2,7 @@ package com.ssd.mvd.entity;
 
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.foreigner.Foreigner;
+import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.family.Family;
 
 import lombok.NoArgsConstructor;
@@ -34,4 +35,8 @@ public class PsychologyCard {
     public PsychologyCard ( Results results ) {
         this.setPapilonData( results.getResults() );
         this.setViolationList( results.getViolationList() ); }
+
+    private ErrorResponse errorResponse;
+
+    public PsychologyCard ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

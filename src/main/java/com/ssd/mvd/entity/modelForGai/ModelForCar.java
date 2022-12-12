@@ -1,5 +1,6 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.constants.ErrorResponse;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Data;
@@ -33,4 +34,8 @@ public class ModelForCar {
     private Tonirovka tonirovka;
     private Insurance insurance;
     private DoverennostList doverennostList;
+
+    private ErrorResponse errorResponse;
+
+    public ModelForCar ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }
