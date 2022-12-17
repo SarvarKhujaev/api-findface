@@ -123,13 +123,9 @@ public class SerDes implements Runnable {
         log.info( "Updating tokens..." );
         this.getTokenForFio.get().subscribe( token -> {
             this.setTokenForFio( token );
-            if ( this.getTokenForFio().compareTo( Errors.GAI_TOKEN_ERROR.name() ) == 0 )
-                this.updateTokens();
             log.info( "Token for FIO established successfully: " + this.getTokenForFio().length() ); } );
         this.getTokenForGai.get().subscribe( token -> {
             this.setTokenForGai( token );
-            if ( this.getTokenForGai().compareTo( Errors.GAI_TOKEN_ERROR.name() ) == 0 )
-                this.updateTokens();
             this.setTokenForPassport( this.getTokenForGai() );
             log.info( "Token For Gai successfully established: " + this.getTokenForGai().length() ); } ); }
 
