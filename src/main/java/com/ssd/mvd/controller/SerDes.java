@@ -74,10 +74,14 @@ public class SerDes implements Runnable {
                     .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
                     .responseSingle( ( res, content ) -> content
                             .asString()
-                            .map( s -> ( this.flag = s.length() > 30 && s.contains( "access_token" ) )
-                                    ? s.substring( s.indexOf( "access_token" ) + 15,
-                                    s.indexOf( "token_type" ) - 3 )
-                                    : Errors.GAI_TOKEN_ERROR.name() ) )
+                            .map( s -> {
+                                log.info( s );
+                                log.info( s.substring( s.indexOf( "access_token" ) + 15,
+                                        s.indexOf( "token_type" ) - 3 ) );
+                                return ( this.flag = s.length() > 30 && s.contains( "access_token" ) )
+                                        ? s.substring( s.indexOf( "access_token" ) + 15,
+                                        s.indexOf( "token_type" ) - 3 )
+                                        : Errors.GAI_TOKEN_ERROR.name(); } ) )
                     .doOnError( throwable -> {
                         this.setFlag( false );
                         this.sendErrorLog( "updateTokenForGai",
