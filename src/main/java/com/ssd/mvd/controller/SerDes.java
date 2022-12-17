@@ -1,10 +1,7 @@
 package com.ssd.mvd.controller;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.BiFunction;
+import java.util.function.*;
 import java.util.concurrent.TimeUnit;
 
 import reactor.netty.ByteBufFlux;
@@ -68,69 +65,64 @@ public class SerDes implements Runnable {
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         this.updateTokens(); }
 
-    private void updateTokens () {
-        log.info( "Updating tokens..." );
-        this.setFlag( false );
-        HttpClient
-                .create()
-                .post()
-                .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
-                        + this.getConfig().getLOGIN_FOR_GAI_TOKEN()
-                        + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_GAI_TOKEN()
-                        + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_GAI() + "\"\r\n}" ) ) )
-                .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
-                .responseSingle( ( res, content ) -> content
-                        .asString()
-                        .map( s -> s.substring( s.indexOf( "access_token" ) + 15,
-                                s.indexOf( "token_type" ) - 3 ) ) )
-                .log()
-                .doOnError( throwable -> {
-                    this.setFlag( false );
-                    this.sendErrorLog( "updateToken",
-                            "access_token",
-                            "Error: " + throwable.getMessage() );
-                    this.saveErrorLog( throwable.getMessage(),
-                            IntegratedServiceApis.OVIR.getName(),
-                            IntegratedServiceApis.OVIR.getDescription() );
-                    log.error( "Error: " + throwable.getMessage() ); } )
-                .doOnSuccess( value -> {
-                    this.setFlag( true );
-                    log.info( "Token successfully established: " + value.length() ); } )
-                .subscribe( token -> {
-                    this.setTokenForGai( token );
-                    this.setTokenForPassport( this.getTokenForGai() );
-                    log.info( "Token successfully established: " + this.getTokenForGai().length() ); } );
+    private final Supplier< Mono< String > > getTokenForGai = () -> HttpClient
+            .create()
+            .post()
+            .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
+                    + this.getConfig().getLOGIN_FOR_GAI_TOKEN()
+                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_GAI_TOKEN()
+                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_GAI() + "\"\r\n}" ) ) )
+            .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
+            .responseSingle( ( res, content ) -> content
+                    .asString()
+                    .map( s -> s.length() > 15 && s.contains( "access_token" )
+                            ? s.substring( s.indexOf( "access_token" ) + 15,
+                            s.indexOf( "token_type" ) - 3 )
+                            : Errors.GAI_TOKEN_ERROR.name() ) )
+            .doOnSuccess( value -> {
+                this.setFlag( true );
+                log.info( "Token successfully established: " + value.length() ); } );
 
-        HttpClient
-                .create()
-                .headers( header -> header.add( "Content-Type", "application/json" ) )
-                .post()
-                .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
-                        + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
-                        + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
-                        + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}" ) ) )
-                .uri( this.getConfig().getAPI_FOR_FIO_TOKEN() )
-                .responseSingle( ( res, content ) -> content
-                        .asString()
-                        .map( s -> {
-                            log.info( "Token for Fio: " + s.substring( s.indexOf( "access_token" ) + 15 ) );
-                            return s.substring( s.indexOf( "access_token" ) + 15,
-                                    s.indexOf( "token_type" ) - 3 ); } ) )
-                .doOnError( throwable -> {
-                    this.setFlag( false );
-                    this.sendErrorLog( "updateToken",
-                            "access_token",
-                            "Error: " + throwable.getMessage() );
-                    this.saveErrorLog( throwable.getMessage(),
-                            IntegratedServiceApis.OVIR.getName(),
-                            IntegratedServiceApis.OVIR.getDescription() );
-                    log.error( "Error in getting token for FIO: " + throwable.getMessage() ); } )
-                .doOnSuccess( value -> {
-                    this.setFlag( true );
-                    log.info( "Token for FIO established successfully: " + value.length() ); } )
-                .subscribe( s -> {
-                    this.setTokenForFio( s );
-                    log.info( "Token for FIO established successfully: " + this.getTokenForFio().length() ); } ); }
+    private final Supplier< Mono< String > > getTokenForFio = () -> HttpClient
+            .create()
+            .headers( header -> header.add( "Content-Type", "application/json" ) )
+            .post()
+            .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
+                    + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
+                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
+                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}" ) ) )
+            .uri( this.getConfig().getAPI_FOR_FIO_TOKEN() )
+            .responseSingle( ( res, content ) -> content
+                    .asString()
+                    .flatMap( s -> {
+                        log.info( "Token for Fio: " + s.substring( s.indexOf( "access_token" ) ) );
+                        return s.length() > 15 && s.contains( "access_token" )
+                                ? Mono.just( s.substring( s.indexOf( "access_token" ) + 15,
+                                s.indexOf( "token_type" ) - 3 ) )
+                                : this.getTokenForGai.get(); } ) )
+            .doOnError( throwable -> {
+                this.setFlag( false );
+                this.sendErrorLog( "updateToken",
+                        "access_token",
+                        "Error: " + throwable.getMessage() );
+                this.saveErrorLog( throwable.getMessage(),
+                        IntegratedServiceApis.OVIR.getName(),
+                        IntegratedServiceApis.OVIR.getDescription() );
+                log.error( "Error in getting token for FIO: " + throwable.getMessage() ); } )
+            .doOnSuccess( value -> {
+                this.setFlag( true );
+                log.info( "Token for FIO established successfully: " + value.length() ); } );
+
+    private void updateTokens () {
+        this.setFlag( false );
+        log.info( "Updating tokens..." );
+        this.getTokenForFio.get().subscribe( token -> {
+            this.setTokenForFio( token );
+            log.info( "Token for FIO established successfully: " + this.getTokenForFio().length() ); } );
+        this.getTokenForGai.get().subscribe( token -> {
+            this.setTokenForGai( token );
+            this.setTokenForPassport( this.getTokenForGai() );
+            log.info( "Token successfully established: " + this.getTokenForGai().length() ); } ); }
 
     // используется когда внешние сервисы возвращают 500 ошибку
     private final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
