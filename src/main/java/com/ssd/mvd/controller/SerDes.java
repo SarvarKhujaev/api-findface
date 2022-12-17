@@ -65,7 +65,7 @@ public class SerDes implements Runnable {
 
     private final Supplier< Mono< String > > getTokenForGai = () -> Mono.justOrEmpty(
             this.getHttpClient()
-                    .keepAlive( false )
+                    .headers( header -> header.add( "Content-Type", "application/json" ) )
                     .post()
                     .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
                             + this.getConfig().getLOGIN_FOR_GAI_TOKEN()
@@ -98,7 +98,6 @@ public class SerDes implements Runnable {
 
     private final Supplier< Mono< String > > getTokenForFio = () -> Mono.justOrEmpty(
             this.getHttpClient()
-                    .keepAlive( false )
                     .headers( header -> header.add( "Content-Type", "application/json" ) )
                     .post()
                     .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
@@ -163,25 +162,27 @@ public class SerDes implements Runnable {
         this.getNotification().setReason( reason );
         this.getNotification().setMethodName( methodName );
         this.getNotification().setCallingTime( new Date() );
-        KafkaDataControl
-                .getInstance()
-                .getWriteErrorLog()
-                .accept( this.getGson().toJson( this.getNotification() ) ); }
+//        KafkaDataControl
+//                .getInstance()
+//                .getWriteErrorLog()
+//                .accept( this.getGson().toJson( this.getNotification() ) );
+    }
 
     private void saveErrorLog ( String errorMessage,
                                 String integratedService,
                                 String integratedServiceDescription ) {
-        KafkaDataControl
-                .getInstance()
-                .getWriteToKafkaErrorLog()
-                .accept( this.getGson().toJson(
-                        ErrorLog
-                                .builder()
-                                .errorMessage( errorMessage )
-                                .createdAt( new Date().getTime() )
-                                .integratedService( integratedService )
-                                .integratedServiceApiDescription( integratedServiceDescription )
-                                .build() ) ); }
+//        KafkaDataControl
+//                .getInstance()
+//                .getWriteToKafkaErrorLog()
+//                .accept( this.getGson().toJson(
+//                        ErrorLog
+//                                .builder()
+//                                .errorMessage( errorMessage )
+//                                .createdAt( new Date().getTime() )
+//                                .integratedService( integratedService )
+//                                .integratedServiceApiDescription( integratedServiceDescription )
+//                                .build() ) );
+    }
 
     private void saveUserUsageLog ( UserRequest userRequest ) {
         Mono.just( userRequest )
@@ -194,7 +195,6 @@ public class SerDes implements Runnable {
 
     private final Function< String, Mono< String > > base64ToLink = base64 -> Mono.justOrEmpty(
             this.getHttpClient()
-                    .keepAlive( false )
                     .headers( h -> h.add( "Content-Type", "application/json" ) )
                     .post()
                     .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" ) ) )
@@ -211,7 +211,6 @@ public class SerDes implements Runnable {
 
     private final Function< String, Mono< Pinpp > > pinfl = pinpp -> Mono.justOrEmpty(
             this.getHttpClient()
-                    .keepAlive( false )
                     .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
                     .get()
                     .uri( this.getConfig().getAPI_FOR_PINPP() + pinpp )
@@ -246,7 +245,6 @@ public class SerDes implements Runnable {
 
     private final Function< String, Mono< Data > > deserialize = pinfl -> Mono.justOrEmpty(
             this.getHttpClient()
-                    .keepAlive( false )
                     .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
                     .post()
                     .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Pcadastre\": \"" + pinfl + "\"\r\n}" ) ) )
