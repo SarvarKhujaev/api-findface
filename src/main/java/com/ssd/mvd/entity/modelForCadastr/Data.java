@@ -13,12 +13,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Data {
+    private ErrorResponse errorResponse;
     @JsonDeserialize
     private List< Person > PermanentRegistration;
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
-
-    private ErrorResponse errorResponse;
 
     public Data ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }
