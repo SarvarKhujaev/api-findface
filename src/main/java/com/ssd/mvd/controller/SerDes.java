@@ -50,8 +50,7 @@ public class SerDes implements Runnable {
 
     private <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
 
-    private SerDes () {
-        Unirest.setObjectMapper( new ObjectMapper() {
+    private SerDes () { Unirest.setObjectMapper( new ObjectMapper() {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
             @Override
@@ -62,8 +61,7 @@ public class SerDes implements Runnable {
             @Override
             public <T> T readValue( String s, Class<T> aClass ) {
                 try { return this.objectMapper.readValue( s, aClass ); }
-                catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
-        this.updateTokens(); }
+                catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } ); }
 
     private final Supplier< Mono< String > > getTokenForGai = () -> HttpClient
             .create()
@@ -75,13 +73,22 @@ public class SerDes implements Runnable {
             .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
             .responseSingle( ( res, content ) -> content
                     .asString()
-                    .map( s -> s.length() > 15 && s.contains( "access_token" )
+                    .map( s -> ( this.flag = s.length() > 15 && s.contains( "access_token" ) )
                             ? s.substring( s.indexOf( "access_token" ) + 15,
                             s.indexOf( "token_type" ) - 3 )
                             : Errors.GAI_TOKEN_ERROR.name() ) )
+            .doOnError( throwable -> {
+                this.setFlag( false );
+                this.sendErrorLog( "updateTokenForGai",
+                        "access_token",
+                        "Error: " + throwable.getMessage() );
+                this.saveErrorLog( throwable.getMessage(),
+                        IntegratedServiceApis.OVIR.getName(),
+                        IntegratedServiceApis.OVIR.getDescription() );
+                log.error( "Error in getting token for Gai: " + throwable.getMessage() ); } )
             .doOnSuccess( value -> {
                 this.setFlag( true );
-                log.info( "Token successfully established: " + value.length() ); } );
+                log.info( "Token For Gai successfully established: " + value.length() ); } );
 
     private final Supplier< Mono< String > > getTokenForFio = () -> HttpClient
             .create()
@@ -96,7 +103,7 @@ public class SerDes implements Runnable {
                     .asString()
                     .flatMap( s -> {
                         log.info( "Token for Fio: " + s.substring( s.indexOf( "access_token" ) ) );
-                        return s.length() > 15 && s.contains( "access_token" )
+                        return ( this.flag = s.length() > 15 && s.contains( "access_token" ) )
                                 ? Mono.just( s.substring( s.indexOf( "access_token" ) + 15,
                                 s.indexOf( "token_type" ) - 3 ) )
                                 : this.getTokenForGai.get(); } ) )
