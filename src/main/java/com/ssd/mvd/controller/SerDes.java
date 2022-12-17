@@ -73,7 +73,7 @@ public class SerDes implements Runnable {
             .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
             .responseSingle( ( res, content ) -> content
                     .asString()
-                    .map( s -> ( this.flag = s.length() > 15 && s.contains( "access_token" ) )
+                    .map( s -> ( this.flag = s.length() > 30 && s.contains( "access_token" ) )
                             ? s.substring( s.indexOf( "access_token" ) + 15,
                             s.indexOf( "token_type" ) - 3 )
                             : Errors.GAI_TOKEN_ERROR.name() ) )
@@ -101,12 +101,10 @@ public class SerDes implements Runnable {
             .uri( this.getConfig().getAPI_FOR_FIO_TOKEN() )
             .responseSingle( ( res, content ) -> content
                     .asString()
-                    .flatMap( s -> {
-                        log.info( "Token for Fio: " + s.substring( s.indexOf( "access_token" ) ) );
-                        return ( this.flag = s.length() > 15 && s.contains( "access_token" ) )
-                                ? Mono.just( s.substring( s.indexOf( "access_token" ) + 15,
-                                s.indexOf( "token_type" ) - 3 ) )
-                                : this.getTokenForGai.get(); } ) )
+                    .map( s -> ( this.flag = s.length() > 30 && s.contains( "access_token" ) )
+                            ? s.substring( s.indexOf( "access_token" ) + 15,
+                            s.indexOf( "token_type" ) - 3 )
+                            : Errors.GAI_TOKEN_ERROR.name() ) )
             .doOnError( throwable -> {
                 this.setFlag( false );
                 this.sendErrorLog( "updateToken",
@@ -125,11 +123,15 @@ public class SerDes implements Runnable {
         log.info( "Updating tokens..." );
         this.getTokenForFio.get().subscribe( token -> {
             this.setTokenForFio( token );
+            if ( this.getTokenForFio().compareTo( Errors.GAI_TOKEN_ERROR.name() ) == 0 )
+                this.updateTokens();
             log.info( "Token for FIO established successfully: " + this.getTokenForFio().length() ); } );
         this.getTokenForGai.get().subscribe( token -> {
             this.setTokenForGai( token );
+            if ( this.getTokenForGai().compareTo( Errors.GAI_TOKEN_ERROR.name() ) == 0 )
+                this.updateTokens();
             this.setTokenForPassport( this.getTokenForGai() );
-            log.info( "Token successfully established: " + this.getTokenForGai().length() ); } ); }
+            log.info( "Token For Gai successfully established: " + this.getTokenForGai().length() ); } ); }
 
     // используется когда внешние сервисы возвращают 500 ошибку
     private final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
@@ -388,7 +390,8 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_FOR_INSURANCE() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.info( "Gosno in insurance: " + gosno );
+                log.info( "Gosno in insurance: " + gosno
+                        + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getInsurance().apply( gosno ); }
@@ -424,7 +427,8 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.info( "Gosno in getVehicleData: " + gosno );
+                log.info( "Gosno in getVehicleData: " + gosno
+                        + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getGetVehicleData().apply( gosno ); }
@@ -458,7 +462,8 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.info( "Gosno in getVehicleTonirovka: " + gosno );
+                log.info( "Gosno in getVehicleTonirovka: " + gosno
+                        + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getGetVehicleTonirovka().apply( gosno ); }
@@ -492,7 +497,8 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.info( "Gosno in getViolationList: " + gosno );
+                log.info( "Gosno in getViolationList: " + gosno
+                        + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getViolationList.apply( gosno ); }
@@ -527,6 +533,8 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> {
+                log.error( "Gosno in getDoverennostList: " + gosno
+                        + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getDoverennostList.apply( gosno ); }
