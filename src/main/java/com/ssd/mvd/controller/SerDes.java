@@ -79,16 +79,10 @@ public class SerDes implements Runnable {
                         + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_GAI_TOKEN()
                         + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_GAI() + "\"\r\n}" ) ) )
                 .uri( this.getConfig().getAPI_FOR_GAI_TOKEN() )
-                .responseSingle( ( res, content ) -> {
-                    log.info( " " );
-                    log.info( " " );
-                    return content
-                            .asString()
-                            .map( s -> {
-                                log.info( s );
-                                return s.substring(
-                                        s.indexOf( "access_token" + 15, s.length() - 2 ) ); } );
-                } )
+                .responseSingle( ( res, content ) -> content
+                        .asString()
+                        .map( s -> s.substring( s.indexOf( "access_token" ) + 15,
+                                s.indexOf( "token_type" ) - 3 ) ) )
                 .log()
                 .doOnError( throwable -> {
                     this.setFlag( false );
@@ -116,17 +110,12 @@ public class SerDes implements Runnable {
                         + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
                         + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}" ) ) )
                 .uri( this.getConfig().getAPI_FOR_FIO_TOKEN() )
-                .responseSingle( ( res, content ) -> {
-                    log.info( " " );
-                    log.info( " " );
-                    return content
-                            .asString()
-                            .map( s -> {
-                                log.info( s );
-                                return s.substring(
-                                        s.indexOf( "access_token" + 15, s.length() - 2 ) ); } );
-                } )
-                .log()
+                .responseSingle( ( res, content ) -> content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Token for Fio: " + s.substring( s.indexOf( "access_token" ) + 15 ) );
+                            return s.substring( s.indexOf( "access_token" ) + 15,
+                                    s.indexOf( "token_type" ) - 3 ); } ) )
                 .doOnError( throwable -> {
                     this.setFlag( false );
                     this.sendErrorLog( "updateToken",
