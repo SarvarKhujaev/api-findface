@@ -59,7 +59,7 @@ public class KafkaDataControl {
 
     private KafkaDataControl () { this.getLogger().info( "KafkaDataControl was created" ); }
 
-    // записывает все ошибки в работе серивса
+    // записывает все ошибки в работе сервиса
     private final Consumer< String > writeErrorLog = errorLog -> this.getKafkaSender()
             .createOutbound()
             .send( Mono.just( new ProducerRecord<>( this.getERROR_LOGS(),
@@ -71,7 +71,7 @@ public class KafkaDataControl {
                     " at: " + new Date() ) )
             .subscribe();
 
-    // записывает случае когда серивсы выдают ошибки
+    // записывает случае когда сервисы выдают ошибки
     private final Consumer< String > writeToKafkaErrorLog = errorLog -> this.getKafkaSender()
             .createOutbound()
             .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL_ERROR_LOG(),
