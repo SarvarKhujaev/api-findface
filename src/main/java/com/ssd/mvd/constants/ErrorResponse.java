@@ -8,8 +8,4 @@ import lombok.Data;
 public class ErrorResponse {
     private String message;
     private Errors errors;
-
-    public ErrorResponse( String message, Errors errors ) {
-        this.setMessage( message );
-        this.setErrors( errors ); }
 }

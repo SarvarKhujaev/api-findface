@@ -11,7 +11,7 @@ import lombok.Data;
 public class Insurance {
     private String DateBegin;
     private String DateValid;
-    private String InsuranceSerialNumber;
+    private String TintinType;
 
     private ErrorResponse errorResponse;
 
