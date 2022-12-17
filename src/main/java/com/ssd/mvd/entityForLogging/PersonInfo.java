@@ -22,8 +22,8 @@ public class PersonInfo {
 
     public PersonInfo ( PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            this.setFullname( psychologyCard.getPinpp() != null
-                    ? ( psychologyCard
+            this.setFullname( psychologyCard.getPinpp() != null ?
+                    ( psychologyCard
                             .getPinpp()
                             .getName()
                             + " "
@@ -68,25 +68,15 @@ public class PersonInfo {
                     .getPinpp()
                     .getCadastre() : "unknown" );
             if ( psychologyCard.getPapilonData() != null
-                    && psychologyCard.getPapilonData().size() > 0 )
-                    SerDes
-                        .getSerDes()
-                        .getBase64ToLink()
-                        .apply( psychologyCard
-                                .getPapilonData()
-                                .get( 0 )
-                                .getPhoto() )
-                        .subscribe( this::setPhoto ); }
-
-        else {
-            SerDes
+                    && psychologyCard.getPapilonData().size() > 0 ) this.setPhoto( SerDes
                     .getSerDes()
                     .getBase64ToLink()
                     .apply( psychologyCard
                             .getPapilonData()
                             .get( 0 )
-                            .getPhoto() )
-                    .subscribe( this::setPhoto );
+                            .getPhoto() ) ); }
+
+        else {
             this.setPassportNumber ( psychologyCard
                     .getPapilonData()
                     .get( 0 )
@@ -95,19 +85,26 @@ public class PersonInfo {
             this.setPinfl( psychologyCard
                     .getPapilonData()
                     .get( 0 )
-                    .getPersonal_code() ); } }
+                    .getPersonal_code() );
+
+            this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( psychologyCard
+                            .getPapilonData()
+                            .get( 0 )
+                            .getPhoto() ) ); } }
 
     public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO ) {
         if ( personTotalDataByFIO.getData() != null
                 && !personTotalDataByFIO.getData().isEmpty() ) {
-            SerDes
-                .getSerDes()
-                .getBase64ToLink()
-                .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() )
-                .subscribe( this::setPhoto );
             this.setPinfl( personTotalDataByFIO.getData().get( 0 ).getPinpp() );
             this.setCadastre( personTotalDataByFIO.getData().get( 0 ).getCadastre() );
             this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );
+            this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
             this.setFullname( personTotalDataByFIO.getData().get( 0 ).getNameLatin()
                     + " "
                     + personTotalDataByFIO.getData().get( 0 ).getSurnameLatin()
