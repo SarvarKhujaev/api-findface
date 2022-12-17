@@ -40,6 +40,8 @@ public class SerDes implements Runnable {
     private String tokenForFio;
     private String tokenForPassport;
 
+    private final HttpClient httpClient = HttpClient.create();
+
     private final Gson gson = new Gson();
     private final Config config = new Config();
     private static SerDes serDes = new SerDes();
@@ -63,8 +65,7 @@ public class SerDes implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } ); }
 
-    private final Supplier< Mono< String > > getTokenForGai = () -> HttpClient
-            .create()
+    private final Supplier< Mono< String > > getTokenForGai = () -> this.getHttpClient()
             .post()
             .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
                     + this.getConfig().getLOGIN_FOR_GAI_TOKEN()
@@ -90,8 +91,7 @@ public class SerDes implements Runnable {
                 this.setFlag( true );
                 log.info( "Token For Gai successfully established: " + value.length() ); } );
 
-    private final Supplier< Mono< String > > getTokenForFio = () -> HttpClient
-            .create()
+    private final Supplier< Mono< String > > getTokenForFio = () -> this.getHttpClient()
             .headers( header -> header.add( "Content-Type", "application/json" ) )
             .post()
             .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Login\": \""
@@ -184,8 +184,7 @@ public class SerDes implements Runnable {
                         .getWriteToKafkaServiceUsage()
                         .accept( this.getGson().toJson( userRequest1 ) ) ); }
 
-    private final Function< String, Mono< String > > base64ToLink = base64 -> HttpClient
-            .create()
+    private final Function< String, Mono< String > > base64ToLink = base64 -> this.getHttpClient()
             .headers( h -> h.add( "Content-Type", "application/json" ) )
             .post()
             .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" ) ) )
@@ -199,8 +198,7 @@ public class SerDes implements Runnable {
             .doOnError( throwable -> log.error( "Error: " + throwable.getMessage() ) )
             .doOnSuccess( value -> log.info( "Success: " + value ) );
 
-    private final Function< String, Mono< Pinpp > > pinfl = pinpp -> HttpClient
-            .create()
+    private final Function< String, Mono< Pinpp > > pinfl = pinpp -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_PINPP() + pinpp )
@@ -232,8 +230,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "pinpp", pinpp, "Error in service: " + e.getMessage() ); } )
             .onErrorReturn( new Pinpp( this.getServiceErrorResponse.apply( "" ) ) );
 
-    private final Function< String, Mono< Data > > deserialize = pinfl -> HttpClient
-            .create()
+    private final Function< String, Mono< Data > > deserialize = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
             .post()
             .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"Pcadastre\": \"" + pinfl + "\"\r\n}" ) ) )
@@ -269,8 +266,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() ); } )
             .onErrorReturn( new Data( this.getServiceErrorResponse.apply( "" ) ) );
 
-    private final Function< String, Mono< String > > getImageByPinfl = pinfl -> HttpClient
-            .create()
+    private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinfl )
@@ -301,8 +297,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "getImageByPinfl", pinfl, "Error: " + e.getMessage() ); } )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
-    private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> HttpClient
-            .create()
+    private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .post()
             .uri( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() )
@@ -338,8 +333,7 @@ public class SerDes implements Runnable {
             .onErrorReturn( new ModelForAddress( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final BiFunction< String, String, Mono< com.ssd.mvd.entity.modelForPassport.Data > > getModelForPassport =
-        ( SerialNumber, BirthDate ) -> HttpClient
-                .create()
+        ( SerialNumber, BirthDate ) -> this.getHttpClient()
                 .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
                 .post()
                 .uri( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
@@ -380,8 +374,7 @@ public class SerDes implements Runnable {
                 .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.Data(
                         this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Mono< Insurance > > insurance = gosno -> HttpClient
-            .create()
+    private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_FOR_INSURANCE() + gosno )
@@ -417,8 +410,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "insurance", gosno, "Error: " + e.getMessage() ); } )
             .onErrorReturn( new Insurance( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> HttpClient
-            .create()
+    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
@@ -452,8 +444,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "getVehicleData", gosno, e.getMessage() ); } )
             .onErrorReturn( new ModelForCar( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> HttpClient
-            .create()
+    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
@@ -487,8 +478,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "getVehicleTonirovka", gosno, e.getMessage() ); } )
             .onErrorReturn( new Tonirovka( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> HttpClient
-            .create()
+    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
@@ -523,8 +513,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "getViolationList", gosno, e.getMessage() ); } )
             .onErrorReturn( new ViolationsList( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> HttpClient
-            .create()
+    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
@@ -559,8 +548,7 @@ public class SerDes implements Runnable {
                 this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() ); } )
             .onErrorReturn( new DoverennostList( this.getServiceErrorResponse.apply( gosno ) ) );
 
-    private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> HttpClient
-            .create()
+    private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
@@ -690,8 +678,7 @@ public class SerDes implements Runnable {
                         .apply( familyMember.getPnfl() )
                         .subscribe( familyMember::setPersonal_image ) ); }
 
-    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> HttpClient
-            .create()
+    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForFio() ) )
             .post()
             .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
