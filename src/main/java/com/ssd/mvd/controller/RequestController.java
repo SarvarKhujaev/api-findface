@@ -69,26 +69,22 @@ public class RequestController {
         return SerDes.getSerDes().getFlag()
                 ? Mono.just( new CarTotalData() )
                 .flatMap( carTotalData -> {
-                    SerDes
+                    carTotalData.setModelForCar( SerDes
                             .getSerDes()
                             .getGetVehicleData()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setModelForCar );
-                    SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
+                    carTotalData.setDoverennostList( SerDes
                             .getSerDes()
                             .getGetDoverennostList()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setDoverennostList );
-                    SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
+                    carTotalData.setViolationsList( SerDes
                             .getSerDes()
                             .getGetViolationList()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setViolationsList );
-                    SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
+                    carTotalData.setTonirovka( SerDes
                             .getSerDes()
                             .getGetVehicleTonirovka()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setTonirovka );
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
 
                     if ( carTotalData.getModelForCar() != null
                             && carTotalData.getModelForCar().getPinpp() != null
@@ -103,13 +99,13 @@ public class RequestController {
                                                 .build() )
                                         .user( apiResponseModel.getUser() )
                                         .build() ) );
-                    SerDes
+                    carTotalData.setInsurance( SerDes
                             .getSerDes()
                             .getInsurance()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setInsurance );
+                            .apply( apiResponseModel.getStatus().getMessage() ) );
                     carTotalData.setCameraImage( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
                     carTotalData.setGosNumber( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
+                    System.out.println( carTotalData );
                     return Mono.just( carTotalData ); } )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
