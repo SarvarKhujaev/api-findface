@@ -50,7 +50,6 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
-        log.info( fio + "" );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()

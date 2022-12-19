@@ -1,5 +1,6 @@
 package com.ssd.mvd.controller;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
@@ -220,22 +221,22 @@ public class SerDes implements Runnable {
             .doOnError( throwable -> log.error( "Error: " + throwable.getMessage() ) )
             .doOnSuccess( value -> log.info( "Success: " + value ) );
 
-    private final Function< String, Mono< String > > test = base64 -> this.getHttpClient()
-            .headers( h -> h.add( "Content-Type", "application/json" ) )
-            .post()
-            .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" ) ) )
-            .uri( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
-            .responseContent()
-            .asString()
-            .next()
-//                    .responseSingle( ( ( res, content ) -> res.status().code() == 200
-//                            && content != null
-//                            ? content
-//                            .asString()
-//                            .map( s -> s.substring( s.indexOf( "data" ) + 7, s.length() - 2 ) )
-//                            : Mono.just( Errors.DATA_NOT_FOUND.name() ) ) )
-            .doOnError( throwable -> log.error( "Error: " + throwable.getMessage() ) )
-            .doOnSuccess( value -> log.info( "Success: " + value ) );
+    private final Function< String, Mono< String > > test = base64 -> Mono.just(
+            HttpClient
+                    .create()
+                    .keepAlive( true )
+                    .headers( h -> {
+                        h.clear();
+                        h.add( "Content-Type", "application/json" ); } )
+                    .post()
+                    .send( ByteBufFlux.fromString( Mono.just( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" ) ) )
+                    .uri( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+                    .responseContent()
+                    .asString()
+                    .next()
+                    .doOnError( throwable -> log.error( "Error: " + throwable.getMessage() ) )
+                    .doOnSuccess( value -> log.info( "Success: " + value ) )
+                    .block( Duration.ofSeconds( 5 ) ) );
 
     private final Function< String, Mono< Pinpp > > pinfl = pinpp -> Mono.just(
             this.getHttpClient()
@@ -761,69 +762,47 @@ public class SerDes implements Runnable {
                         .apply( familyMember.getPnfl() )
                         .subscribe( familyMember::setPersonal_image ) ); }
 
-    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForFio() ) )
-            .post()
-            .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
-            .send( ByteBufFlux.fromString( Mono.just(
-                    "{\r\n    \"Surname\" : \"" + fio.getSurname() + "\",\r\n    \"Name\" : \"" + fio.getName() + "\",\r\n    \"Patronym\" : \"" + fio.getPatronym() + "\"\r\n}" ) ) )
-            .responseContent()
-            .asString()
-            .next()
-            .map( s -> {
-                log.info( "Response: " + s );
-                PersonTotalDataByFIO person = this.getGson()
-                        .fromJson( s, PersonTotalDataByFIO.class );
-                if ( person != null
-                        && person.getData() != null
-                        && person.getData().size() > 0 ) {
-                    person
-                            .getData()
-                            .parallelStream()
-                            .forEach( person1 -> this.getGetImageByPinfl()
-                                    .apply( person1.getPinpp() )
-                                    .subscribe( person1::setPersonImage ) );
-                    this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
-                return person != null ? person
-                        : new PersonTotalDataByFIO(
-                        this.getServiceErrorResponse.apply(
-                                Errors.DATA_NOT_FOUND.name() ) ); } )
-//            .responseSingle( ( res, content ) -> {
-//                if ( res.status().code() == 401 ) {
-//                    this.updateTokens();
-//                    return this.getPersonTotalDataByFIO.apply( fio ); }
-//
-//                if ( this.check500ErrorAsync.test( res.status().code() ) ) this.saveErrorLog(
-//                        res.status().toString(),
-//                        IntegratedServiceApis.GAI.getName(),
-//                        IntegratedServiceApis.GAI.getDescription() );
-//
-//                return res.status().code() == 200
-//                        && content != null
-//                        ? content
-//                        .asString()
-//                        .map( s -> {
-//                            PersonTotalDataByFIO person = this.getGson()
-//                                    .fromJson( s, PersonTotalDataByFIO.class );
-//                            if ( person != null && person.getData().size() > 0 ) {
-//                                person
-//                                        .getData()
-//                                        .parallelStream()
-//                                        .forEach( person1 -> this.getGetImageByPinfl()
-//                                                .apply( person1.getPinpp() )
-//                                                .subscribe( person1::setPersonImage ) );
-//                                this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
-//                            return person != null ? person : new PersonTotalDataByFIO(); } )
-//                        : Mono.just( new PersonTotalDataByFIO(
-//                        this.getDataNotFoundErrorResponse.apply( "" ) ) ); } )
-            .doOnError( e -> {
-                log.error( "Error in getPersonTotalDataByFIO method: {}", e.getMessage() );
-                this.saveErrorLog( e.getMessage(),
-                        IntegratedServiceApis.GAI.getName(),
-                        IntegratedServiceApis.GAI.getDescription() );
-                this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() ); } )
-            .onErrorReturn( new PersonTotalDataByFIO(
-                    this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> Mono.just(
+            HttpClient
+                    .create()
+                    .keepAlive( true )
+                    .headers( h -> {
+                        h.clear();
+                        h.add( "Authorization", "Bearer " + this.getTokenForFio() ); } )
+                    .post()
+                    .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
+                    .send( ByteBufFlux.fromString( Mono.just(
+                            "{\r\n    \"Surname\" : \"" + fio.getSurname() + "\",\r\n    \"Name\" : \"" + fio.getName() + "\",\r\n    \"Patronym\" : \"" + fio.getPatronym() + "\"\r\n}" ) ) )
+                    .responseContent()
+                    .asString()
+                    .next()
+                    .map( s -> {
+                        log.info( "Response: " + s );
+                        PersonTotalDataByFIO person = this.getGson()
+                                .fromJson( s, PersonTotalDataByFIO.class );
+                        if ( person != null
+                                && person.getData() != null
+                                && person.getData().size() > 0 ) {
+                            person
+                                    .getData()
+                                    .parallelStream()
+                                    .forEach( person1 -> this.getGetImageByPinfl()
+                                            .apply( person1.getPinpp() )
+                                            .subscribe( person1::setPersonImage ) );
+                            this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
+                        return person != null ? person
+                                : new PersonTotalDataByFIO(
+                                this.getServiceErrorResponse.apply(
+                                        Errors.DATA_NOT_FOUND.name() ) ); } )
+                    .doOnError( e -> {
+                        log.error( "Error in getPersonTotalDataByFIO method: {}", e.getMessage() );
+                        this.saveErrorLog( e.getMessage(),
+                                IntegratedServiceApis.GAI.getName(),
+                                IntegratedServiceApis.GAI.getDescription() );
+                        this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() ); } )
+                    .onErrorReturn( new PersonTotalDataByFIO(
+                            this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                    .block() );
 
     public PsychologyCard getPsychologyCard ( ApiResponseModel apiResponseModel ) {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
