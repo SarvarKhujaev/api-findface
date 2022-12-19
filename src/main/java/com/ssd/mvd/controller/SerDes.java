@@ -766,19 +766,17 @@ public class SerDes implements Runnable {
             .post()
             .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
             .send( ByteBufFlux.fromString( Mono.just(
-                    "{\r\n    \"Surname\" : \"" + ( fio.getSurname() != null
-                            ? fio.getSurname().toUpperCase( Locale.ROOT ) : null ) + "\",\r\n    " +
-                            "\"Name\" : \"" + ( fio.getName() != null
-                            ? fio.getName().toUpperCase( Locale.ROOT ) : null ) + "\",\r\n    " +
-                            "\"Patronym\" : \"" + ( fio.getPatronym() != null
-                            ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null ) + "\"\r\n}" ) ) )
+                    "{\r\n    \"Surname\" : \"" + fio.getSurname() + "\",\r\n    \"Name\" : \"" + fio.getName() + "\",\r\n    \"Patronym\" : \"" + fio.getPatronym() + "\"\r\n}" ) ) )
             .responseContent()
             .asString()
             .next()
             .map( s -> {
+                log.info( "Response: " + s );
                 PersonTotalDataByFIO person = this.getGson()
                         .fromJson( s, PersonTotalDataByFIO.class );
-                if ( person != null && person.getData().size() > 0 ) {
+                if ( person != null
+                        && person.getData() != null
+                        && person.getData().size() > 0 ) {
                     person
                             .getData()
                             .parallelStream()
@@ -786,7 +784,10 @@ public class SerDes implements Runnable {
                                     .apply( person1.getPinpp() )
                                     .subscribe( person1::setPersonImage ) );
                     this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
-                return person != null ? person : new PersonTotalDataByFIO(); } )
+                return person != null ? person
+                        : new PersonTotalDataByFIO(
+                        this.getServiceErrorResponse.apply(
+                                Errors.DATA_NOT_FOUND.name() ) ); } )
 //            .responseSingle( ( res, content ) -> {
 //                if ( res.status().code() == 401 ) {
 //                    this.updateTokens();
