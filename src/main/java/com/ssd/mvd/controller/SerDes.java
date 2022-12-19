@@ -802,7 +802,7 @@ public class SerDes implements Runnable {
                         this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() ); } )
                     .onErrorReturn( new PersonTotalDataByFIO(
                             this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                    .block() );
+                    .block( Duration.ofSeconds( 5 ) ) );
 
     public PsychologyCard getPsychologyCard ( ApiResponseModel apiResponseModel ) {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
