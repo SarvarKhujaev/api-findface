@@ -397,7 +397,7 @@ public class SerDes implements Runnable {
                     .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.Data(
                             this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Insurance > insurance = gosno -> this.getHttpClient()
+    private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_FOR_INSURANCE() + gosno )
@@ -406,7 +406,7 @@ public class SerDes implements Runnable {
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
-                    return Mono.just( this.getInsurance().apply( gosno ) ); }
+                    return this.getInsurance().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -434,11 +434,9 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( "insurance", gosno, "Error: " + e.getMessage() ); } )
-            .onErrorReturn( new Insurance(
-                    this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-            .block();
+            .onErrorReturn( new Insurance( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, ModelForCar > getVehicleData = gosno -> this.getHttpClient()
+    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
@@ -447,7 +445,7 @@ public class SerDes implements Runnable {
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                             this.updateTokens();
-                            return Mono.just( this.getGetVehicleData().apply( gosno ) ); }
+                            return this.getGetVehicleData().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -461,19 +459,21 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + this.getGson().fromJson( s, ModelForCar.class ) );
+                            return this.getGson().fromJson( s, ModelForCar.class ); } )
                         : Mono.just( new ModelForCar(
-                        this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
+                        this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
             .doOnError( e -> {
                 log.error( "Error in getVehicleData method: {}", e.getMessage() );
                 this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( "getVehicleData", gosno, e.getMessage() ); } )
-            .onErrorReturn( new ModelForCar( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-            .block();
+            .onErrorReturn( new ModelForCar( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Tonirovka > getVehicleTonirovka = gosno -> this.getHttpClient()
+    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
@@ -481,8 +481,8 @@ public class SerDes implements Runnable {
                 log.info( "Gosno in getVehicleTonirovka: " + gosno
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
-                        this.updateTokens();
-                        return Mono.just( this.getGetVehicleTonirovka().apply( gosno ) ); }
+                            this.updateTokens();
+                            return this.getGetVehicleTonirovka().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -508,10 +508,9 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( "getVehicleTonirovka", gosno, e.getMessage() ); } )
-            .onErrorReturn( new Tonirovka( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-            .block();
+            .onErrorReturn( new Tonirovka( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, ViolationsList > getViolationList = gosno -> this.getHttpClient()
+    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
@@ -520,7 +519,7 @@ public class SerDes implements Runnable {
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
-                    return Mono.just( this.getViolationList.apply( gosno ) ); }
+                    return this.getViolationList.apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -548,11 +547,9 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( "getViolationList", gosno, e.getMessage() ); } )
-            .onErrorReturn( new ViolationsList(
-                    this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-            .block();
+            .onErrorReturn( new ViolationsList( this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, DoverennostList > getDoverennostList = gosno -> this.getHttpClient()
+    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
             .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
@@ -561,7 +558,7 @@ public class SerDes implements Runnable {
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
-                    return Mono.just( this.getDoverennostList.apply( gosno ) ); }
+                    return this.getDoverennostList.apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -589,8 +586,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() ); } )
-            .onErrorReturn( new DoverennostList( this.getServiceErrorResponse.apply( gosno ) ) )
-            .block();
+            .onErrorReturn( new DoverennostList( this.getServiceErrorResponse.apply( gosno ) ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
@@ -646,9 +642,12 @@ public class SerDes implements Runnable {
                 .getModelForCarList()
                 .parallelStream()
                 .forEach( modelForCar -> {
-                    modelForCar.setInsurance( this.getInsurance().apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setTonirovka( this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setDoverennostList( this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) ); } ); };
+                    this.getInsurance().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setInsurance );
+                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setTonirovka );
+                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setDoverennostList ); } ); };
 
     private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
             psychologyCard.getModelForCadastr() != null
