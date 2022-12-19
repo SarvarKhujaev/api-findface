@@ -783,13 +783,15 @@ public class SerDes implements Runnable {
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
 
         this.getPinfl().apply( apiResponseModel.getStatus().getMessage() )
-                .subscribe( psychologyCard::setPinpp );
-        this.getModelForCarList.apply( apiResponseModel.getStatus().getMessage() )
-                .subscribe( psychologyCard::setModelForCarList );
+                .subscribe( pinpp -> {
+                    psychologyCard.setPinpp( pinpp );
+                    this.getSetPersonPrivateData().accept( psychologyCard ); } );
+        this.getGetModelForCarList().apply( apiResponseModel.getStatus().getMessage() )
+                .subscribe( modelForCarList -> {
+                    psychologyCard.setModelForCarList( modelForCarList );
+                    this.getFindAllDataAboutCar().accept( psychologyCard ); } );
         this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() )
                 .subscribe( psychologyCard::setPersonImage );
-        this.getSetPersonPrivateData().accept( psychologyCard );
-        this.getFindAllDataAboutCar().accept( psychologyCard );
         this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
         return psychologyCard; }
 

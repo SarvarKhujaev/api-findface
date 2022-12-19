@@ -114,8 +114,7 @@ public class RequestController {
 //                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
 //                        error.getMessage(), object ) ) )
 //                .onErrorReturn( new CarTotalData( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
-                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) );
-    }
+                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalData" ) // возвращает данные по фотографии
     public Mono< PsychologyCard > getPersonTotalData ( ApiResponseModel apiResponseModel ) {
