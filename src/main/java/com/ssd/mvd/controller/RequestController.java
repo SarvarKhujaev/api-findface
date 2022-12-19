@@ -68,49 +68,54 @@ public class RequestController {
         log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.just( new CarTotalData() )
-                .flatMap( carTotalData -> {
-                    carTotalData.setModelForCar( SerDes
+                .map( carTotalData -> {
+                    SerDes
                             .getSerDes()
                             .getGetVehicleData()
-                            .apply( apiResponseModel.getStatus().getMessage() ) );
-                    carTotalData.setDoverennostList( SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( modelForCar -> {
+                                carTotalData.setModelForCar( modelForCar );
+                                if ( carTotalData.getModelForCar() != null
+                                        && carTotalData.getModelForCar().getPinpp() != null
+                                        && !carTotalData.getModelForCar().getPinpp().isEmpty() )
+                                    carTotalData.setPsychologyCard( SerDes
+                                            .getSerDes()
+                                            .getPsychologyCard( ApiResponseModel
+                                                    .builder()
+                                                    .status( Status
+                                                            .builder()
+                                                            .message( carTotalData.getModelForCar().getPinpp() )
+                                                            .build() )
+                                                    .user( apiResponseModel.getUser() )
+                                                    .build() ) ); } );
+                    SerDes
                             .getSerDes()
                             .getGetDoverennostList()
-                            .apply( apiResponseModel.getStatus().getMessage() ) );
-                    carTotalData.setViolationsList( SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( carTotalData::setDoverennostList );
+                    SerDes
                             .getSerDes()
                             .getGetViolationList()
-                            .apply( apiResponseModel.getStatus().getMessage() ) );
-                    carTotalData.setTonirovka( SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( carTotalData::setViolationsList );
+                    SerDes
                             .getSerDes()
                             .getGetVehicleTonirovka()
-                            .apply( apiResponseModel.getStatus().getMessage() ) );
-
-                    if ( carTotalData.getModelForCar() != null
-                            && carTotalData.getModelForCar().getPinpp() != null
-                            && !carTotalData.getModelForCar().getPinpp().isEmpty() )
-                        carTotalData.setPsychologyCard( SerDes
-                                .getSerDes()
-                                .getPsychologyCard( ApiResponseModel
-                                        .builder()
-                                        .status( Status
-                                                .builder()
-                                                .message( carTotalData.getModelForCar().getPinpp() )
-                                                .build() )
-                                        .user( apiResponseModel.getUser() )
-                                        .build() ) );
-                    carTotalData.setInsurance( SerDes
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( carTotalData::setTonirovka );
+                    SerDes
                             .getSerDes()
                             .getInsurance()
-                            .apply( apiResponseModel.getStatus().getMessage() ) );
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( carTotalData::setInsurance );
                     carTotalData.setCameraImage( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
                     carTotalData.setGosNumber( apiResponseModel.getStatus().getMessage().split( "@$" )[0] );
-                    System.out.println( carTotalData );
-                    return Mono.just( carTotalData ); } )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .onErrorReturn( new CarTotalData( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
-                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
+                    return carTotalData; } )
+//                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+//                        error.getMessage(), object ) ) )
+//                .onErrorReturn( new CarTotalData( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) );
+    }
 
     @MessageMapping ( value = "getPersonTotalData" ) // возвращает данные по фотографии
     public Mono< PsychologyCard > getPersonTotalData ( ApiResponseModel apiResponseModel ) {
