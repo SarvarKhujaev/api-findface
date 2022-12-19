@@ -404,9 +404,9 @@ public class SerDes implements Runnable {
             .responseSingle( ( res, content ) -> {
                 log.info( "Gosno in insurance: " + gosno
                         + " With status: " + res.status() );
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getInsurance().apply( gosno ); }
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getInsurance().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -420,9 +420,12 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> !s.contains( "топилмади" )
-                                ? this.getGson().fromJson( s, Insurance.class )
-                                : new Insurance( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + this.getGson().fromJson( s, Insurance.class ) );
+                            return !s.contains( "топилмади" )
+                                    ? this.getGson().fromJson( s, Insurance.class )
+                                    : new Insurance( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); } )
                         : Mono.just( new Insurance(
                         this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -440,9 +443,9 @@ public class SerDes implements Runnable {
             .responseSingle( ( res, content ) -> {
                 log.info( "Gosno in getVehicleData: " + gosno
                         + " With status: " + res.status() );
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getGetVehicleData().apply( gosno ); }
+                if ( res.status().code() == 401 ) {
+                            this.updateTokens();
+                            return this.getGetVehicleData().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -456,7 +459,10 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + this.getGson().fromJson( s, ModelForCar.class ) );
+                            return this.getGson().fromJson( s, ModelForCar.class ); } )
                         : Mono.just( new ModelForCar(
                         this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -474,9 +480,9 @@ public class SerDes implements Runnable {
             .responseSingle( ( res, content ) -> {
                 log.info( "Gosno in getVehicleTonirovka: " + gosno
                         + " With status: " + res.status() );
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getGetVehicleTonirovka().apply( gosno ); }
+                if ( res.status().code() == 401 ) {
+                            this.updateTokens();
+                            return this.getGetVehicleTonirovka().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -490,7 +496,10 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + this.getGson().fromJson( s, Tonirovka.class ) );
+                            return this.getGson().fromJson( s, Tonirovka.class ); } )
                         : Mono.just( new Tonirovka(
                         this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -508,9 +517,9 @@ public class SerDes implements Runnable {
             .responseSingle( ( res, content ) -> {
                 log.info( "Gosno in getViolationList: " + gosno
                         + " With status: " + res.status() );
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getViolationList.apply( gosno ); }
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getViolationList.apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -524,8 +533,12 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> new ViolationsList(
-                                this.stringToArrayList( s, ViolationsInformation[].class ) ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + new ViolationsList(
+                                    this.stringToArrayList( s, ViolationsInformation[].class ) ) );
+                            return new ViolationsList(
+                                    this.stringToArrayList( s, ViolationsInformation[].class ) ); })
                         : Mono.just( new ViolationsList(
                         this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -543,9 +556,9 @@ public class SerDes implements Runnable {
             .responseSingle( ( res, content ) -> {
                 log.error( "Gosno in getDoverennostList: " + gosno
                         + " With status: " + res.status() );
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getDoverennostList.apply( gosno ); }
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getDoverennostList.apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -559,8 +572,12 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> new DoverennostList(
-                                this.stringToArrayList( s, Doverennost[].class ) ) )
+                        .map( s -> {
+                            log.info( "Body: " + s );
+                            log.info( "Object: " + new DoverennostList(
+                                    this.stringToArrayList( s, Doverennost[].class ) ) );
+                            return new DoverennostList(
+                                    this.stringToArrayList( s, Doverennost[].class ) ); } )
                         : Mono.just( new DoverennostList(
                         this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
             .doOnError( e -> {
