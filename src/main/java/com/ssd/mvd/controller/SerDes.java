@@ -434,21 +434,19 @@ public class SerDes implements Runnable {
                         carTotalData.setInsurance( new Insurance(
                                 this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-                    if ( res.status().code() == 200
-                            && content != null ) content
+                    return res.status().code() == 200
+                            && content != null
+                            ? content
                             .asString()
-                            .subscribe( s -> {
+                            .map( s -> {
                                 log.info( "Body: " + s );
                                 log.info( "Object: " + this.getGson().fromJson( s, Insurance.class ) );
-                                if ( !s.contains( "топилмади" ) ) carTotalData.setInsurance(
-                                        this.getGson().fromJson( s, Insurance.class ) );
-                                else carTotalData.setInsurance( new Insurance(
-                                        this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) ); } );
-
-                    else carTotalData.setInsurance( new Insurance(
-                            this.getDataNotFoundErrorResponse.apply( gosno ) ) );
-                    return Mono.just( carTotalData.getInsurance() ); } )
-                .subscribe( System.out::println ); }
+                                return !s.contains( "топилмади" )
+                                        ? this.getGson().fromJson( s, Insurance.class )
+                                        : new Insurance( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); } )
+                            : Mono.just( new Insurance(
+                            this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
+                .subscribe( carTotalData::setInsurance ); }
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> {
