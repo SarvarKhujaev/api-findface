@@ -71,6 +71,11 @@ public class RequestController {
                 .flatMap( carTotalData -> {
                     SerDes
                             .getSerDes()
+                            .getGetVehicleData()
+                            .apply( apiResponseModel.getStatus().getMessage() )
+                            .subscribe( carTotalData::setModelForCar );
+                    SerDes
+                            .getSerDes()
                             .getGetDoverennostList()
                             .apply( apiResponseModel.getStatus().getMessage() )
                             .subscribe( carTotalData::setDoverennostList );
@@ -84,11 +89,6 @@ public class RequestController {
                             .getGetVehicleTonirovka()
                             .apply( apiResponseModel.getStatus().getMessage() )
                             .subscribe( carTotalData::setTonirovka );
-                    SerDes
-                            .getSerDes()
-                            .getGetVehicleData()
-                            .apply( apiResponseModel.getStatus().getMessage() )
-                            .subscribe( carTotalData::setModelForCar );
 
                     if ( carTotalData.getModelForCar() != null
                             && carTotalData.getModelForCar().getPinpp() != null

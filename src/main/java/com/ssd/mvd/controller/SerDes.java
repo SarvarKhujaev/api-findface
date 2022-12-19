@@ -554,7 +554,7 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.error( "Gosno in getDoverennostList: " + gosno
+                log.error( "Gosno in getDoverennostList: " + this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
@@ -593,9 +593,9 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
             .responseSingle( ( res, content ) -> {
-//                        if ( res.status().code() == 401 ) {
-//                            this.updateTokens();
-//                            return this.getModelForCarList.apply( pinfl ); }
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getModelForCarList.apply( pinfl ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
