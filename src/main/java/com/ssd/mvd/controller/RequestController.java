@@ -155,9 +155,10 @@ public class RequestController {
                 .getPermanentRegistration();
         return personList != null && !personList.isEmpty()
                 ? Flux.fromStream( personList.stream() )
-                .map( person -> SerDes
+                .flatMap( person -> SerDes
                         .getSerDes()
-                        .getPsychologyCard( SerDes
+                        .getGetPsychologyCardByData()
+                        .apply( SerDes
                                         .getSerDes()
                                         .deserialize(
                                                 person.getPPsp(),
@@ -165,10 +166,15 @@ public class RequestController {
                                 apiResponseModel ) )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new PsychologyCard( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Flux.just( new PsychologyCard(
-                SerDes.getSerDes().getGetDataNotFoundErrorResponse().apply(
-                        apiResponseModel.getStatus().getMessage() ) ) ); }
+                SerDes
+                        .getSerDes()
+                        .getGetDataNotFoundErrorResponse()
+                        .apply( apiResponseModel.getStatus().getMessage() ) ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
@@ -191,13 +197,17 @@ public class RequestController {
                 .getMessage() == null ) return Mono.just( new PsychologyCard( this.getWrongParamResponse.get() ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         return SerDes.getSerDes().getFlag()
-                ? Mono.just( SerDes
+                ? SerDes
+                .getSerDes()
+                .getGetPsychologyCardByData()
+                .apply( SerDes
                         .getSerDes()
-                        .getPsychologyCard( SerDes
-                                .getSerDes()
-                                .deserialize( strings[ 0 ], strings[ 1 ] ), apiResponseModel ) )
+                        .deserialize( strings[ 0 ], strings[ 1 ] ), apiResponseModel )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
-                .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new PsychologyCard( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
 }
