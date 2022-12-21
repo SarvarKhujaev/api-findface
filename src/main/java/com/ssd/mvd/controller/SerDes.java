@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import com.google.gson.Gson;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -108,6 +109,13 @@ public class SerDes implements Runnable {
             log.error( "Error in updating tokens: " + e.getMessage() );
             this.updateTokens(); } }
 
+    // используется когда внешние сервисы возвращают 500 ошибку
+    private final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
+            .builder()
+            .message( "Service error: " + error )
+            .errors( Errors.EXTERNAL_SERVICE_500_ERROR)
+            .build();
+
     private final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Service error: " + error )
@@ -119,6 +127,17 @@ public class SerDes implements Runnable {
             .message( "Data for: " + error + " not found" )
             .errors( Errors.DATA_NOT_FOUND )
             .build();
+
+    private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
+            () -> {
+                KafkaDataControl
+                        .getInstance()
+                        .getWriteToKafkaServiceUsage()
+                        .accept( this.getGson().toJson( userRequest ) );
+                return ""; } )
+            .subscribeOn( Schedulers.boundedElastic() )
+            .then()
+            .subscribe();
 
     private final Function< String, String > base64ToLink = base64 -> {
         this.getFields().clear();
@@ -152,7 +171,7 @@ public class SerDes implements Runnable {
         this.getNotification().setCallingTime( new Date() );
         if ( this.getResponse() != null ) {
             this.getNotification().setJsonNode( this.getResponse().getBody() );
-            log.info( this.getResponse().getBody()
+            log.error( this.getResponse().getBody()
                     + " Status: " + this.getResponse().getStatus() ); }
         KafkaDataControl
                 .getInstance()
@@ -240,7 +259,7 @@ public class SerDes implements Runnable {
     private final Function< String, String > getImageByPinfl = pinpp -> {
         HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp in getImageByPinfl: " + pinpp );
+        try { log.info( "Pinpp in getImageByPinfl: " + this.getConfig().getAPI_FOR_PERSON_IMAGE() + " : " + pinpp );
             response1 = Unirest.get( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinpp )
                     .headers( this.getHeaders() )
                     .asJson();
@@ -494,9 +513,9 @@ public class SerDes implements Runnable {
 
     private final Predicate< HttpResponse< ? > > check500Error = response ->
             response.getStatus() == 500
-                    ^ response.getStatus() == 501
-                    ^ response.getStatus() == 502
-                    ^ response.getStatus() == 503;
+            ^ response.getStatus() == 501
+            ^ response.getStatus() == 502
+            ^ response.getStatus() == 503;
 
     private final Function< String, ModelForCarList > getModelForCarList = pinfl -> {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
@@ -578,8 +597,8 @@ public class SerDes implements Runnable {
 
     private final Predicate< Family > checkFamily = family ->
             family != null
-                    && family.getItems() != null
-                    && !family.getItems().isEmpty();
+            && family.getItems() != null
+            && !family.getItems().isEmpty();
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         // личные данные человека чьи данные были переданы на данный сервис
@@ -650,13 +669,7 @@ public class SerDes implements Runnable {
                 person.getData()
                         .forEach( person1 -> person1.setPersonImage( this.getGetImageByPinfl()
                                 .apply( person1.getPinpp() ) ) );
-                Mono.just( new UserRequest( person, fio ) )
-                        .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                                error.getMessage(), object ) ) )
-                        .subscribe( userRequest -> KafkaDataControl
-                                .getInstance()
-                                .getWriteToKafkaServiceUsage()
-                                .accept( this.getGson().toJson( userRequest ) ) ); }
+                this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
             return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
         } catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
@@ -665,7 +678,7 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() );
             return Mono.just( new PersonTotalDataByFIO() ); } };
 
-    public PsychologyCard getPsychologyCard ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > getPsychologyCard ( ApiResponseModel apiResponseModel ) {
         if ( apiResponseModel.getStatus().getMessage() == null ) return null;
         PsychologyCard psychologyCard = new PsychologyCard();
         FindFaceComponent
@@ -680,20 +693,30 @@ public class SerDes implements Runnable {
                 .getInstance()
                 .getFamilyMembersData( apiResponseModel.getStatus().getMessage() )
                 .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-
-        psychologyCard.setPinpp( this.getPinpp().apply( apiResponseModel.getStatus().getMessage() ) );
-        psychologyCard.setModelForCarList( this.getModelForCarList.apply( apiResponseModel.getStatus().getMessage() ) );
-        psychologyCard.setPersonImage( this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) );
-        this.setPersonPrivateData.accept( psychologyCard );
-        this.findAllDataAboutCar.accept( psychologyCard );
-        Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .subscribe( userRequest -> KafkaDataControl
-                        .getInstance()
-                        .getWriteToKafkaServiceUsage()
-                        .accept( this.getGson().toJson( userRequest ) ) );
-        return psychologyCard; }
+        return Mono.zip(
+                Mono.fromCallable( () -> this.getPinpp()
+                                .apply( apiResponseModel
+                                        .getStatus()
+                                        .getMessage() ) )
+                        .subscribeOn( Schedulers.boundedElastic() ),
+                Mono.fromCallable( () -> this.getGetModelForCarList()
+                                .apply( apiResponseModel
+                                        .getStatus()
+                                        .getMessage() ) )
+                        .subscribeOn( Schedulers.boundedElastic() ),
+                Mono.fromCallable( () -> this.getGetImageByPinfl()
+                        .apply( apiResponseModel
+                                .getStatus()
+                                .getMessage() ) ) )
+                .subscribeOn( Schedulers.boundedElastic() )
+                .map( tuple -> {
+                    psychologyCard.setPinpp( tuple.getT1() );
+                    psychologyCard.setPersonImage( tuple.getT3() );
+                    psychologyCard.setModelForCarList( tuple.getT2() );
+                    this.getSetPersonPrivateData().accept( psychologyCard );
+                    this.getFindAllDataAboutCar().accept( psychologyCard );
+                    this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                    return psychologyCard; } ); }
 
     public PsychologyCard getPsychologyCard ( PsychologyCard psychologyCard,
                                               String token,
@@ -712,13 +735,7 @@ public class SerDes implements Runnable {
                             .getObject()
                             .get( "data" )
                             .toString(), Foreigner[].class ) );
-            Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
-                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                            error.getMessage(), object ) ) )
-                    .subscribe( userRequest -> KafkaDataControl
-                            .getInstance()
-                            .getWriteToKafkaServiceUsage()
-                            .accept( this.getGson().toJson( userRequest ) ) );
+            this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -736,49 +753,37 @@ public class SerDes implements Runnable {
             this.setFamilyData( results, psychologyCard );
             psychologyCard.setPapilonData( results.getResults() );
             psychologyCard.setViolationList( results.getViolationList() );
-            Mono.just( this.getPinpp()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                    .subscribe( psychologyCard::setPinpp );
+            psychologyCard.setPinpp( this.getPinpp()
+                    .apply( results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ) );
+            psychologyCard.setModelForCadastr( this.getDeserialize()
+                    .apply( psychologyCard
+                            .getPinpp()
+                            .getCadastre() ) );
+            psychologyCard.setPersonImage( this.getGetImageByPinfl()
+                    .apply( results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ) );
+            psychologyCard.setModelForCarList( this.getGetModelForCarList().apply(
+                    results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ) );
 
-            Mono.just( this.getDeserialize()
-                            .apply( psychologyCard
-                                    .getPinpp()
-                                    .getCadastre() ) )
-                    .subscribe( psychologyCard::setModelForCadastr );
-
-            Mono.just( this.getGetImageByPinfl()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                    .subscribe( psychologyCard::setPersonImage );
-
-            Mono.just( this.getModelForCarList.apply(
-                            results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                    .subscribe( psychologyCard::setModelForCarList );
-
-            this.findAllDataAboutCar.accept( psychologyCard );
-            this.setPersonPrivateData.accept( psychologyCard );
-            Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
-                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                            error.getMessage(), object ) ) )
-                    .subscribe( userRequest -> KafkaDataControl
-                            .getInstance()
-                            .getWriteToKafkaServiceUsage()
-                            .accept( this.getGson().toJson( userRequest ) ) );
+            this.getFindAllDataAboutCar().accept( psychologyCard );
+            this.getSetPersonPrivateData().accept( psychologyCard );
+            this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
     public PsychologyCard getPsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data,
                                               ApiResponseModel apiResponseModel ) {
+        if ( data.getPerson() == null ) return new PsychologyCard( this.getDataNotFoundErrorResponse
+                .apply( Errors.DATA_NOT_FOUND.name() ) );
         PsychologyCard psychologyCard = new PsychologyCard();
-        if ( data.getPerson() == null ) return psychologyCard;
         psychologyCard.setModelForPassport( data );
         FindFaceComponent
                 .getInstance()
@@ -806,14 +811,8 @@ public class SerDes implements Runnable {
                 .subscribe( psychologyCard::setModelForAddress );
         Mono.just( this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) )
                 .subscribe( psychologyCard::setModelForCadastr );
-        this.findAllDataAboutCar.accept( psychologyCard );
-        Mono.just( new UserRequest( psychologyCard, apiResponseModel ) )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .subscribe( userRequest -> KafkaDataControl
-                        .getInstance()
-                        .getWriteToKafkaServiceUsage()
-                        .accept( this.getGson().toJson( userRequest ) ) );
+        this.getFindAllDataAboutCar().accept( psychologyCard );
+        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
         return psychologyCard; }
 
     @Override

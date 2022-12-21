@@ -96,7 +96,7 @@ public class RequestController {
                 .flatMap( carTotalData -> carTotalData.getModelForCar() != null
                         && carTotalData.getModelForCar().getPinpp() != null
                         && !carTotalData.getModelForCar().getPinpp().isEmpty()
-                        ? Mono.just( SerDes
+                        ? SerDes
                                 .getSerDes()
                                 .getPsychologyCard( ApiResponseModel
                                         .builder()
@@ -105,7 +105,7 @@ public class RequestController {
                                                 .message( carTotalData.getModelForCar().getPinpp() )
                                                 .build() )
                                         .user( apiResponseModel.getUser() )
-                                        .build() ) )
+                                        .build() )
                         .map( psychologyCard -> {
                             carTotalData.setPsychologyCard( psychologyCard );
                             return carTotalData; } )
@@ -175,9 +175,9 @@ public class RequestController {
         return SerDes.getSerDes().getFlag()
                 ? apiResponseModel.getStatus().getMessage() != null
                 && apiResponseModel.getStatus().getMessage().length() > 0
-                ? Mono.just( SerDes
+                ? SerDes
                         .getSerDes()
-                        .getPsychologyCard( apiResponseModel ) )
+                        .getPsychologyCard( apiResponseModel )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
