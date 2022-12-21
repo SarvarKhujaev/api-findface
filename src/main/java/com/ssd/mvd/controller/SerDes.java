@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.BiFunction;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -779,41 +780,47 @@ public class SerDes implements Runnable {
             return psychologyCard;
         } catch ( Exception e ) { return psychologyCard; } }
 
-    public PsychologyCard getPsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data,
-                                              ApiResponseModel apiResponseModel ) {
-        if ( data.getPerson() == null ) return new PsychologyCard( this.getDataNotFoundErrorResponse
-                .apply( Errors.DATA_NOT_FOUND.name() ) );
-        PsychologyCard psychologyCard = new PsychologyCard();
-        psychologyCard.setModelForPassport( data );
-        FindFaceComponent
-                .getInstance()
-                .getViolationListByPinfl( data.getPerson().getPinpp() )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .onErrorReturn( new ArrayList() )
-                .subscribe( value -> psychologyCard.setViolationList( value != null ? value : new ArrayList<>() ) );
-
-        FindFaceComponent
-                .getInstance()
-                .getFamilyMembersData( data.getPerson().getPinpp() )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .onErrorReturn( new Results() )
-                .subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-
-        Mono.just( this.getPinpp().apply( data.getPerson().getPinpp() ) )
-                .subscribe( psychologyCard::setPinpp );
-        Mono.just( this.getGetImageByPinfl().apply( data.getPerson().getPinpp() ) )
-                .subscribe( psychologyCard::setPersonImage );
-        Mono.just( this.getModelForCarList.apply( data.getPerson().getPinpp() ) )
-                .subscribe( psychologyCard::setModelForCarList );
-        Mono.just( this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
-                .subscribe( psychologyCard::setModelForAddress );
-        Mono.just( this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) )
-                .subscribe( psychologyCard::setModelForCadastr );
-        this.getFindAllDataAboutCar().accept( psychologyCard );
-        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-        return psychologyCard; }
+    private final BiFunction< com.ssd.mvd.entity.modelForPassport.Data, ApiResponseModel, Mono< PsychologyCard > >
+            getPsychologyCardByData = ( data, apiResponseModel ) -> data.getPerson() != null
+            ? Mono.zip(
+                    Mono.fromCallable( () -> this.getPinpp().apply( data.getPerson().getPinpp() ) )
+                            .subscribeOn( Schedulers.boundedElastic() ),
+                    Mono.fromCallable( () -> this.getGetImageByPinfl().apply( data.getPerson().getPinpp() ) )
+                            .subscribeOn( Schedulers.boundedElastic() ),
+                    Mono.fromCallable( () -> this.getGetModelForCarList().apply( data.getPerson().getPinpp() ) )
+                            .subscribeOn( Schedulers.boundedElastic() ),
+                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
+                            .subscribeOn( Schedulers.boundedElastic() ),
+                    Mono.fromCallable( () -> FindFaceComponent
+                                    .getInstance()
+                                    .getViolationListByPinfl( data.getPerson().getPinpp() )
+                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                                            error.getMessage(), object ) ) )
+                                    .onErrorReturn( new ArrayList() ) )
+                            .subscribeOn( Schedulers.boundedElastic() ),
+                    Mono.fromCallable( () -> FindFaceComponent
+                                    .getInstance()
+                                    .getFamilyMembersData( data.getPerson().getPinpp() )
+                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                                            error.getMessage(), object ) ) )
+                                    .onErrorReturn( new Results(
+                                            this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
+                            .subscribeOn( Schedulers.boundedElastic() ) )
+            .map( tuple -> {
+                PsychologyCard psychologyCard = new PsychologyCard();
+                psychologyCard.setModelForPassport( data );
+                psychologyCard.setPinpp( tuple.getT1() );
+                psychologyCard.setPersonImage( tuple.getT2() );
+                psychologyCard.setModelForCarList( tuple.getT3() );
+                psychologyCard.setModelForAddress( tuple.getT4() );
+                tuple.getT6().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+                tuple.getT5().subscribe( value -> psychologyCard.setViolationList(
+                        value != null ? value : new ArrayList<>() ) );
+                psychologyCard.setModelForCadastr( this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) );
+                this.getFindAllDataAboutCar().accept( psychologyCard );
+                this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                return psychologyCard; } )
+            : Mono.just( new PsychologyCard( this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
     public void run () {
