@@ -4,10 +4,10 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.BiFunction;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -781,7 +781,7 @@ public class SerDes implements Runnable {
         } catch ( Exception e ) { return psychologyCard; } }
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.Data, ApiResponseModel, Mono< PsychologyCard > >
-            getPsychologyCardByData = ( data, apiResponseModel ) -> data.getPerson() == null
+            getPsychologyCardByData = ( data, apiResponseModel ) -> data.getPerson() != null
             ? Mono.zip(
                     Mono.fromCallable( () -> this.getPinpp().apply( data.getPerson().getPinpp() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
