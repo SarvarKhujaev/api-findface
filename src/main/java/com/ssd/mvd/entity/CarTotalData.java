@@ -4,8 +4,6 @@ import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.modelForGai.*;
 
 import reactor.util.function.Tuple5;
-import reactor.core.publisher.Mono;
-
 import java.util.List;
 import lombok.Data;
 
@@ -27,17 +25,12 @@ public class CarTotalData {
 
     private ErrorResponse errorResponse;
 
-    public CarTotalData ( Tuple5<
-            Mono< Tonirovka >,
-            Mono< ModelForCar >,
-            Mono< DoverennostList >,
-            Mono< Insurance >,
-            Mono< ViolationsList > > tuple ) {
-tuple.getT1().subscribe( this::setTonirovka );
-tuple.getT4().subscribe( this::setInsurance );
-tuple.getT2().subscribe( this::setModelForCar );
-tuple.getT5().subscribe( this::setViolationsList );
-tuple.getT3().subscribe( this::setDoverennostList ); }
+    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData ( Tuple5< Tonirovka, ModelForCar, DoverennostList, Insurance, ViolationsList > objects ) {
+        this.setDoverennostList( objects.getT3() );
+        this.setViolationsList( objects.getT5() );
+        this.setModelForCar( objects.getT2() );
+        this.setTonirovka( objects.getT1() );
+        this.setInsurance( objects.getT4() ); }
 }
