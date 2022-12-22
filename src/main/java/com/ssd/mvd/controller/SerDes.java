@@ -681,7 +681,7 @@ public class SerDes implements Runnable {
             return Mono.just( new PersonTotalDataByFIO() ); } };
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCard =
-            apiResponseModel -> apiResponseModel.getStatus().getMessage() == null
+            apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
                     ? Mono.zip(
                             Mono.fromCallable( () -> this.getPinpp()
                                             .apply( apiResponseModel
