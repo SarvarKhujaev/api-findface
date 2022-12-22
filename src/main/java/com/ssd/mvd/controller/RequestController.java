@@ -126,7 +126,7 @@ public class RequestController {
                 .getPapilonList( base64url )
                 .filter( value -> value.getResults() != null
                         && value.getResults().size() > 0 )
-                .mapNotNull( results ->
+                .flatMap( results ->
                         SerDes
                                 .getSerDes()
                                 .getFlag()
@@ -137,11 +137,15 @@ public class RequestController {
                                 .equals( "УЗБЕКИСТАН" )
                                 ? SerDes
                                 .getSerDes()
-                                .getPsychologyCard( results, apiResponseModel )
+                                .getGetPsychologyCardByImage()
+                                .apply( results, apiResponseModel )
                                 : SerDes
                                 .getSerDes()
-                                .getPsychologyCard( new PsychologyCard( results ), token, apiResponseModel )
-                                : new PsychologyCard( this.getErrorResponse.get() ) )
+                                .getPsychologyCard(
+                                        new PsychologyCard( results ),
+                                        token,
+                                        apiResponseModel )
+                                : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ) )
                 : Mono.just( new PsychologyCard( this.getWrongParamResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
