@@ -680,41 +680,44 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() );
             return Mono.just( new PersonTotalDataByFIO() ); } };
 
-    public Mono< PsychologyCard > getPsychologyCard ( ApiResponseModel apiResponseModel ) {
-        if ( apiResponseModel.getStatus().getMessage() == null ) return null;
-        return Mono.zip(
-                Mono.fromCallable( () -> this.getPinpp()
-                                .apply( apiResponseModel
-                                        .getStatus()
-                                        .getMessage() ) )
-                        .subscribeOn( Schedulers.boundedElastic() ),
-                Mono.fromCallable( () -> this.getGetModelForCarList()
-                                .apply( apiResponseModel
-                                        .getStatus()
-                                        .getMessage() ) )
-                        .subscribeOn( Schedulers.boundedElastic() ),
-                Mono.fromCallable( () -> this.getGetImageByPinfl()
-                        .apply( apiResponseModel
-                                .getStatus()
-                                .getMessage() ) ),
-                Mono.fromCallable( () -> FindFaceComponent
-                                .getInstance()
-                                .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
-                                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
-                                .onErrorReturn( new ArrayList() ) )
-                        .subscribeOn( Schedulers.boundedElastic() ),
-                Mono.fromCallable( () -> FindFaceComponent
-                                .getInstance()
-                                .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                        .subscribeOn( Schedulers.boundedElastic() ) )
-                .subscribeOn( Schedulers.boundedElastic() )
-                .map( tuple -> {
-                    PsychologyCard psychologyCard = new PsychologyCard( tuple );
-                    tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-                    this.getSetPersonPrivateData().accept( psychologyCard );
-                    this.getFindAllDataAboutCar().accept( psychologyCard );
-                    this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                    return psychologyCard; } ); }
+    private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCard =
+            apiResponseModel -> apiResponseModel.getStatus().getMessage() == null
+                    ? Mono.zip(
+                            Mono.fromCallable( () -> this.getPinpp()
+                                            .apply( apiResponseModel
+                                                    .getStatus()
+                                                    .getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetModelForCarList()
+                                            .apply( apiResponseModel
+                                                    .getStatus()
+                                                    .getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetImageByPinfl()
+                                    .apply( apiResponseModel
+                                            .getStatus()
+                                            .getMessage() ) ),
+                            Mono.fromCallable( () -> FindFaceComponent
+                                            .getInstance()
+                                            .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                                            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
+                                            .onErrorReturn( new ArrayList() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> FindFaceComponent
+                                            .getInstance()
+                                            .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetModelForAddress()
+                                            .apply( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ) )
+                    .map( tuple -> {
+                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
+                        tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+                        this.getSetPersonPrivateData().accept( psychologyCard );
+                        this.getFindAllDataAboutCar().accept( psychologyCard );
+                        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                        return psychologyCard; } )
+                    : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
             apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
@@ -742,8 +745,10 @@ public class SerDes implements Runnable {
                             Mono.fromCallable( () -> FindFaceComponent
                                             .getInstance()
                                             .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetModelForAddress()
+                                            .apply( apiResponseModel.getStatus().getMessage() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ) )
-                    .subscribeOn( Schedulers.boundedElastic() )
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );

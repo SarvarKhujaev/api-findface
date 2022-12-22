@@ -59,12 +59,13 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT3() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard ( Tuple5<
+    public PsychologyCard ( Tuple6<
             Pinpp,
             ModelForCarList,
             String,
             Mono< List >,
-            Mono< Results > > tuple ) {
+            Mono< Results >,
+            ModelForAddress > tuple ) {
         tuple.getT4().subscribe( value -> this.setViolationList(
                 value != null ? value : new ArrayList<>() ) );
         this.setModelForCarList( tuple.getT2() );

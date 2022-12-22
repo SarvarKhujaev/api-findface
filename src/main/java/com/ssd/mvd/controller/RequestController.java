@@ -97,8 +97,9 @@ public class RequestController {
                         && carTotalData.getModelForCar().getPinpp() != null
                         && !carTotalData.getModelForCar().getPinpp().isEmpty()
                         ? SerDes
-                                .getSerDes()
-                                .getPsychologyCard( ApiResponseModel
+                        .getSerDes()
+                        .getGetPsychologyCard()
+                        .apply( ApiResponseModel
                                         .builder()
                                         .status( Status
                                                 .builder()
@@ -186,8 +187,9 @@ public class RequestController {
                 ? apiResponseModel.getStatus().getMessage() != null
                 && apiResponseModel.getStatus().getMessage().length() > 0
                 ? SerDes
-                        .getSerDes()
-                        .getPsychologyCard( apiResponseModel )
+                .getSerDes()
+                .getGetPsychologyCard()
+                .apply( apiResponseModel )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
