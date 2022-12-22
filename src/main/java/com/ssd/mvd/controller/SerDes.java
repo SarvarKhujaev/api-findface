@@ -713,6 +713,8 @@ public class SerDes implements Runnable {
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+                        psychologyCard.setModelForCadastr( this.getDeserialize()
+                                .apply( psychologyCard.getPinpp().getCadastre() ) );
                         this.getSetPersonPrivateData().accept( psychologyCard );
                         this.getFindAllDataAboutCar().accept( psychologyCard );
                         this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
@@ -752,6 +754,8 @@ public class SerDes implements Runnable {
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+                        psychologyCard.setModelForCadastr( this.getDeserialize()
+                                .apply( psychologyCard.getPinpp().getCadastre() ) );
                         this.getSetPersonPrivateData().accept( psychologyCard );
                         this.getFindAllDataAboutCar().accept( psychologyCard );
                         this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
