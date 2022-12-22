@@ -833,7 +833,7 @@ public class SerDes implements Runnable {
                             .subscribeOn( Schedulers.boundedElastic() ),
                     Mono.fromCallable( () -> this.getGetModelForCarList().apply( data.getPerson().getPinpp() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
+                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPinpp() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
                     Mono.fromCallable( () -> FindFaceComponent
                                     .getInstance()

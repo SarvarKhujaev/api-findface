@@ -69,6 +69,7 @@ public class PsychologyCard {
         tuple.getT4().subscribe( value -> this.setViolationList(
                 value != null ? value : new ArrayList<>() ) );
         this.setModelForCarList( tuple.getT2() );
+        this.setModelForAddress( tuple.getT6() );
         this.setPersonImage( tuple.getT3() );
         this.setPinpp( tuple.getT1() ); }
 
