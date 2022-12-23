@@ -135,7 +135,7 @@ public class SerDes implements Runnable {
                         .getInstance()
                         .getWriteToKafkaServiceUsage()
                         .accept( this.getGson().toJson( userRequest ) );
-                return ""; } )
+                return Void.TYPE; } )
             .subscribeOn( Schedulers.boundedElastic() )
             .then()
             .subscribe();
@@ -229,7 +229,7 @@ public class SerDes implements Runnable {
         HttpResponse< JsonNode > response1;
         this.getFields().put( "Pcadastre", pinfl );
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try {  log.info( "Pcadastre in deserialize 310: " + pinfl );
+        try {  log.info( "Pcadastre in deserialize 232: " + pinfl );
             response1 = Unirest.post( this.getConfig().getAPI_FOR_CADASTR() )
                     .headers( this.getHeaders() )
                     .fields( this.getFields() )
@@ -249,7 +249,8 @@ public class SerDes implements Runnable {
                     .getBody()
                     .getObject();
             return object != null
-                    ? this.getGson().fromJson( object.get( "Data" ).toString() , Data.class ) : new Data();
+                    ? this.getGson().fromJson( object.get( "Data" ).toString() , Data.class )
+                    : new Data( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) );
         } catch ( JSONException | UnirestException e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
@@ -278,7 +279,13 @@ public class SerDes implements Runnable {
             JSONObject object = response1
                     .getBody()
                     .getObject();
-            return object != null ? object.getString( "Data" ) : "image was not found";
+
+            log.info( "Body for image: " + response1.getBody() );
+
+            return object != null
+                    && object.keySet().contains( "Data" )
+                    ? object.getString( "Data" )
+                    : Errors.DATA_NOT_FOUND.name();
         } catch ( JSONException | UnirestException e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
@@ -317,43 +324,44 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getModelForAddress", pinfl, "Error: " + e.getMessage() );
             return new ModelForAddress( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
-    public com.ssd.mvd.entity.modelForPassport.Data deserialize ( String SerialNumber, String BirthDate ) {
-        this.getFields().clear();
-        HttpResponse< JsonNode > response1;
-        this.getFields().put( "BirthDate", BirthDate );
-        this.getFields().put( "SerialNumber", SerialNumber );
-        log.info( "PassportNumber: " + SerialNumber + " : Birthdate " + BirthDate );
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { response1 = Unirest.post( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
-                .headers( this.getHeaders() )
-                .fields( this.getFields() )
-                .asJson();
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.deserialize( SerialNumber, BirthDate ); }
+    private final BiFunction< String, String, com.ssd.mvd.entity.modelForPassport.Data > getPassportData =
+            ( SerialNumber, BirthDate ) -> {
+                this.getFields().clear();
+                HttpResponse< JsonNode > response1;
+                this.getFields().put( "BirthDate", BirthDate );
+                this.getFields().put( "SerialNumber", SerialNumber );
+                log.info( "PassportNumber: " + SerialNumber + " : Birthdate " + BirthDate );
+                this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
+                try { response1 = Unirest.post( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
+                        .headers( this.getHeaders() )
+                        .fields( this.getFields() )
+                        .asJson();
+                    if ( response1.getStatus() == 401 ) {
+                        this.updateTokens();
+                        return this.getGetPassportData().apply( SerialNumber, BirthDate ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        response1.getStatusText(),
-                        IntegratedServiceApis.OVIR.getName(),
-                        IntegratedServiceApis.OVIR.getDescription() );
-                return new com.ssd.mvd.entity.modelForPassport
-                        .Data( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                    if ( this.check500Error.test( response1 ) ) {
+                        this.saveErrorLog(
+                                response1.getStatusText(),
+                                IntegratedServiceApis.OVIR.getName(),
+                                IntegratedServiceApis.OVIR.getDescription() );
+                        return new com.ssd.mvd.entity.modelForPassport
+                                .Data( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
-            return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .getObject()
-                            .get( "Data" )
-                            .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.OVIR.getName(),
-                    IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "deserialize Passport Data",
-                    SerialNumber + "_" + BirthDate,
-                    "Error: " + e.getMessage() );
-            return new com.ssd.mvd.entity.modelForPassport.Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } }
+                    return this.getGson()
+                            .fromJson( response1
+                                    .getBody()
+                                    .getObject()
+                                    .get( "Data" )
+                                    .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
+                catch ( Exception e ) {
+                    this.saveErrorLog( e.getMessage(),
+                            IntegratedServiceApis.OVIR.getName(),
+                            IntegratedServiceApis.OVIR.getDescription() );
+                    this.sendErrorLog( "deserialize Passport Data",
+                            SerialNumber + "_" + BirthDate,
+                            "Error: " + e.getMessage() );
+                    return new com.ssd.mvd.entity.modelForPassport.Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, Insurance > insurance = pinpp -> {
         HttpResponse< JsonNode > response1;
@@ -592,7 +600,7 @@ public class SerDes implements Runnable {
                                 .getBirthDate() ) )
                 .forEach( person -> {
                     psychologyCard.setModelForPassport (
-                            this.deserialize ( person.getPPsp(), person.getPDateBirth() ) );
+                            this.getGetPassportData().apply ( person.getPPsp(), person.getPDateBirth() ) );
                     psychologyCard.setModelForAddress(
                             this.getGetModelForAddress().apply( person.getPCitizen() ) ); } ); };
 
@@ -680,47 +688,6 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() );
             return Mono.just( new PersonTotalDataByFIO() ); } };
 
-    private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCard =
-            apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
-                    ? Mono.zip(
-                            Mono.fromCallable( () -> this.getPinpp()
-                                            .apply( apiResponseModel
-                                                    .getStatus()
-                                                    .getMessage() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ),
-                            Mono.fromCallable( () -> this.getGetModelForCarList()
-                                            .apply( apiResponseModel
-                                                    .getStatus()
-                                                    .getMessage() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ),
-                            Mono.fromCallable( () -> this.getGetImageByPinfl()
-                                    .apply( apiResponseModel
-                                            .getStatus()
-                                            .getMessage() ) ),
-                            Mono.fromCallable( () -> FindFaceComponent
-                                            .getInstance()
-                                            .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
-                                            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
-                                            .onErrorReturn( new ArrayList() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ),
-                            Mono.fromCallable( () -> FindFaceComponent
-                                            .getInstance()
-                                            .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ),
-                            Mono.fromCallable( () -> this.getGetModelForAddress()
-                                            .apply( apiResponseModel.getStatus().getMessage() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ) )
-                    .map( tuple -> {
-                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
-                        tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-                        psychologyCard.setModelForCadastr( this.getDeserialize()
-                                .apply( psychologyCard.getPinpp().getCadastre() ) );
-                        this.getSetPersonPrivateData().accept( psychologyCard );
-                        this.getFindAllDataAboutCar().accept( psychologyCard );
-                        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                        return psychologyCard; } )
-                    : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
-
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
             apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
                     ? Mono.zip(
@@ -747,20 +714,15 @@ public class SerDes implements Runnable {
                             Mono.fromCallable( () -> FindFaceComponent
                                             .getInstance()
                                             .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                                    .subscribeOn( Schedulers.boundedElastic() ),
-                            Mono.fromCallable( () -> this.getGetModelForAddress()
-                                            .apply( apiResponseModel.getStatus().getMessage() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ) )
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-                        psychologyCard.setModelForCadastr( this.getDeserialize()
-                                .apply( psychologyCard.getPinpp().getCadastre() ) );
                         this.getSetPersonPrivateData().accept( psychologyCard );
                         this.getFindAllDataAboutCar().accept( psychologyCard );
                         this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
                         return psychologyCard; } )
-            : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
+                    : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
                                               String token,
@@ -798,12 +760,6 @@ public class SerDes implements Runnable {
                                     .get( 0 )
                                     .getPersonal_code() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getDeserialize()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
                     Mono.fromCallable( () -> this.getGetImageByPinfl()
                             .apply( results
                                     .getResults()
@@ -833,7 +789,7 @@ public class SerDes implements Runnable {
                             .subscribeOn( Schedulers.boundedElastic() ),
                     Mono.fromCallable( () -> this.getGetModelForCarList().apply( data.getPerson().getPinpp() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPinpp() ) )
+                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
                             .subscribeOn( Schedulers.boundedElastic() ),
                     Mono.fromCallable( () -> FindFaceComponent
                                     .getInstance()
