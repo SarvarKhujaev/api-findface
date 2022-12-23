@@ -5,9 +5,9 @@ import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.family.Family;
 
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple6;
 import reactor.util.function.Tuple5;
-import reactor.util.function.Tuple4;
 import reactor.core.publisher.Mono;
 
 import lombok.NoArgsConstructor;
@@ -48,28 +48,23 @@ public class PsychologyCard {
     public PsychologyCard ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
     public PsychologyCard ( Results results,
-                            Tuple4< Pinpp,
-                                    com.ssd.mvd.entity.modelForCadastr.Data,
+                            Tuple3< Pinpp,
                                     String,
                                     ModelForCarList > tuple ) {
         this.setViolationList( results.getViolationList() );
         this.setPapilonData( results.getResults() );
-        this.setModelForCadastr( tuple.getT2() );
-        this.setModelForCarList( tuple.getT4() );
-        this.setPersonImage( tuple.getT3() );
+        this.setModelForCarList( tuple.getT3() );
+        this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard ( Tuple6<
+    public PsychologyCard ( Tuple5<
             Pinpp,
             ModelForCarList,
             String,
             Mono< List >,
-            Mono< Results >,
-            ModelForAddress > tuple ) {
-        tuple.getT4().subscribe( value -> this.setViolationList(
-                value != null ? value : new ArrayList<>() ) );
+            Mono< Results > > tuple ) {
+        tuple.getT4().subscribe( value -> this.setViolationList( value != null ? value : new ArrayList<>() ) );
         this.setModelForCarList( tuple.getT2() );
-        this.setModelForAddress( tuple.getT6() );
         this.setPersonImage( tuple.getT3() );
         this.setPinpp( tuple.getT1() ); }
 
