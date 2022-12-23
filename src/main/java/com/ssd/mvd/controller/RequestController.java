@@ -159,11 +159,7 @@ public class RequestController {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .getPermanentRegistration();
         return personList != null && !personList.isEmpty() // проверяем что все ок
-                ? Flux.fromStream( personList
-                        .stream()
-                        .parallel() )
-                .parallel( personList.size() ) // создаем паралеллизм
-                .runOn( Schedulers.parallel() )
+                ? Flux.fromStream( personList.stream() )
                 .flatMap( person -> SerDes
                         .getSerDes()
                         .getGetPsychologyCardByData()
@@ -174,8 +170,6 @@ public class RequestController {
                                         person.getPPsp(),
                                         person.getPDateBirth() ),
                                 apiResponseModel ) )
-                .sequential()
-                .publishOn( Schedulers.single() )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes
@@ -199,7 +193,10 @@ public class RequestController {
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
-                : Mono.just( new PsychologyCard( this.getWrongParamResponse.get() ) )
+                : Mono.just( new PsychologyCard( SerDes
+                .getSerDes()
+                .getGetServiceErrorResponse()
+                .apply( Errors.WRONG_PARAMS.name() ) ) )
                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" ) // возвращает данные по номеру паспорта

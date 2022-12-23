@@ -75,8 +75,7 @@ public class SerDes implements Runnable {
             public <T> T readValue( String s, Class<T> aClass ) {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
-        this.getHeaders().put( "accept", "application/json" );
-        this.updateTokens(); }
+        this.getHeaders().put( "accept", "application/json" ); }
 
     private void updateTokens () {
         log.info( "Updating tokens..." );
@@ -150,7 +149,6 @@ public class SerDes implements Runnable {
                     .header("Content-Type", "application/json")
                     .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
                     .asJson();
-            System.out.println( response.getBody() );
             return response.getStatus() == 200
                     ? response
                     .getBody()
@@ -159,7 +157,7 @@ public class SerDes implements Runnable {
                     .toString()
                     : "not found"; }
         catch ( UnirestException e ) {
-            System.out.println( e.getMessage() );
+            log.error( e.getMessage() );
             this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
             return "error"; } };
 
@@ -210,7 +208,7 @@ public class SerDes implements Runnable {
                 this.saveErrorLog( response1.getStatusText(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return new Pinpp( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                return new Pinpp( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
             return this.getGson()
                     .fromJson( response1
@@ -243,7 +241,7 @@ public class SerDes implements Runnable {
                         this.getResponse().getStatusText(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return new Data( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                return new Data( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
             JSONObject object = response1
                     .getBody()
@@ -258,29 +256,27 @@ public class SerDes implements Runnable {
             this.sendErrorLog( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() );
             return new Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
-    private final Function< String, String > getImageByPinfl = pinpp -> {
+    private final Function< String, String > getImageByPinfl = pinfl -> {
         HttpResponse< JsonNode > response1;
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp in getImageByPinfl: " + this.getConfig().getAPI_FOR_PERSON_IMAGE() + " : " + pinpp );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinpp )
+        try { log.info( "Pinpp in getImageByPinfl: " + this.getConfig().getAPI_FOR_PERSON_IMAGE() + " : " + pinfl );
+            response1 = Unirest.get( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinfl )
                     .headers( this.getHeaders() )
                     .asJson();
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
-                return getGetImageByPinfl().apply( pinpp ); }
+                return getGetImageByPinfl().apply( pinfl ); }
 
             if ( this.check500Error.test( response1 ) ) {
                 this.saveErrorLog(
                         response1.getStatusText(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return "Error"; }
+                return Errors.EXTERNAL_SERVICE_500_ERROR.name(); }
 
             JSONObject object = response1
                     .getBody()
                     .getObject();
-
-            log.info( "Body for image: " + response1.getBody() );
 
             return object != null
                     && object.keySet().contains( "Data" )
@@ -290,7 +286,7 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "getImageByPinfl", pinpp, "Error: " + e.getMessage() );
+            this.sendErrorLog( "getImageByPinfl", pinfl, "Error: " + e.getMessage() );
             return "Error"; } };
 
     private final Function< String, ModelForAddress > getModelForAddress = pinfl -> {
@@ -310,7 +306,7 @@ public class SerDes implements Runnable {
                         this.getResponse().getStatusText(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                new ModelForAddress( this.getServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                new ModelForAddress( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
             return this.getGson()
                     .fromJson( this.getResponse()
                             .getBody()
@@ -346,7 +342,7 @@ public class SerDes implements Runnable {
                                 IntegratedServiceApis.OVIR.getName(),
                                 IntegratedServiceApis.OVIR.getDescription() );
                         return new com.ssd.mvd.entity.modelForPassport
-                                .Data( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                                .Data( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
                     return this.getGson()
                             .fromJson( response1
@@ -379,7 +375,7 @@ public class SerDes implements Runnable {
                         response1.getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new Insurance( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                return new Insurance( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
             return this.getGson()
                     .fromJson( response1
@@ -411,7 +407,7 @@ public class SerDes implements Runnable {
                         response1.getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ModelForCar( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                return new ModelForCar( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
             if ( this.getResponse().getStatus() == 200 ) return this.getGson()
                     .fromJson( response1
@@ -445,7 +441,7 @@ public class SerDes implements Runnable {
                         response1.getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new Tonirovka( this.getServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                return new Tonirovka( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
 
             return this.getGson()
                     .fromJson( response1
@@ -473,7 +469,7 @@ public class SerDes implements Runnable {
                         this.getResponse().getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ViolationsList( this.getServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                return new ViolationsList( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
 
             if ( this.getResponse().getStatus() == 200 ) return new ViolationsList( this.stringToArrayList(
                     this.getResponse()
@@ -506,7 +502,8 @@ public class SerDes implements Runnable {
                         this.getResponse().getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new DoverennostList( this.getServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                return new DoverennostList(
+                        this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
 
             return new DoverennostList( this.stringToArrayList(
                     this.getResponse()
@@ -541,7 +538,7 @@ public class SerDes implements Runnable {
                         this.getResponse().getStatusText(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ModelForCarList( this.getServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                return new ModelForCarList( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
 
             if ( this.getResponse().getStatus() == 200 ) return new ModelForCarList( this.stringToArrayList(
                     this.getResponse()
