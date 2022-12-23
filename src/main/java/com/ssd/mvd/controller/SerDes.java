@@ -113,7 +113,7 @@ public class SerDes implements Runnable {
     private final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Service error: " + error )
-            .errors( Errors.EXTERNAL_SERVICE_500_ERROR)
+            .errors( Errors.EXTERNAL_SERVICE_500_ERROR )
             .build();
 
     private final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
@@ -138,28 +138,6 @@ public class SerDes implements Runnable {
             .subscribeOn( Schedulers.boundedElastic() )
             .then()
             .subscribe();
-
-    private final Function< String, String > base64ToLink = base64 -> {
-        this.getFields().clear();
-        HttpResponse< JsonNode > response;
-        this.getFields().put( "photo", base64 );
-        this.getFields().put( "serviceName", "psychologyCard" );
-        try { log.info( "Converting image to Link in: base64ToLink method"  );
-            response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
-                    .header("Content-Type", "application/json")
-                    .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
-                    .asJson();
-            return response.getStatus() == 200
-                    ? response
-                    .getBody()
-                    .getObject()
-                    .get( "data" )
-                    .toString()
-                    : "not found"; }
-        catch ( UnirestException e ) {
-            log.error( e.getMessage() );
-            this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
-            return "error"; } };
 
     private void sendErrorLog ( String methodName,
                                 String params,
@@ -248,13 +226,35 @@ public class SerDes implements Runnable {
                     .getObject();
             return object != null
                     ? this.getGson().fromJson( object.get( "Data" ).toString() , Data.class )
-                    : new Data( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) );
+                    : new Data( this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) );
         } catch ( JSONException | UnirestException e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
             this.sendErrorLog( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() );
             return new Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+
+    private final Function< String, String > base64ToLink = base64 -> {
+        this.getFields().clear();
+        HttpResponse< JsonNode > response;
+        this.getFields().put( "photo", base64 );
+        this.getFields().put( "serviceName", "psychologyCard" );
+        try { log.info( "Converting image to Link in: base64ToLink method"  );
+            response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+                    .header("Content-Type", "application/json")
+                    .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
+                    .asJson();
+            return response.getStatus() == 200
+                    ? response
+                    .getBody()
+                    .getObject()
+                    .get( "data" )
+                    .toString()
+                    : "not found"; }
+        catch ( UnirestException e ) {
+            log.error( e.getMessage() );
+            this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
+            return "error"; } };
 
     private final Function< String, String > getImageByPinfl = pinfl -> {
         HttpResponse< JsonNode > response1;
