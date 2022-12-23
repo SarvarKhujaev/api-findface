@@ -778,8 +778,6 @@ public class SerDes implements Runnable {
                         this.getFindAllDataAboutCar().accept( psychologyCard );
                         this.getSetPersonPrivateData().accept( psychologyCard );
                         this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                        psychologyCard.setModelForCadastr(
-                                this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) );
                         return psychologyCard; } );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.Data, ApiResponseModel, Mono< PsychologyCard > >
