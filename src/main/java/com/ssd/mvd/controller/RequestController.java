@@ -1,9 +1,8 @@
 package com.ssd.mvd.controller;
 
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -12,7 +11,6 @@ import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.component.FindFaceComponent;
-import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
@@ -152,34 +150,35 @@ public class RequestController {
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
         log.info( "Request for cadastre: " + apiResponseModel.getStatus().getMessage() );
-        if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( this.getErrorResponse.get() ) );
-        final List< Person > personList = SerDes // находим данные кадастра
-                .getSerDes()
-                .getDeserialize()
-                .apply( apiResponseModel.getStatus().getMessage() )
-                .getPermanentRegistration();
-        return personList != null && !personList.isEmpty() // проверяем что все ок
-                ? Flux.fromStream( personList.stream() )
-                .flatMap( person -> SerDes
+        return SerDes.getSerDes().getFlag()
+                ? Flux.just( SerDes // находим данные кадастра
                         .getSerDes()
-                        .getGetPsychologyCardByData()
-                        .apply( SerDes
+                        .getDeserialize()
+                        .apply( apiResponseModel.getStatus().getMessage() )
+                        .getPermanentRegistration() )
+                .flatMap( personList -> !personList.isEmpty()
+                        ? Flux.fromStream( personList.stream() )
+                        .flatMap( person -> SerDes
                                 .getSerDes()
-                                .getGetPassportData()
-                                .apply(
-                                        person.getPPsp(),
-                                        person.getPDateBirth() ),
-                                apiResponseModel ) )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Flux.just( new PsychologyCard( SerDes
+                                .getGetPsychologyCardByData()
+                                .apply( SerDes
+                                                .getSerDes()
+                                                .getGetPassportData()
+                                                .apply(
+                                                        person.getPPsp(),
+                                                        person.getPDateBirth() ),
+                                        apiResponseModel ) )
+                        .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                                error.getMessage(), object ) )
+                        .onErrorReturn( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetServiceErrorResponse()
+                                .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        : Flux.just( new PsychologyCard( SerDes
                         .getSerDes()
                         .getGetDataNotFoundErrorResponse()
-                        .apply( apiResponseModel.getStatus().getMessage() ) ) ); }
+                        .apply( apiResponseModel.getStatus().getMessage() ) ) ) )
+                : Flux.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
