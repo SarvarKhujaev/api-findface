@@ -89,16 +89,16 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-            this.setTokenForFio(
-                    String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
-                            .header("Content-Type", "application/json" )
-                            .body("{\r\n    \"Login\": \"" + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
-                                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
-                                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}")
-                            .asJson()
-                            .getBody()
-                            .getObject()
-                            .get( "access_token" ) ) );
+//            this.setTokenForFio(
+//                    String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
+//                            .header("Content-Type", "application/json" )
+//                            .body("{\r\n    \"Login\": \"" + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
+//                                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
+//                                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}")
+//                            .asJson()
+//                            .getBody()
+//                            .getObject()
+//                            .get( "access_token" ) ) );
             this.setFlag( true );
         } catch ( UnirestException e ) {
             this.setFlag( false );
