@@ -28,12 +28,6 @@ public class RequestController {
             .errors( Errors.GAI_TOKEN_ERROR )
             .build();
 
-    private final Supplier< ErrorResponse > getWrongParamResponse = () -> ErrorResponse
-            .builder()
-            .message( "Wrong params" )
-            .errors( Errors.WRONG_PARAMS )
-            .build();
-
     @MessageMapping ( value = "ping" )
     public Mono< Boolean > ping () { return Mono.just( true ); }
 
@@ -145,7 +139,10 @@ public class RequestController {
                                         token,
                                         apiResponseModel )
                                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ) )
-                : Mono.just( new PsychologyCard( this.getWrongParamResponse.get() ) ); }
+                : Mono.just( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetServiceErrorResponse()
+                                .apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {

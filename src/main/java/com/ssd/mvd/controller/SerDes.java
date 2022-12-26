@@ -116,16 +116,16 @@ public class SerDes implements Runnable {
             .errors( Errors.EXTERNAL_SERVICE_500_ERROR )
             .build();
 
-    private final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
-            .builder()
-            .message( "Service error: " + error )
-            .errors( Errors.SERVICE_WORK_ERROR )
-            .build();
-
     private final Function< String, ErrorResponse > getDataNotFoundErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Data for: " + error + " not found" )
             .errors( Errors.DATA_NOT_FOUND )
+            .build();
+
+    private final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
+            .builder()
+            .message( "Service error: " + error )
+            .errors( Errors.SERVICE_WORK_ERROR )
             .build();
 
     private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
@@ -142,33 +142,49 @@ public class SerDes implements Runnable {
     private void sendErrorLog ( String methodName,
                                 String params,
                                 String reason ) {
-        this.getNotification().setPinfl( params );
-        this.getNotification().setReason( reason );
-        this.getNotification().setMethodName( methodName );
-        this.getNotification().setCallingTime( new Date() );
-        if ( this.getResponse() != null ) {
-            this.getNotification().setJsonNode( this.getResponse().getBody() );
-            log.error( this.getResponse().getBody()
-                    + " Status: " + this.getResponse().getStatus() ); }
-        KafkaDataControl
-                .getInstance()
-                .getWriteErrorLog()
-                .accept( this.getGson().toJson( this.getNotification() ) ); }
+        Mono.fromCallable( () -> {
+                    this.getNotification().setPinfl( params );
+                    this.getNotification().setReason( reason );
+                    this.getNotification().setMethodName( methodName );
+                    this.getNotification().setCallingTime( new Date() );
+                    if ( this.getResponse() != null ) {
+                        this.getNotification().setJsonNode( this.getResponse().getBody() );
+                        log.error( this.getResponse().getBody()
+                                + " Status: " + this.getResponse().getStatus() ); }
+                    KafkaDataControl
+                            .getInstance()
+                            .getWriteErrorLog()
+                            .accept( this.getGson().toJson( this.getNotification() ) );
+                    return Mono.empty(); } )
+                .subscribeOn( Schedulers.boundedElastic() )
+                .then()
+                .subscribe(); }
 
     private void saveErrorLog ( String errorMessage,
                                 String integratedService,
                                 String integratedServiceDescription ) {
-        KafkaDataControl
-                .getInstance()
-                .getWriteToKafkaErrorLog()
-                .accept( this.getGson().toJson(
-                        ErrorLog
-                                .builder()
-                                .errorMessage( errorMessage )
-                                .createdAt( new Date().getTime() )
-                                .integratedService( integratedService )
-                                .integratedServiceApiDescription( integratedServiceDescription )
-                                .build() ) ); }
+        Mono.fromCallable( () -> {
+            KafkaDataControl
+                    .getInstance()
+                    .getWriteToKafkaErrorLog()
+                    .accept( this.getGson().toJson(
+                            ErrorLog
+                                    .builder()
+                                    .errorMessage( errorMessage )
+                                    .createdAt( new Date().getTime() )
+                                    .integratedService( integratedService )
+                                    .integratedServiceApiDescription( integratedServiceDescription )
+                                    .build() ) );
+            return Mono.empty(); } )
+                .subscribeOn( Schedulers.boundedElastic() )
+                .then()
+                .subscribe(); }
+
+    private final Predicate< HttpResponse< ? > > check500Error = response ->
+            response.getStatus() == 500
+            ^ response.getStatus() == 501
+            ^ response.getStatus() == 502
+            ^ response.getStatus() == 503;
 
     private final Function< String, Pinpp > pinpp = pinpp -> {
         HttpResponse< JsonNode > response1;
@@ -197,7 +213,7 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "pinpp", pinpp, "Error in service: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_PINPP(), pinpp, "Error in service: " + e.getMessage() );
             return new Pinpp( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, Data > deserialize = pinfl -> {
@@ -231,7 +247,7 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "deserialize ModelForCadastr", pinfl, "Error: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_CADASTR(), pinfl, "Error: " + e.getMessage() );
             return new Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, String > base64ToLink = base64 -> {
@@ -250,11 +266,11 @@ public class SerDes implements Runnable {
                     .getObject()
                     .get( "data" )
                     .toString()
-                    : "not found"; }
+                    : Errors.DATA_NOT_FOUND.name(); }
         catch ( UnirestException e ) {
             log.error( e.getMessage() );
-            this.sendErrorLog( "base64ToLink", "base64ToLink", "Error: " + e.getMessage() );
-            return "error"; } };
+            this.sendErrorLog( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API(), "base64ToLink", "Error: " + e.getMessage() );
+            return Errors.SERVICE_WORK_ERROR.name(); } };
 
     private final Function< String, String > getImageByPinfl = pinfl -> {
         HttpResponse< JsonNode > response1;
@@ -286,8 +302,8 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "getImageByPinfl", pinfl, "Error: " + e.getMessage() );
-            return "Error"; } };
+            this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_IMAGE(), pinfl, "Error: " + e.getMessage() );
+            return Errors.SERVICE_WORK_ERROR.name(); } };
 
     private final Function< String, ModelForAddress > getModelForAddress = pinfl -> {
         try { log.info( "Pinfl in getModelForAddress: " + pinfl );
@@ -312,12 +328,13 @@ public class SerDes implements Runnable {
                             .getBody()
                             .getObject()
                             .get( "Data" )
-                            .toString(), ModelForAddress.class ); }
+                            .toString(),
+                            ModelForAddress.class ); }
         catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.OVIR.getName(),
                     IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( "getModelForAddress", pinfl, "Error: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS(), pinfl, "Error: " + e.getMessage() );
             return new ModelForAddress( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final BiFunction< String, String, com.ssd.mvd.entity.modelForPassport.Data > getPassportData =
@@ -354,7 +371,7 @@ public class SerDes implements Runnable {
                     this.saveErrorLog( e.getMessage(),
                             IntegratedServiceApis.OVIR.getName(),
                             IntegratedServiceApis.OVIR.getDescription() );
-                    this.sendErrorLog( "deserialize Passport Data",
+                    this.sendErrorLog( this.getConfig().getAPI_FOR_PASSPORT_MODEL(),
                             SerialNumber + "_" + BirthDate,
                             "Error: " + e.getMessage() );
                     return new com.ssd.mvd.entity.modelForPassport.Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
@@ -368,7 +385,7 @@ public class SerDes implements Runnable {
                     .asJson();
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
-                return this.insurance.apply( pinpp ); }
+                return this.getInsurance().apply( pinpp ); }
 
             if ( this.check500Error.test( response1 ) ) {
                 this.saveErrorLog(
@@ -387,7 +404,7 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "insurance", pinpp, "Error: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(), pinpp, "Error: " + e.getMessage() );
             return new Insurance( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, ModelForCar > getVehicleData = gosno -> {
@@ -400,7 +417,7 @@ public class SerDes implements Runnable {
             this.setResponse( response1 );
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
-                return this.getVehicleData.apply( gosno ); }
+                return this.getGetVehicleData().apply( gosno ); }
 
             if ( this.check500Error.test( response1 ) ) {
                 this.saveErrorLog(
@@ -414,15 +431,16 @@ public class SerDes implements Runnable {
                             .getBody()
                             .getArray()
                             .get( 0 )
-                            .toString(), ModelForCar.class );
+                            .toString(),
+                            ModelForCar.class );
             else {
-                this.sendErrorLog( "getVehicleData", gosno, "Data was not found" );
-                return new ModelForCar(); }
+                this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(), gosno, Errors.DATA_NOT_FOUND.name() );
+                return new ModelForCar( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); }
         } catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "getVehicleData", gosno, e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(), gosno, e.getMessage() );
             return new ModelForCar( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, Tonirovka > getVehicleTonirovka = gosno -> {
@@ -434,7 +452,7 @@ public class SerDes implements Runnable {
                     .asJson();
             if ( response1.getStatus() == 401 ) {
                 this.updateTokens();
-                return this.getVehicleTonirovka.apply( gosno ); }
+                return this.getGetVehicleTonirovka().apply( gosno ); }
 
             if ( this.check500Error.test( response1 ) ) {
                 this.saveErrorLog(
@@ -446,12 +464,13 @@ public class SerDes implements Runnable {
             return this.getGson()
                     .fromJson( response1
                             .getBody()
-                            .toString(), Tonirovka.class );
+                            .toString(),
+                            Tonirovka.class );
         } catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "getVehicleTonirovka", gosno, e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_TONIROVKA(), gosno, e.getMessage() );
             return new Tonirovka( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, ViolationsList > getViolationList = gosno -> {
@@ -477,14 +496,16 @@ public class SerDes implements Runnable {
                             .getArray()
                             .toString(), ViolationsInformation[].class ) );
 
-            else { this.sendErrorLog( "getViolationList", gosno, "Data was not found" );
+            else { this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(),
+                    gosno,
+                    Errors.DATA_NOT_FOUND.name() );
                 return new ViolationsList( this.getDataNotFoundErrorResponse
                         .apply( this.getResponse().getStatusText() ) ); } }
         catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "getViolationList", gosno, e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(), gosno, e.getMessage() );
             return new ViolationsList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Function< String, DoverennostList > getDoverennostList = gosno -> {
@@ -514,14 +535,8 @@ public class SerDes implements Runnable {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_DOVERENNOST_LIST(), gosno, "Error: " + e.getMessage() );
             return new DoverennostList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
-
-    private final Predicate< HttpResponse< ? > > check500Error = response ->
-            response.getStatus() == 500
-            ^ response.getStatus() == 501
-            ^ response.getStatus() == 502
-            ^ response.getStatus() == 503;
 
     private final Function< String, ModelForCarList > getModelForCarList = pinfl -> {
         this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
@@ -546,13 +561,13 @@ public class SerDes implements Runnable {
                             .getArray()
                             .toString(), ModelForCar[].class ) );
 
-            else { this.sendErrorLog( "getModelForCarList", pinfl, "Data was not found" );
-                return new ModelForCarList(); } }
+            else { this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(), pinfl, Errors.DATA_NOT_FOUND.name() );
+                return new ModelForCarList( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); } }
         catch ( Exception e ) {
             this.saveErrorLog( e.getMessage(),
                     IntegratedServiceApis.GAI.getName(),
                     IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( "getModelForCarList", pinfl, "Error: " + e.getMessage() );
+            this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(), pinfl, "Error: " + e.getMessage() );
             return new ModelForCarList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard -> psychologyCard.getModelForCarList() != null
@@ -603,8 +618,8 @@ public class SerDes implements Runnable {
 
     private final Predicate< Family > checkFamily = family ->
             family != null
-            && family.getItems() != null
-            && !family.getItems().isEmpty();
+                    && family.getItems() != null
+                    && !family.getItems().isEmpty();
 
     private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
         // личные данные человека чьи данные были переданы на данный сервис
@@ -722,8 +737,8 @@ public class SerDes implements Runnable {
                     : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
-                                              String token,
-                                              ApiResponseModel apiResponseModel ) {
+                                                      String token,
+                                                      ApiResponseModel apiResponseModel ) {
         try { this.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList( Unirest.get(
