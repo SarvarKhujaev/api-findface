@@ -11,7 +11,6 @@ import java.util.function.BiFunction;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -83,24 +82,23 @@ public class SerDes implements Runnable {
         this.getFields().put( "Login", this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
         this.getFields().put( "Password" , this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
         this.getFields().put( "CurrentSystem", this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
-        try {
-            this.setTokenForGai( String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_GAI_TOKEN() )
+        try { this.setTokenForGai( String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_GAI_TOKEN() )
                 .fields( this.getFields() )
                 .asJson()
                 .getBody()
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-//            this.setTokenForFio(
-//                    String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
-//                            .header("Content-Type", "application/json" )
-//                            .body("{\r\n    \"Login\": \"" + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
-//                                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
-//                                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}")
-//                            .asJson()
-//                            .getBody()
-//                            .getObject()
-//                            .get( "access_token" ) ) );
+            this.setTokenForFio(
+                    String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
+                            .header("Content-Type", "application/json" )
+                            .body("{\r\n    \"Login\": \"" + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
+                                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
+                                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}")
+                            .asJson()
+                            .getBody()
+                            .getObject()
+                            .get( "access_token" ) ) );
             this.setFlag( true );
         } catch ( UnirestException e ) {
             this.setFlag( false );
@@ -583,24 +581,14 @@ public class SerDes implements Runnable {
             .size() > 0;
 
     private final Consumer< PsychologyCard > findAllDataAboutCar = psychologyCard -> {
-        if ( this.checkCarData.test( psychologyCard ) ) Flux.fromStream(
-                psychologyCard
+        if ( this.checkCarData.test( psychologyCard ) ) psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
-                .stream() )
-                .parallel( psychologyCard
-                        .getModelForCarList()
-                        .getModelForCarList()
-                        .size() )
-                .runOn( Schedulers.parallel() )
-                .map( modelForCar -> {
+                .parallelStream()
+                .forEach( modelForCar -> {
                     modelForCar.setInsurance( this.getInsurance().apply( modelForCar.getPlateNumber() ) );
                     modelForCar.setTonirovka( this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setDoverennostList( this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) );
-                    return modelForCar; } )
-                .sequential()
-                .publishOn( Schedulers.single() )
-                .subscribe(); };
+                    modelForCar.setDoverennostList( this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) ); } ); };
 
     private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
             psychologyCard.getModelForCadastr() != null
@@ -614,29 +602,20 @@ public class SerDes implements Runnable {
     private final Consumer< PsychologyCard > setPersonPrivateData = psychologyCard -> {
         psychologyCard.setModelForCadastr( this.getDeserialize()
                 .apply( psychologyCard.getPinpp().getCadastre() ) );
-        if ( this.checkPrivateData.test( psychologyCard ) ) Flux.fromStream( psychologyCard
+        if ( this.checkPrivateData.test( psychologyCard ) ) psychologyCard
                 .getModelForCadastr()
                 .getPermanentRegistration()
-                .stream() )
-                .parallel( psychologyCard
-                        .getModelForCadastr()
-                        .getPermanentRegistration()
-                        .size() )
-                .runOn( Schedulers.parallel() )
+                .parallelStream()
                 .filter( person -> person
                         .getPDateBirth()
                         .equals( psychologyCard
                                 .getPinpp()
                                 .getBirthDate() ) )
-                .map( person -> {
+                .forEach( person -> {
                     psychologyCard.setModelForPassport (
                             this.getGetPassportData().apply ( person.getPPsp(), person.getPDateBirth() ) );
                     psychologyCard.setModelForAddress(
-                            this.getGetModelForAddress().apply( person.getPCitizen() ) );
-                    return psychologyCard; } )
-                .sequential()
-                .publishOn( Schedulers.single() )
-                .subscribe(); };
+                            this.getGetModelForAddress().apply( person.getPCitizen() ) ); } ); };
 
     private final Predicate< Family > checkFamily = family ->
             family != null
@@ -655,59 +634,29 @@ public class SerDes implements Runnable {
         psychologyCard.setDaddyData( results.getDaddyData() );
         psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
-        if ( this.checkFamily.test( psychologyCard.getChildData() ) )
-            Flux.fromStream( psychologyCard
-                        .getChildData()
-                        .getItems()
-                        .stream() )
-                    .parallel( psychologyCard
-                            .getChildData()
-                            .getItems()
-                            .size() )
-                    .map( familyMember -> {
-                            familyMember
-                                    .setPersonal_image( this.getGetImageByPinfl()
-                                            .apply( familyMember.getPnfl() ) );
-                            return psychologyCard; } )
-                    .sequential()
-                    .publishOn( Schedulers.single() )
-                    .subscribe();
+        if ( this.checkFamily.test( psychologyCard.getChildData() ) ) psychologyCard
+                .getChildData()
+                .getItems()
+                .parallelStream()
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
-        if ( this.checkFamily.test( psychologyCard.getDaddyData() ) )
-            Flux.fromStream( psychologyCard
-                            .getDaddyData()
-                            .getItems()
-                            .stream() )
-                    .parallel( psychologyCard
-                            .getDaddyData()
-                            .getItems()
-                            .size() )
-                    .map( familyMember -> {
-                        familyMember
-                                .setPersonal_image( this.getGetImageByPinfl()
-                                        .apply( familyMember.getPnfl() ) );
-                        return psychologyCard; } )
-                    .sequential()
-                    .publishOn( Schedulers.single() )
-                    .subscribe();
+        if ( this.checkFamily.test( psychologyCard.getDaddyData() ) ) psychologyCard
+                .getDaddyData()
+                .getItems()
+                .parallelStream()
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
-        if ( this.checkFamily.test( psychologyCard.getMommyData() ) )
-            Flux.fromStream( psychologyCard
-                            .getMommyData()
-                            .getItems()
-                            .stream() )
-                    .parallel( psychologyCard
-                            .getMommyData()
-                            .getItems()
-                            .size() )
-                    .map( familyMember -> {
-                        familyMember
-                                .setPersonal_image( this.getGetImageByPinfl()
-                                        .apply( familyMember.getPnfl() ) );
-                        return psychologyCard; } )
-                    .sequential()
-                    .publishOn( Schedulers.single() )
-                    .subscribe(); }
+        if ( this.checkFamily.test( psychologyCard.getMommyData() ) ) psychologyCard
+                .getMommyData()
+                .getItems()
+                .parallelStream()
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) ); }
 
     private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> {
         if ( fio.getSurname() == null
