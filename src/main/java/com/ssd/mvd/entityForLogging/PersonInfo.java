@@ -2,7 +2,7 @@ package com.ssd.mvd.entityForLogging;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.constants.Errors;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -20,10 +20,11 @@ public class PersonInfo {
     private String birthDate;
     private String passportNumber;
 
-    public PersonInfo ( PsychologyCard psychologyCard ) {
+    public PersonInfo ( PsychologyCard psychologyCard, String image ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            this.setFullname( psychologyCard.getPinpp() != null
-                    ? ( psychologyCard
+            this.setPhoto( image );
+            this.setFullname( psychologyCard.getPinpp() != null ?
+                    ( psychologyCard
                             .getPinpp()
                             .getName()
                             + " "
@@ -33,17 +34,20 @@ public class PersonInfo {
                             + " "
                             + psychologyCard
                             .getPinpp()
-                            .getPatronym() ) : "unknown" );
+                            .getPatronym() )
+                    : Errors.DATA_NOT_FOUND.name() );
             this.setPinfl( psychologyCard
                     .getPinpp() != null
                     ? psychologyCard
                     .getPinpp()
-                    .getPinpp() : "unknown" );
+                    .getPinpp()
+                    : Errors.DATA_NOT_FOUND.name() );
             this.setBirthDate( psychologyCard
                     .getPinpp() != null
                     ? psychologyCard
                     .getPinpp()
-                    .getBirthDate() : "unknown" );
+                    .getBirthDate()
+                    : Errors.DATA_NOT_FOUND.name() );
             this.setPassportNumber( psychologyCard
                     .getModelForPassport() != null
                     && psychologyCard
@@ -52,7 +56,8 @@ public class PersonInfo {
                     ? psychologyCard
                     .getModelForPassport()
                     .getDocument()
-                    .getSerialNumber() : "unknown" );
+                    .getSerialNumber()
+                    : Errors.DATA_NOT_FOUND.name() );
             this.setAddress( psychologyCard
                     .getModelForAddress() != null
                     && psychologyCard
@@ -61,32 +66,16 @@ public class PersonInfo {
                     ? psychologyCard
                     .getModelForAddress()
                     .getPermanentRegistration()
-                    .getPAddress() : "unknown" );
+                    .getPAddress()
+                    : Errors.DATA_NOT_FOUND.name() );
             this.setCadastre( psychologyCard
                     .getPinpp() != null
                     ? psychologyCard
                     .getPinpp()
-                    .getCadastre() : "unknown" );
-            if ( psychologyCard.getPapilonData() != null
-                    && psychologyCard.getPapilonData().size() > 0 )
-                    SerDes
-                        .getSerDes()
-                        .getBase64ToLink()
-                        .apply( psychologyCard
-                                .getPapilonData()
-                                .get( 0 )
-                                .getPhoto() )
-                        .subscribe( this::setPhoto ); }
-
+                    .getCadastre()
+                    : Errors.DATA_NOT_FOUND.name() ); }
         else {
-            SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() )
-                    .subscribe( this::setPhoto );
+            this.setPhoto( image );
             this.setPassportNumber ( psychologyCard
                     .getPapilonData()
                     .get( 0 )
@@ -97,14 +86,10 @@ public class PersonInfo {
                     .get( 0 )
                     .getPersonal_code() ); } }
 
-    public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO ) {
+    public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO, String image ) {
         if ( personTotalDataByFIO.getData() != null
                 && !personTotalDataByFIO.getData().isEmpty() ) {
-            SerDes
-                .getSerDes()
-                .getBase64ToLink()
-                .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() )
-                .subscribe( this::setPhoto );
+            this.setPhoto( image );
             this.setPinfl( personTotalDataByFIO.getData().get( 0 ).getPinpp() );
             this.setCadastre( personTotalDataByFIO.getData().get( 0 ).getCadastre() );
             this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );

@@ -4,6 +4,7 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.Date;
 import lombok.Data;
@@ -17,18 +18,25 @@ public class UserRequest {
     private String integratedServiceName;
     private final String microserviceName = "api-findface";
 
-    public UserRequest ( PersonTotalDataByFIO personTotalDataByFIO, FIO fio ) {
+    public UserRequest ( PersonTotalDataByFIO personTotalDataByFIO,
+                         FIO fio,
+                         String image ) {
         this.setCreatedAt( new Date().getTime() );
-        this.setPersonInfo( new PersonInfo( personTotalDataByFIO ) );
+        this.setPersonInfo( new PersonInfo( personTotalDataByFIO, image ) );
 
         this.setIntegratedServiceName( "ZAKS" );
-        this.setUserPassportNumber( fio.getUser() != null ? fio.getUser().getPassportNumber() : "unknown" ); }
+        this.setUserPassportNumber( fio.getUser() != null
+                ? fio.getUser().getPassportNumber()
+                : Errors.DATA_NOT_FOUND.name() ); }
 
-    public UserRequest ( PsychologyCard psychologyCard, ApiResponseModel apiResponseModel ) {
+    public UserRequest ( PsychologyCard psychologyCard,
+                         ApiResponseModel apiResponseModel,
+                         String image ) {
         this.setCreatedAt( new Date().getTime() );
-        this.setPersonInfo( new PersonInfo( psychologyCard ) );
+        this.setPersonInfo( new PersonInfo( psychologyCard, image ) );
 
         this.setIntegratedServiceName( "OVIR" );
         this.setUserPassportNumber( apiResponseModel.getUser() != null
-        ? apiResponseModel.getUser().getPassportNumber() : "unknown" ); }
+                ? apiResponseModel.getUser().getPassportNumber()
+                : Errors.DATA_NOT_FOUND.name() ); }
 }
