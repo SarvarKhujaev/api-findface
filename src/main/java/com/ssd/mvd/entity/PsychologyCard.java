@@ -5,10 +5,9 @@ import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.family.Family;
 
-import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple6;
 import reactor.util.function.Tuple5;
-import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
 
 import lombok.NoArgsConstructor;
 import lombok.Data;
@@ -48,7 +47,8 @@ public class PsychologyCard {
     public PsychologyCard ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
     public PsychologyCard ( Results results,
-                            Tuple3< Pinpp,
+                            Tuple3<
+                                    Pinpp,
                                     String,
                                     ModelForCarList > tuple ) {
         this.setViolationList( results.getViolationList() );
@@ -73,12 +73,24 @@ public class PsychologyCard {
                                    String,
                                    ModelForCarList,
                                    ModelForAddress,
-                                   Mono< List >,
-                                   Mono< Results > > tuple ) {
-        tuple.getT5().subscribe( value -> this.setViolationList( value != null ? value : new ArrayList<>() ) );
+                                   List,
+                                   Results > tuple ) {
         this.setModelForAddress( tuple.getT4() );
         this.setModelForCarList( tuple.getT3() );
+        this.setViolationList( tuple.getT5() );
         this.setPersonImage( tuple.getT2() );
         this.setModelForPassport( data );
+        this.setModelForPassport( data );
+        this.setPinpp( tuple.getT1() ); }
+
+    public PsychologyCard ( Tuple5<
+            Pinpp,
+            String,
+            ModelForCarList,
+            List,
+            Results > tuple ) {
+        this.setModelForCarList( tuple.getT3() );
+        this.setViolationList( tuple.getT4() );
+        this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 }

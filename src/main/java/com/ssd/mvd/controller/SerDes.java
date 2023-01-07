@@ -14,17 +14,21 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import reactor.netty.ByteBufFlux;
+import reactor.netty.http.client.HttpClient;
+
 import com.google.gson.Gson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
-import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
+import com.ssd.mvd.request.*;
 import com.ssd.mvd.constants.Errors;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.entity.family.Family;
@@ -51,8 +55,7 @@ public class SerDes implements Runnable {
     private final Gson gson = new Gson();
     private final Config config = new Config();
     private static SerDes serDes = new SerDes();
-
-    private HttpResponse< JsonNode > response;
+    private final HttpClient httpClient = HttpClient.create();
     private final Notification notification = new Notification();
 
     private final Map< String, Object > fields = new HashMap<>();
@@ -116,29 +119,21 @@ public class SerDes implements Runnable {
             .errors( Errors.EXTERNAL_SERVICE_500_ERROR )
             .build();
 
-    private final Function< String, ErrorResponse > getDataNotFoundErrorResponse = error -> ErrorResponse
-            .builder()
-            .message( "Data for: " + error + " not found" )
-            .errors( Errors.DATA_NOT_FOUND )
-            .build();
-
+    // используется когда сам сервис ловит ошибку при выполнении
     private final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Service error: " + error )
             .errors( Errors.SERVICE_WORK_ERROR )
             .build();
 
-    private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
-            () -> {
-                KafkaDataControl
-                        .getInstance()
-                        .getWriteToKafkaServiceUsage()
-                        .accept( this.getGson().toJson( userRequest ) );
-                return Void.TYPE; } )
-            .subscribeOn( Schedulers.boundedElastic() )
-            .then()
-            .subscribe();
+    // используется когда сервис возвращает пустое тело при запросе
+    private final Function< String, ErrorResponse > getDataNotFoundErrorResponse = error -> ErrorResponse
+            .builder()
+            .message( "Data for: " + error + " not found" )
+            .errors( Errors.DATA_NOT_FOUND )
+            .build();
 
+    // логирует любые ошибки
     private void sendErrorLog ( String methodName,
                                 String params,
                                 String reason ) {
@@ -160,415 +155,507 @@ public class SerDes implements Runnable {
                 .then()
                 .subscribe(); }
 
+    // отправляет ошибку на сервис Шамсиддина, в случае если какой - либо сервис не отвечает
     private void saveErrorLog ( String errorMessage,
                                 String integratedService,
                                 String integratedServiceDescription ) {
-        Mono.fromCallable( () -> {
-            KafkaDataControl
-                    .getInstance()
-                    .getWriteToKafkaErrorLog()
-                    .accept( this.getGson().toJson(
-                            ErrorLog
-                                    .builder()
-                                    .errorMessage( errorMessage )
-                                    .createdAt( new Date().getTime() )
-                                    .integratedService( integratedService )
-                                    .integratedServiceApiDescription( integratedServiceDescription )
-                                    .build() ) );
-            return Mono.empty(); } )
-                .subscribeOn( Schedulers.boundedElastic() )
-                .then()
-                .subscribe(); }
+        KafkaDataControl
+                .getInstance()
+                .getWriteToKafkaErrorLog()
+                .accept( this.getGson().toJson(
+                        ErrorLog
+                                .builder()
+                                .errorMessage( errorMessage )
+                                .createdAt( new Date().getTime() )
+                                .integratedService( integratedService )
+                                .integratedServiceApiDescription( integratedServiceDescription )
+                                .build() ) ); }
 
-    private final Predicate< HttpResponse< ? > > check500Error = response ->
-            response.getStatus() == 500
-            ^ response.getStatus() == 501
-            ^ response.getStatus() == 502
-            ^ response.getStatus() == 503;
+    // сохраняем логи о пользователе который отправил запрос на сервис
+    private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
+            () -> {
+                KafkaDataControl
+                        .getInstance()
+                        .getWriteToKafkaServiceUsage()
+                        .accept( this.getGson().toJson( userRequest ) );
+                return Void.TYPE; } )
+            .subscribeOn( Schedulers.boundedElastic() )
+            .log()
+            .then()
+            .subscribe();
 
-    private final Function< String, Pinpp > pinpp = pinpp -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try { log.info( "Pinpp: " + pinpp );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_PINPP() + pinpp )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            this.setResponse( response1 );
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getPinpp().apply( pinpp ); }
+    private void logging ( Throwable throwable, Methods method ) { log.error( "Error in {}: {}", method, throwable ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog( response1.getStatusText(),
+    private void logging ( Methods method, Object o ) { log.info( "Method {} has completed successfully {}", method, o ); }
+
+    private void logging ( Object o, Methods method ) { log.info( "OnNext from {}: {}", method, o ); }
+
+    private void logging ( String method ) { log.info( method + " was cancelled" ); }
+
+    private final Function< String, Mono< String > > base64ToLink = base64 -> this.getHttpClient()
+            .headers( h -> h.add( "Content-Type", "application/json" ) )
+            .post()
+            .send( ByteBufFlux.fromString( Mono.just(
+                    this.getGson().toJson( new RequestForBase64ToLink( "psychologyCard", base64 ) ) ) ) )
+            .uri( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+            .responseSingle( ( ( res, content ) -> res.status().code() == 200
+                    && content != null
+                    ? content
+                    .asString()
+                    .map( s -> s.substring( s.indexOf( "data" ) + 7, s.length() - 2 ) )
+                    : Mono.just( Errors.DATA_NOT_FOUND.name() ) ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() ) )
+            .doOnError( throwable -> this.logging( throwable, Methods.BASE64_TO_LINK ) )
+            .doOnSuccess( value -> this.logging( Methods.BASE64_TO_LINK, value ) )
+            .doOnNext( value -> this.logging( value, Methods.BASE64_TO_LINK ) )
+            .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
+
+    private final Function< String, Mono< Pinpp > > getPinpp = pinpp -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+//            .wiretap("reactor.netty.http.client.HttpClient", LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_PINPP() + pinpp )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Pinpp: " + pinpp );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getGetPinpp().apply( pinpp ); }
+
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog( res.status().toString(),
+                            IntegratedServiceApis.OVIR.getName(),
+                            IntegratedServiceApis.OVIR.getDescription() );
+                    return Mono.just( new Pinpp(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
+
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body of pinpp: " + s );
+                            return this.getGson().fromJson( s, Pinpp.class ); } )
+                        : Mono.just( new Pinpp( this.getGetDataNotFoundErrorResponse().apply( pinpp ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_PINPP );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return new Pinpp( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                this.sendErrorLog( "pinpp", pinpp, "Error in service: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_PINPP ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_PINPP, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PINPP() ) )
+            .onErrorReturn( new Pinpp( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .getObject()
-                            .toString(), Pinpp.class ); }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.OVIR.getName(),
-                    IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_PINPP(), pinpp, "Error in service: " + e.getMessage() );
-            return new Pinpp( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+            .post()
+            .send( ByteBufFlux.fromString( Mono.just(
+                    this.getGson().toJson( new RequestForCadaster( cadaster ) ) ) ) )
+            .uri( this.getConfig().getAPI_FOR_CADASTR() )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Pcadastre in deserialize: " + cadaster );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getGetCadaster().apply( cadaster ); }
 
-    private final Function< String, Data > deserialize = pinfl -> {
-        this.getFields().clear();
-        HttpResponse< JsonNode > response1;
-        this.getFields().put( "Pcadastre", pinfl );
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-        try {  log.info( "Pcadastre in deserialize 232: " + pinfl );
-            response1 = Unirest.post( this.getConfig().getAPI_FOR_CADASTR() )
-                    .headers( this.getHeaders() )
-                    .fields( this.getFields() )
-                    .asJson();
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getDeserialize().apply( pinfl ); }
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.OVIR.getName(),
+                            IntegratedServiceApis.OVIR.getDescription() );
+                    return Mono.just( new Data(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        this.getResponse().getStatusText(),
+                return content != null
+                        && res.status().code() == 200
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            String temp = s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 );
+                            log.info( "Temp Response: " + temp );
+                            return this.getGson().fromJson( temp, Data.class ); } )
+                        : Mono.just( new Data( this.getDataNotFoundErrorResponse.apply( cadaster ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.CADASTER );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return new Data( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                this.sendErrorLog( "deserialize ModelForCadastr", cadaster, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.CADASTER ) )
+            .doOnSuccess( value -> this.logging( Methods.CADASTER, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_CADASTR() ) )
+            .onErrorReturn( new Data( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            JSONObject object = response1
-                    .getBody()
-                    .getObject();
-            return object != null
-                    ? this.getGson().fromJson( object.get( "Data" ).toString() , Data.class )
-                    : new Data( this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) );
-        } catch ( JSONException | UnirestException e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.OVIR.getName(),
-                    IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_CADASTR(), pinfl, "Error: " + e.getMessage() );
-            return new Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinfl )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Pinfl in : " + Methods.GET_IMAGE_BY_PINFL + " : " + pinfl );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return getGetImageByPinfl().apply( pinfl ); }
 
-    private final Function< String, String > base64ToLink = base64 -> {
-        this.getFields().clear();
-        HttpResponse< JsonNode > response;
-        this.getFields().put( "photo", base64 );
-        this.getFields().put( "serviceName", "psychologyCard" );
-        try { log.info( "Converting image to Link in: base64ToLink method"  );
-            response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
-                    .header("Content-Type", "application/json")
-                    .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
-                    .asJson();
-            return response.getStatus() == 200
-                    ? response
-                    .getBody()
-                    .getObject()
-                    .get( "data" )
-                    .toString()
-                    : Errors.DATA_NOT_FOUND.name(); }
-        catch ( UnirestException e ) {
-            log.error( e.getMessage() );
-            this.sendErrorLog( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API(), "base64ToLink", "Error: " + e.getMessage() );
-            return Errors.SERVICE_WORK_ERROR.name(); } };
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.OVIR.getName(),
+                            IntegratedServiceApis.OVIR.getDescription() );
+                    return Mono.just( Errors.EXTERNAL_SERVICE_500_ERROR.name() ); }
 
-    private final Function< String, String > getImageByPinfl = pinfl -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinpp in getImageByPinfl: " + this.getConfig().getAPI_FOR_PERSON_IMAGE() + " : " + pinfl );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinfl )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return getGetImageByPinfl().apply( pinfl ); }
-
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        response1.getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in {}, {}" + s, Methods.GET_IMAGE_BY_PINFL );
+                            return s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ); } )
+                        : Mono.just( Errors.DATA_NOT_FOUND.name() ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_IMAGE_BY_PINFL );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                return Errors.EXTERNAL_SERVICE_500_ERROR.name(); }
+                this.sendErrorLog( "getImageByPinfl", pinfl, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_IMAGE_BY_PINFL ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_IMAGE_BY_PINFL, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
+            .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
-            JSONObject object = response1
-                    .getBody()
-                    .getObject();
+    private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .post()
+            .uri( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() )
+            .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson( new RequestForModelOfAddress( pinfl ) ) ) ) )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Pinfl in: " + Methods.GET_MODEL_FOR_ADDRESS + " : " + pinfl );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getGetModelForAddress().apply( pinfl ); }
 
-            return object != null
-                    && object.keySet().contains( "Data" )
-                    ? object.getString( "Data" )
-                    : Errors.DATA_NOT_FOUND.name();
-        } catch ( JSONException | UnirestException e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.OVIR.getName(),
-                    IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_PERSON_IMAGE(), pinfl, "Error: " + e.getMessage() );
-            return Errors.SERVICE_WORK_ERROR.name(); } };
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.OVIR.getName(),
+                            IntegratedServiceApis.OVIR.getDescription() );
+                    return Mono.just( new ModelForAddress(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-    private final Function< String, ModelForAddress > getModelForAddress = pinfl -> {
-        try { log.info( "Pinfl in getModelForAddress: " + pinfl );
-            this.getFields().clear();
-            this.getFields().put( "Pcitizen", pinfl );
-            this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-            this.setResponse( Unirest.post( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() )
-                    .headers( this.getHeaders() )
-                    .field( "Pcitizen", pinfl )
-                    .asJson() );
-            if ( this.getResponse().getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getGetModelForAddress().apply( pinfl ); }
-            if ( this.check500Error.test( this.getResponse() ) ) {
-                this.saveErrorLog(
-                        this.getResponse().getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_MODEL_FOR_ADDRESS, s );
+                            return this.getGson()
+                                    .fromJson( s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ),
+                                            ModelForAddress.class ); } )
+                        : Mono.just( new ModelForAddress( this.getDataNotFoundErrorResponse.apply( pinfl ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_MODEL_FOR_ADDRESS );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
-                new ModelForAddress( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
-            return this.getGson()
-                    .fromJson( this.getResponse()
-                            .getBody()
-                            .getObject()
-                            .get( "Data" )
-                            .toString(),
-                            ModelForAddress.class ); }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.OVIR.getName(),
-                    IntegratedServiceApis.OVIR.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS(), pinfl, "Error: " + e.getMessage() );
-            return new ModelForAddress( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+                this.sendErrorLog( "getModelForAddress", pinfl, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_MODEL_FOR_ADDRESS ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() ) )
+            .onErrorReturn( new ModelForAddress(
+                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final BiFunction< String, String, com.ssd.mvd.entity.modelForPassport.Data > getPassportData =
-            ( SerialNumber, BirthDate ) -> {
-                this.getFields().clear();
-                HttpResponse< JsonNode > response1;
-                this.getFields().put( "BirthDate", BirthDate );
-                this.getFields().put( "SerialNumber", SerialNumber );
-                log.info( "PassportNumber: " + SerialNumber + " : Birthdate " + BirthDate );
-                this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForPassport() );
-                try { response1 = Unirest.post( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
-                        .headers( this.getHeaders() )
-                        .fields( this.getFields() )
-                        .asJson();
-                    if ( response1.getStatus() == 401 ) {
+    private final BiFunction< String, String, Mono< com.ssd.mvd.entity.modelForPassport.Data > > getModelForPassport =
+        ( SerialNumber, BirthDate ) -> this.getHttpClient()
+                .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+                .post()
+                .uri( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
+                .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson(
+                        new RequestForPassport( SerialNumber, BirthDate ) ) ) ) )
+                .responseSingle( ( res, content ) -> {
+                    log.info( "Response in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, res );
+                    if ( res.status().code() == 401 ) {
                         this.updateTokens();
-                        return this.getGetPassportData().apply( SerialNumber, BirthDate ); }
+                        return this.getGetModelForPassport().apply( SerialNumber, BirthDate ); }
 
-                    if ( this.check500Error.test( response1 ) ) {
+                    if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                         this.saveErrorLog(
-                                response1.getStatusText(),
+                                res.status().toString(),
                                 IntegratedServiceApis.OVIR.getName(),
                                 IntegratedServiceApis.OVIR.getDescription() );
-                        return new com.ssd.mvd.entity.modelForPassport
-                                .Data( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                        return Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
+                                this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-                    return this.getGson()
-                            .fromJson( response1
-                                    .getBody()
-                                    .getObject()
-                                    .get( "Data" )
-                                    .toString(), com.ssd.mvd.entity.modelForPassport.Data.class ); }
-                catch ( Exception e ) {
+                    return res.status().code() == 200
+                            && content != null
+                            ? content
+                            .asString()
+                            .map( s -> {
+                                log.info( "Body in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, s );
+                                return this.getGson()
+                                        .fromJson( s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ),
+                                                com.ssd.mvd.entity.modelForPassport.Data.class ); } )
+                            : Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
+                                    this.getGetDataNotFoundErrorResponse()
+                                            .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                .doOnError( e -> {
+                    this.logging( e, Methods.GET_MODEL_FOR_PASSPORT );
                     this.saveErrorLog( e.getMessage(),
                             IntegratedServiceApis.OVIR.getName(),
                             IntegratedServiceApis.OVIR.getDescription() );
-                    this.sendErrorLog( this.getConfig().getAPI_FOR_PASSPORT_MODEL(),
+                    this.sendErrorLog( "deserialize Passport Data",
                             SerialNumber + "_" + BirthDate,
-                            "Error: " + e.getMessage() );
-                    return new com.ssd.mvd.entity.modelForPassport.Data( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+                            "Error: " + e.getMessage() ); } )
+                .doOnNext( value -> this.logging( value, Methods.GET_MODEL_FOR_PASSPORT ) )
+                .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
+                .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
+                .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.Data(
+                        this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Function< String, Insurance > insurance = pinpp -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Gosno in insurance: " + pinpp );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_FOR_INSURANCE() + pinpp )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getInsurance().apply( pinpp ); }
+    private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_FOR_INSURANCE() + gosno )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Gosno in insurance: " + gosno
+                        + " With status: " + res.status() );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getInsurance().apply( gosno ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        response1.getStatusText(),
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new Insurance(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
+
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_INSURANCE, s );
+                            return !s.contains( "топилмади" )
+                                    ? this.getGson().fromJson( s, Insurance.class )
+                                    : new Insurance(
+                                            this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ); } )
+                        : Mono.just( new Insurance(
+                        this.getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_INSURANCE );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new Insurance( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                this.sendErrorLog( "insurance", gosno, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_INSURANCE ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_INSURANCE, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_FOR_INSURANCE() ) )
+            .onErrorReturn( new Insurance( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .getArray()
-                            .get( 0 )
-                            .toString(), Insurance.class );
-        } catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_FOR_INSURANCE(), pinpp, "Error: " + e.getMessage() );
-            return new Insurance( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Gosno in getVehicleData: " + gosno
+                        + " With status: " + res.status() );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getGetVehicleData().apply( gosno ); }
 
-    private final Function< String, ModelForCar > getVehicleData = gosno -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Gosno in getVehicleData: " + gosno );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            this.setResponse( response1 );
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getGetVehicleData().apply( gosno ); }
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new ModelForCar(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        response1.getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_VEHILE_DATA, s );
+                            return this.getGson().fromJson( s, ModelForCar.class ); } )
+                        : Mono.just( new ModelForCar(
+                        this.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_VEHILE_DATA );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ModelForCar( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                this.sendErrorLog( "getVehicleData", gosno, e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_VEHILE_DATA ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_VEHILE_DATA, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_VEHICLE_DATA() ) )
+            .onErrorReturn( new ModelForCar( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            if ( this.getResponse().getStatus() == 200 ) return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .getArray()
-                            .get( 0 )
-                            .toString(),
-                            ModelForCar.class );
-            else {
-                this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(), gosno, Errors.DATA_NOT_FOUND.name() );
-                return new ModelForCar( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); }
-        } catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_VEHICLE_DATA(), gosno, e.getMessage() );
-            return new ModelForCar( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Gosno in getVehicleTonirovka: " + gosno
+                        + " With status: " + res.status() );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getGetVehicleTonirovka().apply( gosno ); }
 
-    private final Function< String, Tonirovka > getVehicleTonirovka = gosno -> {
-        HttpResponse< JsonNode > response1;
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Gosno in getVehicleTonirovka: " + gosno );
-            response1 = Unirest.get( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
-                    .headers( this.getHeaders() )
-                    .asJson();
-            if ( response1.getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getGetVehicleTonirovka().apply( gosno ); }
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new Tonirovka(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-            if ( this.check500Error.test( response1 ) ) {
-                this.saveErrorLog(
-                        response1.getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_INSURANCE, s );
+                            return this.getGson().fromJson( s, Tonirovka.class ); } )
+                        : Mono.just( new Tonirovka(
+                        this.getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_TONIROVKA );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new Tonirovka( this.getExternalServiceErrorResponse.apply( response1.getStatusText() ) ); }
+                this.sendErrorLog( "getVehicleTonirovka", gosno, e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_TONIROVKA ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_TONIROVKA, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_TONIROVKA() ) )
+            .onErrorReturn( new Tonirovka( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            return this.getGson()
-                    .fromJson( response1
-                            .getBody()
-                            .toString(),
-                            Tonirovka.class );
-        } catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_TONIROVKA(), gosno, e.getMessage() );
-            return new Tonirovka( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Gosno in getViolationList: " + gosno
+                        + " With status: " + res.status() );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getViolationList.apply( gosno ); }
 
-    private final Function< String, ViolationsList > getViolationList = gosno -> {
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Gosno in getViolationList: " + gosno );
-            this.setResponse( Unirest.get( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
-                    .headers( this.getHeaders() )
-                    .asJson() );
-            if ( this.getResponse().getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getViolationList.apply( gosno ); }
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new ViolationsList(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
 
-            if ( this.check500Error.test( this.getResponse() ) ) {
-                this.saveErrorLog(
-                        this.getResponse().getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_VIOLATION_LIST, s );
+                            return new ViolationsList(
+                                    this.stringToArrayList( s, ViolationsInformation[].class ) ); } )
+                        : Mono.just( new ViolationsList(
+                        this.getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_VIOLATION_LIST );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ViolationsList( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                this.sendErrorLog( "getViolationList", gosno, e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_VIOLATION_LIST ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_VIOLATION_LIST, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_VIOLATION_LIST() ) )
+            .onErrorReturn( new ViolationsList( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            if ( this.getResponse().getStatus() == 200 ) return new ViolationsList( this.stringToArrayList(
-                    this.getResponse()
-                            .getBody()
-                            .getArray()
-                            .toString(), ViolationsInformation[].class ) );
-
-            else { this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(),
-                    gosno,
-                    Errors.DATA_NOT_FOUND.name() );
-                return new ViolationsList( this.getDataNotFoundErrorResponse
-                        .apply( this.getResponse().getStatusText() ) ); } }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_VIOLATION_LIST(), gosno, e.getMessage() );
-            return new ViolationsList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
-
-    private final Function< String, DoverennostList > getDoverennostList = gosno -> {
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Gosno in getDoverennostList: " + gosno );
-            this.setResponse( Unirest.get( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
-                    .headers( this.getHeaders() )
-                    .asJson() );
-            if ( this.getResponse().getStatus() == 401 ) {
+    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
+            .responseSingle( ( res, content ) -> {
+                log.error( "Gosno in getDoverennostList: " + gosno
+                        + " With status: " + res.status() );
+                if ( res.status().code() == 401 ) {
                 this.updateTokens();
                 return this.getDoverennostList.apply( gosno ); }
 
-            if ( this.check500Error.test( this.getResponse() ) ) {
-                this.saveErrorLog(
-                        this.getResponse().getStatusText(),
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new DoverennostList(
+                            this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
+
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_DOVERENNOST_LIST, s );
+                            return new DoverennostList(
+                                    this.stringToArrayList( s, Doverennost[].class ) ); } )
+                        : Mono.just( new DoverennostList(
+                        this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_DOVERENNOST_LIST );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new DoverennostList(
-                        this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                this.sendErrorLog( "getDoverennostList", gosno, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_DOVERENNOST_LIST ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_DOVERENNOST_LIST, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() ) )
+            .onErrorReturn( new DoverennostList( this.getGetServiceErrorResponse().apply( gosno ) ) );
 
-            return new DoverennostList( this.stringToArrayList(
-                    this.getResponse()
-                            .getBody()
-                            .getArray()
-                            .toString(), Doverennost[].class ) ); }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_DOVERENNOST_LIST(), gosno, "Error: " + e.getMessage() );
-            return new DoverennostList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .get()
+            .uri( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
+            .responseSingle( ( res, content ) -> {
+                log.info( "Response in: {}, {}", Methods.GET_MODEL_FOR_CAR_LIST, res );
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getModelForCarList.apply( pinfl ); }
 
-    private final Function< String, ModelForCarList > getModelForCarList = pinfl -> {
-        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForGai() );
-        try { log.info( "Pinfl in getModelForCarList: " + pinfl );
-            this.setResponse( Unirest.get( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
-                    .headers( this.getHeaders() )
-                    .asJson() );
-            if ( this.getResponse().getStatus() == 401 ) {
-                this.updateTokens();
-                return this.getModelForCarList.apply( pinfl ); }
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                    this.saveErrorLog(
+                            res.status().toString(),
+                            IntegratedServiceApis.GAI.getName(),
+                            IntegratedServiceApis.GAI.getDescription() );
+                    return Mono.just( new ModelForCarList(
+                            this.getGetExternalServiceErrorResponse().apply( res.status().toString() ) ) ); }
 
-            if ( this.check500Error.test( this.getResponse() ) ) {
-                this.saveErrorLog(
-                        this.getResponse().getStatusText(),
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            log.info( "Body in: {}, {}", Methods.GET_MODEL_FOR_CAR_LIST, s );
+                            return new ModelForCarList(
+                                    this.stringToArrayList( s, ModelForCar[].class ) ); } )
+                        : Mono.just( new ModelForCarList(
+                        this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
+            .doOnError( e -> {
+                this.logging( e, Methods.GET_MODEL_FOR_CAR_LIST );
+                this.saveErrorLog( e.getMessage(),
                         IntegratedServiceApis.GAI.getName(),
                         IntegratedServiceApis.GAI.getDescription() );
-                return new ModelForCarList( this.getExternalServiceErrorResponse.apply( this.getResponse().getStatusText() ) ); }
+                this.sendErrorLog( "getModelForCarList", pinfl, "Error: " + e.getMessage() ); } )
+            .doOnNext( value -> this.logging( value, Methods.GET_MODEL_FOR_CAR_LIST ) )
+            .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_CAR_LIST, value ) )
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
+            .onErrorReturn( new ModelForCarList(
+                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-            if ( this.getResponse().getStatus() == 200 ) return new ModelForCarList( this.stringToArrayList(
-                    this.getResponse()
-                            .getBody()
-                            .getArray()
-                            .toString(), ModelForCar[].class ) );
-
-            else { this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(), pinfl, Errors.DATA_NOT_FOUND.name() );
-                return new ModelForCarList( this.getServiceErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ); } }
-        catch ( Exception e ) {
-            this.saveErrorLog( e.getMessage(),
-                    IntegratedServiceApis.GAI.getName(),
-                    IntegratedServiceApis.GAI.getDescription() );
-            this.sendErrorLog( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST(), pinfl, "Error: " + e.getMessage() );
-            return new ModelForCarList( this.getServiceErrorResponse.apply( e.getMessage() ) ); } };
+    private final Predicate< Integer > check500ErrorAsync = statusCode ->
+            statusCode == 500
+            ^ statusCode == 501
+            ^ statusCode == 502
+            ^ statusCode == 503;
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
@@ -580,15 +667,19 @@ public class SerDes implements Runnable {
             .getModelForCarList()
             .size() > 0;
 
-    private final Consumer< PsychologyCard > findAllDataAboutCar = psychologyCard -> {
-        if ( this.checkCarData.test( psychologyCard ) ) psychologyCard
+    private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCarAsync = psychologyCard -> {
+        if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard
                 .getModelForCarList()
                 .getModelForCarList()
                 .parallelStream()
                 .forEach( modelForCar -> {
-                    modelForCar.setInsurance( this.getInsurance().apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setTonirovka( this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ) );
-                    modelForCar.setDoverennostList( this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) ); } ); };
+                    this.getInsurance().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setInsurance );
+                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setTonirovka );
+                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
+                            .subscribe( modelForCar::setDoverennostList ); } );
+        return Mono.just( psychologyCard ); };
 
     private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
             psychologyCard.getModelForCadastr() != null
@@ -599,30 +690,34 @@ public class SerDes implements Runnable {
             .getModelForCadastr()
             .getPermanentRegistration().size() > 0;
 
-    private final Consumer< PsychologyCard > setPersonPrivateData = psychologyCard -> {
-        psychologyCard.setModelForCadastr( this.getDeserialize()
-                .apply( psychologyCard.getPinpp().getCadastre() ) );
-        if ( this.checkPrivateData.test( psychologyCard ) ) psychologyCard
-                .getModelForCadastr()
-                .getPermanentRegistration()
-                .parallelStream()
-                .filter( person -> person
-                        .getPDateBirth()
-                        .equals( psychologyCard
-                                .getPinpp()
-                                .getBirthDate() ) )
-                .forEach( person -> {
-                    psychologyCard.setModelForPassport (
-                            this.getGetPassportData().apply ( person.getPPsp(), person.getPDateBirth() ) );
-                    psychologyCard.setModelForAddress(
-                            this.getGetModelForAddress().apply( person.getPCitizen() ) ); } ); };
+    private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
+            this.getGetCadaster()
+            .apply( psychologyCard.getPinpp().getCadastre() )
+            .map( data -> {
+                psychologyCard.setModelForCadastr( data );
+                if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
+                        .getModelForCadastr()
+                        .getPermanentRegistration()
+                        .parallelStream()
+                        .filter( person -> person
+                                .getPDateBirth()
+                                .equals( psychologyCard
+                                        .getPinpp()
+                                        .getBirthDate() ) )
+                        .forEach( person -> {
+                            this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                    .subscribe( psychologyCard::setModelForPassport );
+                            this.getGetModelForAddress().apply( person.getPCitizen() )
+                                    .subscribe( psychologyCard::setModelForAddress ); } );
+                return psychologyCard; } );
 
     private final Predicate< Family > checkFamily = family ->
             family != null
             && family.getItems() != null
             && !family.getItems().isEmpty();
 
-    private void setFamilyData ( Results results, PsychologyCard psychologyCard ) {
+    private final BiFunction< Results, PsychologyCard, Mono< PsychologyCard > > findAllAboutFamily =
+            ( results, psychologyCard ) -> {
         // личные данные человека чьи данные были переданы на данный сервис
         psychologyCard.setChildData( results.getChildData() );
 
@@ -634,7 +729,7 @@ public class SerDes implements Runnable {
         psychologyCard.setDaddyData( results.getDaddyData() );
         psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
-        if ( this.checkFamily.test( psychologyCard.getChildData() ) ) psychologyCard
+        if ( this.getCheckFamily().test( psychologyCard.getChildData() ) ) psychologyCard
                 .getChildData()
                 .getItems()
                 .parallelStream()
@@ -642,7 +737,7 @@ public class SerDes implements Runnable {
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) );
 
-        if ( this.checkFamily.test( psychologyCard.getDaddyData() ) ) psychologyCard
+        if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
                 .getDaddyData()
                 .getItems()
                 .parallelStream()
@@ -650,7 +745,7 @@ public class SerDes implements Runnable {
                         .setPersonal_image( this.getGetImageByPinfl()
                                 .apply( familyMember.getPnfl() ) ) );
 
-        if ( this.checkFamily.test( psychologyCard.getMommyData() ) ) psychologyCard
+        if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
                 .getMommyData()
                 .getItems()
                 .parallelStream()
@@ -748,7 +843,15 @@ public class SerDes implements Runnable {
                             .getObject()
                             .get( "data" )
                             .toString(), Foreigner[].class ) );
-            this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+//            this.getBase64ToLink().apply( psychologyCard
+//                            .getPapilonData()
+//                            .get( 0 )
+//                            .getPhoto() )
+//                    .subscribe( s ->
+//                            this.getSaveUserUsageLog().accept(
+//                                    new UserRequest( psychologyCard,
+//                                            apiResponseModel,
+//                                            s ) ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -759,68 +862,154 @@ public class SerDes implements Runnable {
             return Mono.just( psychologyCard ); }
         return Mono.just( psychologyCard ); }
 
+    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
+            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForFio() ) )
+            .post()
+            .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
+            .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson( new RequestForFio( fio ) ) ) ) )
+            .responseSingle( ( res, content ) -> {
+                if ( res.status().code() == 401 ) {
+                    this.updateTokens();
+                    return this.getPersonTotalDataByFIO.apply( fio ); }
+
+                if ( this.check500ErrorAsync.test( res.status().code() ) ) this.saveErrorLog(
+                        res.status().toString(),
+                        IntegratedServiceApis.GAI.getName(),
+                        IntegratedServiceApis.GAI.getDescription() );
+
+                return res.status().code() == 200
+                        && content != null
+                        ? content
+                        .asString()
+                        .map( s -> {
+                            PersonTotalDataByFIO person = this.getGson()
+                                    .fromJson( s, PersonTotalDataByFIO.class );
+                            if ( person != null && person.getData().size() > 0 ) {
+                                person
+                                        .getData()
+                                        .parallelStream()
+                                        .forEach( person1 -> this.getGetImageByPinfl()
+                                                .apply( person1.getPinpp() )
+                                                .subscribe( person1::setPersonImage ) );
+//                                this.getBase64ToLink().apply( person.getData().get( 0 ).getPersonImage() )
+//                                        .subscribe( image -> this.getSaveUserUsageLog().accept(
+//                                                new UserRequest( person, fio, image ) ) );
+                            }
+                            return person != null ? person : new PersonTotalDataByFIO(); } )
+                        : Mono.just( new PersonTotalDataByFIO(
+                                this.getGetDataNotFoundErrorResponse().apply( "" ) ) ); } )
+            .doOnError( e -> {
+                log.error( "Error in getPersonTotalDataByFIO method: {}", e.getMessage() );
+                this.saveErrorLog( e.getMessage(),
+                        IntegratedServiceApis.GAI.getName(),
+                        IntegratedServiceApis.GAI.getDescription() );
+                this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() ); } )
+            .onErrorReturn( new PersonTotalDataByFIO(
+                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+
+    private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
+            apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
+                    ? Mono.zip(
+                            this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
+                            this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ),
+                            this.getGetModelForCarList().apply( apiResponseModel.getStatus().getMessage() ),
+                            FindFaceComponent
+                                    .getInstance()
+                                    .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                                    .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) )
+                                    .onErrorReturn( new ArrayList() ),
+                            FindFaceComponent
+                                    .getInstance()
+                                    .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
+                    .flatMap( tuple -> {
+                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
+                        return Mono.zip(
+                                this.getFindAllDataAboutCarAsync().apply( psychologyCard ),
+                                this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
+                                this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ) )
+                                .mapNotNull( tuple1 -> {
+//                                    this.getBase64ToLink().apply( psychologyCard
+//                                            .getPapilonData()
+//                                            .get( 0 )
+//                                            .getPhoto() )
+//                                            .subscribe( image ->
+//                                                    this.getSaveUserUsageLog().accept(
+//                                                            new UserRequest( psychologyCard,
+//                                                                    apiResponseModel,
+//                                                                    image ) ) );
+                                    return tuple1.getT1(); } ); } )
+                    : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
+
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
-                    Mono.fromCallable( () -> this.getPinpp()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetImageByPinfl()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetModelForCarList()
-                            .apply( results
-                                    .getResults()
-                                    .get( 0 )
-                                    .getPersonal_code() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ) )
-                    .map( tuple -> {
-                        PsychologyCard psychologyCard = new PsychologyCard( results, tuple );
-                        this.setFamilyData( results, psychologyCard );
-                        this.getFindAllDataAboutCar().accept( psychologyCard );
-                        this.getSetPersonPrivateData().accept( psychologyCard );
-                        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                        return psychologyCard; } );
+                    this.getGetPinpp().apply( results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ),
+                    this.getGetImageByPinfl().apply( results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ),
+                    this.getGetModelForCarList().apply( results
+                            .getResults()
+                            .get( 0 )
+                            .getPersonal_code() ) )
+                    .map( tuple -> new PsychologyCard( results, tuple ) )
+                    .flatMap( psychologyCard -> Mono.zip(
+                            this.getFindAllDataAboutCarAsync().apply( psychologyCard ),
+                            this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
+                            this.getFindAllAboutFamily().apply( results, psychologyCard ) )
+                            .mapNotNull( tuple -> {
+//                                this.getBase64ToLink().apply( psychologyCard
+//                                                .getPapilonData()
+//                                                .get( 0 )
+//                                                .getPhoto() )
+//                                        .subscribe( image ->
+//                                                this.getSaveUserUsageLog().accept(
+//                                                        new UserRequest( psychologyCard,
+//                                                                apiResponseModel,
+//                                                                image ) ) );
+                                return tuple.getT1(); } ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.Data, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> data.getPerson() != null
             ? Mono.zip(
-                    Mono.fromCallable( () -> this.getPinpp().apply( data.getPerson().getPinpp() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetImageByPinfl().apply( data.getPerson().getPinpp() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetModelForCarList().apply( data.getPerson().getPinpp() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> FindFaceComponent
-                                    .getInstance()
-                                    .getViolationListByPinfl( data.getPerson().getPinpp() )
-                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                                            error.getMessage(), object ) ) )
-                                    .onErrorReturn( new ArrayList() ) )
-                            .subscribeOn( Schedulers.boundedElastic() ),
-                    Mono.fromCallable( () -> FindFaceComponent
-                                    .getInstance()
-                                    .getFamilyMembersData( data.getPerson().getPinpp() )
-                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                                            error.getMessage(), object ) ) )
-                                    .onErrorReturn( new Results(
-                                            this.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
-                            .subscribeOn( Schedulers.boundedElastic() ) )
-            .map( tuple -> {
+                    this.getGetPinpp().apply( data.getPerson().getPinpp() ),
+                    this.getGetImageByPinfl().apply( data.getPerson().getPinpp() ),
+                    this.getGetModelForCarList().apply( data.getPerson().getPinpp() ),
+                    this.getGetModelForAddress().apply( data.getPerson().getPCitizen() ),
+                    FindFaceComponent
+                            .getInstance()
+                            .getViolationListByPinfl( data.getPerson().getPinpp() )
+                            .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                                    error.getMessage(), object ) )
+                            .onErrorReturn( new ArrayList() ),
+                    FindFaceComponent
+                            .getInstance()
+                            .getFamilyMembersData( data.getPerson().getPinpp() )
+                            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
+                                    error.getMessage(), object ) ) )
+                            .onErrorReturn( new Results(
+                                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
+            .flatMap( tuple -> {
                 PsychologyCard psychologyCard = new PsychologyCard( data, tuple );
-                tuple.getT6().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
-                psychologyCard.setModelForCadastr( this.getDeserialize().apply( psychologyCard.getPinpp().getCadastre() ) );
-                this.getFindAllDataAboutCar().accept( psychologyCard );
-                this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                return psychologyCard; } )
-            : Mono.just( new PsychologyCard( this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
+                return Mono.zip(
+                        this.getFindAllDataAboutCarAsync().apply( psychologyCard ),
+                        this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
+                        this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard ) )
+                        .mapNotNull( tuple1 -> {
+//                            this.getBase64ToLink().apply( psychologyCard
+//                                            .getPapilonData()
+//                                            .get( 0 )
+//                                            .getPhoto() )
+//                                    .subscribe( image ->
+//                                            this.getSaveUserUsageLog().accept(
+//                                                    new UserRequest( psychologyCard,
+//                                                            apiResponseModel,
+//                                                            image ) ) );
+                            return tuple1.getT1(); } ); } )
+            : Mono.just( new PsychologyCard(
+                    this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
     public void run () {
