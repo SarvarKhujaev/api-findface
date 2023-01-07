@@ -749,10 +749,82 @@ public class SerDes implements Runnable {
                 .getMommyData()
                 .getItems()
                 .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
-        return Mono.just( psychologyCard ); };
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) ); }
+
+    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> {
+        if ( fio.getSurname() == null
+                && fio.getName() == null
+                && fio.getPatronym() == null ) return Mono.just( new PersonTotalDataByFIO() );
+        this.getFields().clear();
+        HttpResponse< String > httpResponse;
+        this.getHeaders().put( "Authorization", "Bearer " + this.getTokenForFio() );
+        this.getFields().put( "Name", fio.getName() != null
+                ? fio.getName().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Surname", fio.getSurname() != null
+                ? fio.getSurname().toUpperCase( Locale.ROOT ) : null );
+        this.getFields().put( "Patronym", fio.getPatronym() != null
+                ? fio.getPatronym().toUpperCase( Locale.ROOT ) : null );
+        try { httpResponse = Unirest.post( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
+                .headers( this.getHeaders() )
+                .fields( this.getFields() )
+                .asString();
+            if ( httpResponse.getStatus() == 401 ) {
+                this.updateTokens();
+                return this.getPersonTotalDataByFIO.apply( fio ); }
+
+            if ( this.check500Error.test( httpResponse ) ) this.saveErrorLog(
+                    httpResponse.getStatusText(),
+                    IntegratedServiceApis.GAI.getName(),
+                    IntegratedServiceApis.GAI.getDescription() );
+
+            PersonTotalDataByFIO person = this.getGson()
+                    .fromJson( httpResponse.getBody(),
+                            PersonTotalDataByFIO.class );
+            if ( person != null && person.getData().size() > 0 ) {
+                person.getData()
+                        .parallelStream()
+                        .forEach( person1 -> person1.setPersonImage( this.getGetImageByPinfl()
+                                .apply( person1.getPinpp() ) ) );
+                this.getSaveUserUsageLog().accept( new UserRequest( person, fio ) ); }
+            return Mono.just( person != null ? person : new PersonTotalDataByFIO() );
+        } catch ( Exception e ) {
+            this.saveErrorLog( e.getMessage(),
+                    IntegratedServiceApis.GAI.getName(),
+                    IntegratedServiceApis.GAI.getDescription() );
+            this.sendErrorLog( "getPersonTotalDataByFIO", fio.getName(), "Error: " + e.getMessage() );
+            return Mono.just( new PersonTotalDataByFIO() ); } };
+
+    private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
+            apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
+                    ? Mono.zip(
+                            Mono.fromCallable( () -> this.getPinpp()
+                                    .apply( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetModelForCarList()
+                                    .apply( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> this.getGetImageByPinfl()
+                                    .apply( apiResponseModel.getStatus().getMessage() ) ),
+                            Mono.fromCallable( () -> FindFaceComponent
+                                    .getInstance()
+                                    .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
+                                    .onErrorReturn( new ArrayList() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ),
+                            Mono.fromCallable( () -> FindFaceComponent
+                                    .getInstance()
+                                    .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
+                                    .subscribeOn( Schedulers.boundedElastic() ) )
+                    .map( tuple -> {
+                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
+                        tuple.getT5().subscribe( results -> this.setFamilyData( results, psychologyCard ) );
+                        this.getSetPersonPrivateData().accept( psychologyCard );
+                        this.getFindAllDataAboutCar().accept( psychologyCard );
+                        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                        return psychologyCard; } )
+                    : Mono.just( new PsychologyCard( this.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
                                                       String token,
