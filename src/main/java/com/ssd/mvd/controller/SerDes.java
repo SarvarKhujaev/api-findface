@@ -1,7 +1,13 @@
 package com.ssd.mvd.controller;
 
+import org.json.JSONObject;
+import org.json.JSONException;
+
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.BiFunction;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +21,7 @@ import com.google.gson.Gson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
@@ -130,14 +137,23 @@ public class SerDes implements Runnable {
     private void sendErrorLog ( String methodName,
                                 String params,
                                 String reason ) {
-        this.getNotification().setPinfl( params );
-        this.getNotification().setReason( reason );
-        this.getNotification().setMethodName( methodName );
-        this.getNotification().setCallingTime( new Date() );
-        KafkaDataControl
-                .getInstance()
-                .getWriteErrorLog()
-                .accept( this.getGson().toJson( this.getNotification() ) ); }
+        Mono.fromCallable( () -> {
+                    this.getNotification().setPinfl( params );
+                    this.getNotification().setReason( reason );
+                    this.getNotification().setMethodName( methodName );
+                    this.getNotification().setCallingTime( new Date() );
+                    if ( this.getResponse() != null ) {
+                        this.getNotification().setJsonNode( this.getResponse().getBody() );
+                        log.error( this.getResponse().getBody()
+                                + " Status: " + this.getResponse().getStatus() ); }
+                    KafkaDataControl
+                            .getInstance()
+                            .getWriteErrorLog()
+                            .accept( this.getGson().toJson( this.getNotification() ) );
+                    return Mono.empty(); } )
+                .subscribeOn( Schedulers.boundedElastic() )
+                .then()
+                .subscribe(); }
 
     // отправляет ошибку на сервис Шамсиддина, в случае если какой - либо сервис не отвечает
     private void saveErrorLog ( String errorMessage,
@@ -717,17 +733,17 @@ public class SerDes implements Runnable {
                 .getChildData()
                 .getItems()
                 .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
         if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
                 .getDaddyData()
                 .getItems()
                 .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
+                .forEach( familyMember -> familyMember
+                        .setPersonal_image( this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() ) ) );
 
         if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
                 .getMommyData()

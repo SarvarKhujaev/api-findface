@@ -10,8 +10,10 @@ import reactor.util.function.Tuple5;
 import reactor.util.function.Tuple3;
 
 import lombok.NoArgsConstructor;
-import java.util.List;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
