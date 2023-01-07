@@ -4,7 +4,6 @@ import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.modelForGai.*;
 
 import reactor.util.function.Tuple5;
-import java.util.List;
 import lombok.Data;
 
 @Data
@@ -20,14 +19,16 @@ public class CarTotalData {
     private DoverennostList doverennostList;
     private ModelForCarList modelForCarList; // the list of all cars of each citizen
 
-    private List< String > patruls; // link to list of Patruls who is gonna deal with this Card
-    private List< ReportForCard > reportForCards;
-
     private ErrorResponse errorResponse;
 
-    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public CarTotalData ( Tuple5< Tonirovka, ModelForCar, DoverennostList, Insurance, ViolationsList > objects ) {
+    public CarTotalData( Tuple5<
+            Tonirovka,
+            ModelForCar,
+            DoverennostList,
+            Insurance,
+            ViolationsList > objects ) {
         this.setDoverennostList( objects.getT3() );
         this.setViolationsList( objects.getT5() );
         this.setModelForCar( objects.getT2() );
