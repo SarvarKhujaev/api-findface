@@ -68,7 +68,7 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT3() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard( com.ssd.mvd.entity.modelForPassport.Data data,
+    public PsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data,
                            Tuple6< Pinpp,
                                    String,
                                    ModelForCarList,

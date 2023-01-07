@@ -705,28 +705,22 @@ public class SerDes implements Runnable {
             apiResponseModel -> apiResponseModel.getStatus().getMessage() != null
                     ? Mono.zip(
                             Mono.fromCallable( () -> this.getPinpp()
-                                            .apply( apiResponseModel
-                                                    .getStatus()
-                                                    .getMessage() ) )
+                                    .apply( apiResponseModel.getStatus().getMessage() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ),
                             Mono.fromCallable( () -> this.getGetModelForCarList()
-                                            .apply( apiResponseModel
-                                                    .getStatus()
-                                                    .getMessage() ) )
+                                    .apply( apiResponseModel.getStatus().getMessage() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ),
                             Mono.fromCallable( () -> this.getGetImageByPinfl()
-                                    .apply( apiResponseModel
-                                            .getStatus()
-                                            .getMessage() ) ),
+                                    .apply( apiResponseModel.getStatus().getMessage() ) ),
                             Mono.fromCallable( () -> FindFaceComponent
-                                            .getInstance()
-                                            .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
-                                            .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
-                                            .onErrorReturn( new ArrayList() ) )
+                                    .getInstance()
+                                    .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                                    .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ", error.getMessage(), object ) ) )
+                                    .onErrorReturn( new ArrayList() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ),
                             Mono.fromCallable( () -> FindFaceComponent
-                                            .getInstance()
-                                            .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
+                                    .getInstance()
+                                    .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
                                     .subscribeOn( Schedulers.boundedElastic() ) )
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
