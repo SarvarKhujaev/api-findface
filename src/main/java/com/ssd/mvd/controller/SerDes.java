@@ -755,15 +755,15 @@ public class SerDes implements Runnable {
                             .getObject()
                             .get( "data" )
                             .toString(), Foreigner[].class ) );
-//            this.getBase64ToLink().apply( psychologyCard
-//                            .getPapilonData()
-//                            .get( 0 )
-//                            .getPhoto() )
-//                    .subscribe( s ->
-//                            this.getSaveUserUsageLog().accept(
-//                                    new UserRequest( psychologyCard,
-//                                            apiResponseModel,
-//                                            s ) ) );
+            this.getBase64ToLink().apply( psychologyCard
+                            .getPapilonData()
+                            .get( 0 )
+                            .getPhoto() )
+                    .subscribe( image ->
+                            this.getSaveUserUsageLog().accept(
+                                    new UserRequest( psychologyCard,
+                                            apiResponseModel,
+                                            image ) ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -803,10 +803,9 @@ public class SerDes implements Runnable {
                                         .forEach( person1 -> this.getGetImageByPinfl()
                                                 .apply( person1.getPinpp() )
                                                 .subscribe( person1::setPersonImage ) );
-//                                this.getBase64ToLink().apply( person.getData().get( 0 ).getPersonImage() )
-//                                        .subscribe( image -> this.getSaveUserUsageLog().accept(
-//                                                new UserRequest( person, fio, image ) ) );
-                            }
+                                this.getBase64ToLink().apply( person.getData().get( 0 ).getPersonImage() )
+                                        .subscribe( image -> this.getSaveUserUsageLog().accept(
+                                                new UserRequest( person, fio, image ) ) ); }
                             return person != null ? person : new PersonTotalDataByFIO(); } )
                         : Mono.just( new PersonTotalDataByFIO(
                                 this.getGetDataNotFoundErrorResponse().apply( "" ) ) ); } )
@@ -840,15 +839,15 @@ public class SerDes implements Runnable {
                                 this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
                                 this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ) )
                                 .mapNotNull( tuple1 -> {
-//                                    this.getBase64ToLink().apply( psychologyCard
-//                                            .getPapilonData()
-//                                            .get( 0 )
-//                                            .getPhoto() )
-//                                            .subscribe( image ->
-//                                                    this.getSaveUserUsageLog().accept(
-//                                                            new UserRequest( psychologyCard,
-//                                                                    apiResponseModel,
-//                                                                    image ) ) );
+                                    this.getBase64ToLink().apply( psychologyCard
+                                            .getPapilonData()
+                                            .get( 0 )
+                                            .getPhoto() )
+                                            .subscribe( image ->
+                                                    this.getSaveUserUsageLog().accept(
+                                                            new UserRequest( psychologyCard,
+                                                                    apiResponseModel,
+                                                                    image ) ) );
                                     return tuple1.getT1(); } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
@@ -872,15 +871,15 @@ public class SerDes implements Runnable {
                             this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
                             this.getFindAllAboutFamily().apply( results, psychologyCard ) )
                             .mapNotNull( tuple -> {
-//                                this.getBase64ToLink().apply( psychologyCard
-//                                                .getPapilonData()
-//                                                .get( 0 )
-//                                                .getPhoto() )
-//                                        .subscribe( image ->
-//                                                this.getSaveUserUsageLog().accept(
-//                                                        new UserRequest( psychologyCard,
-//                                                                apiResponseModel,
-//                                                                image ) ) );
+                                this.getBase64ToLink().apply( psychologyCard
+                                                .getPapilonData()
+                                                .get( 0 )
+                                                .getPhoto() )
+                                        .subscribe( image ->
+                                                this.getSaveUserUsageLog().accept(
+                                                        new UserRequest( psychologyCard,
+                                                                apiResponseModel,
+                                                                image ) ) );
                                 return tuple.getT1(); } ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.Data, ApiResponseModel, Mono< PsychologyCard > >
@@ -910,15 +909,15 @@ public class SerDes implements Runnable {
                         this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
                         this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard ) )
                         .mapNotNull( tuple1 -> {
-//                            this.getBase64ToLink().apply( psychologyCard
-//                                            .getPapilonData()
-//                                            .get( 0 )
-//                                            .getPhoto() )
-//                                    .subscribe( image ->
-//                                            this.getSaveUserUsageLog().accept(
-//                                                    new UserRequest( psychologyCard,
-//                                                            apiResponseModel,
-//                                                            image ) ) );
+                            this.getBase64ToLink().apply( psychologyCard
+                                            .getPapilonData()
+                                            .get( 0 )
+                                            .getPhoto() )
+                                    .subscribe( image ->
+                                            this.getSaveUserUsageLog().accept(
+                                                    new UserRequest( psychologyCard,
+                                                            apiResponseModel,
+                                                            image ) ) );
                             return tuple1.getT1(); } ); } )
             : Mono.just( new PsychologyCard(
                     this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
