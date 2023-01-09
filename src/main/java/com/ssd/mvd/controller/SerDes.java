@@ -656,7 +656,7 @@ public class SerDes implements Runnable {
                 .parallelStream()
                 .forEach( familyMember -> familyMember
                         .setPersonal_image( this.getGetImageByPinfl()
-                                .apply( familyMember.getPnfl() ) ) ); }
+                                .apply( familyMember.getPnfl() ) ) ); };
 
     private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> {
         if ( fio.getSurname() == null
