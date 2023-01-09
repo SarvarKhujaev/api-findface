@@ -809,24 +809,7 @@ public class SerDes implements Runnable {
                             FindFaceComponent
                                     .getInstance()
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                    .flatMap( tuple -> {
-                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
-                        log.info( "After analyze: " + psychologyCard.getPinpp() );
-                        return Mono.zip(
-                                this.getFindAllDataAboutCarAsync().apply( psychologyCard ),
-                                this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
-                                this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ) )
-                                .mapNotNull( tuple1 -> {
-                                    this.getBase64ToLink().apply( psychologyCard
-                                            .getPapilonData()
-                                            .get( 0 )
-                                            .getPhoto() )
-                                            .subscribe( image ->
-                                                    this.getSaveUserUsageLog().accept(
-                                                            new UserRequest( psychologyCard,
-                                                                    apiResponseModel,
-                                                                    image ) ) );
-                                    return tuple1.getT1(); } ); } )
+                    .map( PsychologyCard::new )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
