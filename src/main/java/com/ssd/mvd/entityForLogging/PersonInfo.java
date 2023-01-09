@@ -84,15 +84,7 @@ public class PersonInfo {
             this.setPinfl( psychologyCard
                     .getPapilonData()
                     .get( 0 )
-                    .getPersonal_code() );
-
-            this.setPhoto( SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() ) ); } }
+                    .getPersonal_code() ); } }
 
     public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO, String image ) {
         if ( personTotalDataByFIO.getData() != null
@@ -101,10 +93,6 @@ public class PersonInfo {
             this.setPinfl( personTotalDataByFIO.getData().get( 0 ).getPinpp() );
             this.setCadastre( personTotalDataByFIO.getData().get( 0 ).getCadastre() );
             this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );
-            this.setPhoto( SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
             this.setFullname( personTotalDataByFIO.getData().get( 0 ).getNameLatin()
                     + " "
                     + personTotalDataByFIO.getData().get( 0 ).getSurnameLatin()

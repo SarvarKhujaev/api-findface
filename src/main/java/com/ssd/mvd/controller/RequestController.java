@@ -1,18 +1,15 @@
 package com.ssd.mvd.controller;
 
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.component.FindFaceComponent;
-import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
@@ -39,9 +36,12 @@ public class RequestController {
                 ? FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( pinfl )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .onErrorReturn( new Results( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) )
+                .onErrorReturn( new Results( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new Results( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека

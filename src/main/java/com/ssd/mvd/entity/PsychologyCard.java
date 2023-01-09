@@ -10,10 +10,8 @@ import reactor.util.function.Tuple5;
 import reactor.util.function.Tuple3;
 
 import lombok.NoArgsConstructor;
-import lombok.Data;
-
-import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 @Data
 @NoArgsConstructor
@@ -57,19 +55,9 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard ( Tuple5<
-            Pinpp,
-            ModelForCarList,
-            String,
-            Mono< List >,
-            Mono< Results > > tuple ) {
-        tuple.getT4().subscribe( value -> this.setViolationList( value != null ? value : new ArrayList<>() ) );
-        this.setModelForCarList( tuple.getT2() );
-        this.setPersonImage( tuple.getT3() );
-        this.setPinpp( tuple.getT1() ); }
-
     public PsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data,
-                           Tuple6< Pinpp,
+                           Tuple6<
+                                   Pinpp,
                                    String,
                                    ModelForCarList,
                                    ModelForAddress,
