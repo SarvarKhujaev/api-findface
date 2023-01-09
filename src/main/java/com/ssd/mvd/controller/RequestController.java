@@ -53,7 +53,10 @@ public class RequestController {
                 .apply( fio )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
-                .onErrorReturn( new PersonTotalDataByFIO( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new PersonTotalDataByFIO( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PersonTotalDataByFIO( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getCarTotalData" ) // возвращает данные по номеру машины
@@ -102,8 +105,10 @@ public class RequestController {
                         : Mono.just( carTotalData ) )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
-                .onErrorReturn( new CarTotalData(
-                        SerDes.getSerDes().getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                .onErrorReturn( new CarTotalData( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalData" ) // возвращает данные по фотографии
@@ -183,8 +188,10 @@ public class RequestController {
                 .apply( apiResponseModel )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard(
-                        SerDes.getSerDes().getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                .onErrorReturn( new PsychologyCard( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PsychologyCard( SerDes
                 .getSerDes()
                 .getGetServiceErrorResponse()
