@@ -256,7 +256,7 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson(
-                                s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ), Data.class ) )
+                                s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
                         : Mono.just( new Data( this.getGetDataNotFoundErrorResponse().apply( cadaster ) ) ); } )
             .doOnError( e -> {
                 this.logging( e, Methods.CADASTER );
@@ -809,7 +809,12 @@ public class SerDes implements Runnable {
                             FindFaceComponent
                                     .getInstance()
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                    .map( PsychologyCard::new )
+                    .map( tuple -> {
+                        PsychologyCard psychologyCard = new PsychologyCard( tuple );
+                        this.getFindAllDataAboutCarAsync().apply( psychologyCard );
+                        this.getSetPersonPrivateDataAsync().apply( psychologyCard );
+                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
+                        return psychologyCard; } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
