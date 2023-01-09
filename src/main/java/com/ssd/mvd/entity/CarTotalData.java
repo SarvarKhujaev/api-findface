@@ -20,7 +20,7 @@ public class CarTotalData {
 
     private ErrorResponse errorResponse;
 
-    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
     public CarTotalData ( Tuple5<
             Tonirovka,
