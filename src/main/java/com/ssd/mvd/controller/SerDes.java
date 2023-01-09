@@ -654,6 +654,7 @@ public class SerDes implements Runnable {
             .apply( psychologyCard.getPinpp().getCadastre() )
             .map( data -> {
                 psychologyCard.setModelForCadastr( data );
+                log.info( "After analyze: " + psychologyCard.getModelForCadastr() );
                 if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
                         .getModelForCadastr()
                         .getPermanentRegistration()
@@ -810,6 +811,7 @@ public class SerDes implements Runnable {
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
                     .flatMap( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
+                        log.info( "After analyze: " + psychologyCard.getPinpp() );
                         return Mono.zip(
                                 this.getFindAllDataAboutCarAsync().apply( psychologyCard ),
                                 this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
