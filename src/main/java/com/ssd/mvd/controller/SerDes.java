@@ -35,6 +35,7 @@ import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entityForLogging.UserRequest;
+import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entityForLogging.IntegratedServiceApis;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -745,14 +746,6 @@ public class SerDes implements Runnable {
                             .getObject()
                             .get( "data" )
                             .toString(), Foreigner[].class ) );
-            this.getBase64ToLink().apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() )
-                    .subscribe( image -> this.getSaveUserUsageLog().accept(
-                            new UserRequest( psychologyCard,
-                                    apiResponseModel,
-                                    image ) ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -829,22 +822,23 @@ public class SerDes implements Runnable {
                         this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
                         return this.getGetCadaster()
                                 .apply( psychologyCard.getPinpp().getCadastre() )
+                                .publishOn( Schedulers.boundedElastic() )
                                 .map( data -> {
                                     psychologyCard.setModelForCadastr( data );
-                                    if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
-                                            .getModelForCadastr()
-                                            .getPermanentRegistration()
-                                            .parallelStream()
-                                            .filter( person -> person
+                                    if ( this.getCheckPrivateData().test( psychologyCard ) ) {
+                                        for ( Person person : psychologyCard
+                                                .getModelForCadastr()
+                                                .getPermanentRegistration() )
+                                            if ( person
                                                     .getPDateBirth()
                                                     .equals( psychologyCard
                                                             .getPinpp()
-                                                            .getBirthDate() ) )
-                                            .forEach( person -> {
+                                                            .getBirthDate() ) ) {
                                                 this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
                                                         .subscribe( psychologyCard::setModelForPassport );
                                                 this.getGetModelForAddress().apply( person.getPCitizen() )
-                                                        .subscribe( psychologyCard::setModelForAddress ); } );
+                                                        .subscribe( psychologyCard::setModelForAddress ); }
+                                        return psychologyCard; }
                                     return psychologyCard; } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
