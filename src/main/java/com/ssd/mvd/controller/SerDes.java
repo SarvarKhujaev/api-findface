@@ -822,21 +822,30 @@ public class SerDes implements Runnable {
                             FindFaceComponent
                                     .getInstance()
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                    .map( tuple -> {
+                    .flatMap( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
+//                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                         this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
-//                        this.getBase64ToLink().apply( psychologyCard
-//                                        .getPapilonData()
-//                                        .get( 0 )
-//                                        .getPhoto() )
-//                                .subscribe( image ->
-//                                        this.getSaveUserUsageLog().accept(
-//                                                new UserRequest( psychologyCard,
-//                                                        apiResponseModel,
-//                                                        image ) ) );
-                        return psychologyCard; } )
+                        return this.getGetCadaster()
+                                .apply( psychologyCard.getPinpp().getCadastre() )
+                                .map( data -> {
+                                    psychologyCard.setModelForCadastr( data );
+                                    if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
+                                            .getModelForCadastr()
+                                            .getPermanentRegistration()
+                                            .parallelStream()
+                                            .filter( person -> person
+                                                    .getPDateBirth()
+                                                    .equals( psychologyCard
+                                                            .getPinpp()
+                                                            .getBirthDate() ) )
+                                            .forEach( person -> {
+                                                this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                                        .subscribe( psychologyCard::setModelForPassport );
+                                                this.getGetModelForAddress().apply( person.getPCitizen() )
+                                                        .subscribe( psychologyCard::setModelForAddress ); } );
+                                    return psychologyCard; } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
@@ -854,20 +863,38 @@ public class SerDes implements Runnable {
                             .get( 0 )
                             .getPersonal_code() ) )
                     .map( tuple -> new PsychologyCard( results, tuple ) )
-                    .map( psychologyCard -> {
+                    .flatMap( psychologyCard -> {
                         this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
+//                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                         this.getFindAllAboutFamily().apply( results, psychologyCard );
-                        this.getBase64ToLink().apply( psychologyCard
-                                        .getPapilonData()
-                                        .get( 0 )
-                                        .getPhoto() )
-                                .subscribe( image ->
-                                        this.getSaveUserUsageLog().accept(
-                                                new UserRequest( psychologyCard,
-                                                        apiResponseModel,
-                                                        image ) ) );
-                        return psychologyCard; } );
+//                        this.getBase64ToLink().apply( psychologyCard
+//                                        .getPapilonData()
+//                                        .get( 0 )
+//                                        .getPhoto() )
+//                                .subscribe( image ->
+//                                        this.getSaveUserUsageLog().accept(
+//                                                new UserRequest( psychologyCard,
+//                                                        apiResponseModel,
+//                                                        image ) ) );
+                        return this.getGetCadaster()
+                                .apply( psychologyCard.getPinpp().getCadastre() )
+                                .map( data -> {
+                                    psychologyCard.setModelForCadastr( data );
+                                    if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
+                                            .getModelForCadastr()
+                                            .getPermanentRegistration()
+                                            .parallelStream()
+                                            .filter( person -> person
+                                                    .getPDateBirth()
+                                                    .equals( psychologyCard
+                                                            .getPinpp()
+                                                            .getBirthDate() ) )
+                                            .forEach( person -> {
+                                                this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                                        .subscribe( psychologyCard::setModelForPassport );
+                                                this.getGetModelForAddress().apply( person.getPCitizen() )
+                                                        .subscribe( psychologyCard::setModelForAddress ); } );
+                                    return psychologyCard; } ); } );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> data.getData().getPerson() != null
