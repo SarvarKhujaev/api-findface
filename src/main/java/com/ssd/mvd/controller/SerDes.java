@@ -619,10 +619,7 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> {
-                            log.info( "Body in: {}, {}", Methods.GET_MODEL_FOR_CAR_LIST, s );
-                            return new ModelForCarList(
-                                    this.stringToArrayList( s, ModelForCar[].class ) ); } )
+                        .map( s -> new ModelForCarList( this.stringToArrayList( s, ModelForCar[].class ) ) )
                         : Mono.just( new ModelForCarList(
                         this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
             .doOnError( e -> {
@@ -639,19 +636,19 @@ public class SerDes implements Runnable {
 
     private final Predicate< Integer > check500ErrorAsync = statusCode ->
             statusCode == 500
-                    ^ statusCode == 501
-                    ^ statusCode == 502
-                    ^ statusCode == 503;
+            ^ statusCode == 501
+            ^ statusCode == 502
+            ^ statusCode == 503;
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
-                    && psychologyCard
-                    .getModelForCarList()
-                    .getModelForCarList() != null
-                    && psychologyCard
-                    .getModelForCarList()
-                    .getModelForCarList()
-                    .size() > 0;
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList() != null
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList()
+            .size() > 0;
 
     private final Consumer< PsychologyCard > findAllDataAboutCarAsync = psychologyCard -> {
         if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard

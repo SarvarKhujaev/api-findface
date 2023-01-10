@@ -155,9 +155,9 @@ public class RequestController {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> data.getTemproaryRegistration() != null
-                        && !data.getTemproaryRegistration().isEmpty()
-                        ? Flux.fromStream( data.getTemproaryRegistration().stream() )
+                .flatMapMany( data -> data.getPermanentRegistration() != null
+                        && !data.getPermanentRegistration().isEmpty()
+                        ? Flux.fromStream( data.getPermanentRegistration().stream() )
                         .flatMap( person -> SerDes
                                 .getSerDes()
                                 .getGetModelForPassport()
