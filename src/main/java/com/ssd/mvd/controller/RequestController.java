@@ -1,18 +1,15 @@
 package com.ssd.mvd.controller;
 
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.component.FindFaceComponent;
-import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
@@ -39,9 +36,12 @@ public class RequestController {
                 ? FindFaceComponent
                 .getInstance()
                 .getFamilyMembersData( pinfl )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
-                .onErrorReturn( new Results( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) )
+                .onErrorReturn( new Results( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new Results( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека
@@ -53,7 +53,10 @@ public class RequestController {
                 .apply( fio )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
-                .onErrorReturn( new PersonTotalDataByFIO( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new PersonTotalDataByFIO( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PersonTotalDataByFIO( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getCarTotalData" ) // возвращает данные по номеру машины
@@ -61,31 +64,26 @@ public class RequestController {
         log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
-                        Mono.fromCallable( () -> SerDes
-                                        .getSerDes()
-                                        .getGetVehicleTonirovka()
-                                        .apply( apiResponseModel.getStatus().getMessage() ) )
-                                .subscribeOn( Schedulers.boundedElastic() ),
-                        Mono.fromCallable( () -> SerDes
-                                        .getSerDes()
-                                        .getGetVehicleData()
-                                        .apply( apiResponseModel.getStatus().getMessage() ) )
-                                .subscribeOn( Schedulers.boundedElastic() ),
-                        Mono.fromCallable( () -> SerDes
-                                        .getSerDes()
-                                        .getGetDoverennostList()
-                                        .apply( apiResponseModel.getStatus().getMessage() ) )
-                                .subscribeOn( Schedulers.boundedElastic() ),
-                        Mono.fromCallable( () -> SerDes
-                                        .getSerDes()
-                                        .getInsurance()
-                                        .apply( apiResponseModel.getStatus().getMessage() ) )
-                                .subscribeOn( Schedulers.boundedElastic() ),
-                        Mono.fromCallable( () -> SerDes
-                                        .getSerDes()
-                                        .getGetViolationList()
-                                        .apply( apiResponseModel.getStatus().getMessage() ) )
-                                .subscribeOn( Schedulers.boundedElastic() ) )
+                        SerDes
+                                .getSerDes()
+                                .getGetVehicleTonirovka()
+                                .apply( apiResponseModel.getStatus().getMessage() ),
+                        SerDes
+                                .getSerDes()
+                                .getGetVehicleData()
+                                .apply( apiResponseModel.getStatus().getMessage() ),
+                        SerDes
+                                .getSerDes()
+                                .getGetDoverennostList()
+                                .apply( apiResponseModel.getStatus().getMessage() ),
+                        SerDes
+                                .getSerDes()
+                                .getInsurance()
+                                .apply( apiResponseModel.getStatus().getMessage() ),
+                        SerDes
+                                .getSerDes()
+                                .getGetViolationList()
+                                .apply( apiResponseModel.getStatus().getMessage() ) )
                 .map( CarTotalData::new )
                 .flatMap( carTotalData -> carTotalData.getModelForCar() != null
                         && carTotalData.getModelForCar().getPinpp() != null
@@ -94,20 +92,23 @@ public class RequestController {
                         .getSerDes()
                         .getGetPsychologyCardByPinfl()
                         .apply( ApiResponseModel
+                                .builder()
+                                .status( Status
                                         .builder()
-                                        .status( Status
-                                                .builder()
-                                                .message( carTotalData.getModelForCar().getPinpp() )
-                                                .build() )
-                                        .user( apiResponseModel.getUser() )
+                                        .message( carTotalData.getModelForCar().getPinpp() )
                                         .build() )
+                                .user( apiResponseModel.getUser() )
+                                .build() )
                         .map( psychologyCard -> {
                             carTotalData.setPsychologyCard( psychologyCard );
                             return carTotalData; } )
                         : Mono.just( carTotalData ) )
                 .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) ) )
-                .onErrorReturn( new CarTotalData( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new CarTotalData( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonTotalData" ) // возвращает данные по фотографии
@@ -142,42 +143,39 @@ public class RequestController {
                                         apiResponseModel )
                                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ) )
                 : Mono.just( new PsychologyCard( SerDes
-                                .getSerDes()
-                                .getGetServiceErrorResponse()
-                                .apply( Errors.WRONG_PARAMS.name() ) ) ); }
+                .getSerDes()
+                .getGetServiceErrorResponse()
+                .apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
         log.info( apiResponseModel.getStatus().getMessage() );
         if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( this.getErrorResponse.get() ) );
-        final List< Person > personList = SerDes
+        return SerDes
                 .getSerDes()
-                .getDeserialize()
+                .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .getPermanentRegistration();
-        return personList != null && !personList.isEmpty()
-                ? Flux.fromStream( personList.stream() )
-                .flatMap( person -> SerDes
-                        .getSerDes()
-                        .getGetPsychologyCardByData()
-                        .apply( SerDes
+                .flatMapMany( data -> data.getTemproaryRegistration() != null
+                        && !data.getTemproaryRegistration().isEmpty()
+                        ? Flux.fromStream( data.getTemproaryRegistration().stream() )
+                        .flatMap( person -> SerDes
                                 .getSerDes()
-                                .getGetPassportData()
-                                .apply(
-                                        person.getPPsp(),
-                                        person.getPDateBirth() ),
-                        apiResponseModel ) )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Flux.just( new PsychologyCard(
-                SerDes
-                        .getSerDes()
-                        .getGetDataNotFoundErrorResponse()
-                        .apply( apiResponseModel.getStatus().getMessage() ) ) ); }
+                                .getGetModelForPassport()
+                                .apply( person.getPPsp(), person.getPDateBirth() )
+                                .flatMap( data1 -> SerDes
+                                        .getSerDes()
+                                        .getGetPsychologyCardByData()
+                                        .apply( data1, apiResponseModel ) ) )
+                        .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                                error.getMessage(), object ) )
+                        .onErrorReturn( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetServiceErrorResponse()
+                                .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        : Flux.just( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetDataNotFoundErrorResponse()
+                                .apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
@@ -190,7 +188,10 @@ public class RequestController {
                 .apply( apiResponseModel )
                 .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
                         error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes.getSerDes().getGetServiceErrorResponse().apply( "" ) ) )
+                .onErrorReturn( new PsychologyCard( SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PsychologyCard( SerDes
                 .getSerDes()
                 .getGetServiceErrorResponse()
@@ -210,14 +211,14 @@ public class RequestController {
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()
-                .getGetPsychologyCardByData()
-                .apply( SerDes
+                .getGetModelForPassport()
+                .apply( strings[ 0 ], strings[ 1 ] )
+                .flatMap( data -> SerDes
                         .getSerDes()
-                        .getGetPassportData()
-                        .apply( strings[ 0 ], strings[ 1 ] ),
-                        apiResponseModel )
-                .onErrorContinue( ( (error, object) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) ) )
+                        .getGetPsychologyCardByData()
+                        .apply( data, apiResponseModel ) )
+                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+                        error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes
                         .getSerDes()
                         .getGetServiceErrorResponse()
