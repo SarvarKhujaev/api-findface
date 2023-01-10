@@ -193,8 +193,8 @@ public class SerDes implements Runnable {
                     : Mono.just( Errors.DATA_NOT_FOUND.name() ) ) )
             .doOnCancel( () -> this.logging( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() ) )
             .doOnError( throwable -> this.logging( throwable, Methods.BASE64_TO_LINK ) )
-            .doOnSuccess( value -> this.logging( Methods.BASE64_TO_LINK, value ) )
-            .doOnNext( value -> this.logging( value, Methods.BASE64_TO_LINK ) )
+//            .doOnSuccess( value -> this.logging( Methods.BASE64_TO_LINK, value ) )
+//            .doOnNext( value -> this.logging( value, Methods.BASE64_TO_LINK ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< Pinpp > > getPinpp = pinpp -> this.getHttpClient()
@@ -258,7 +258,7 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> {
-                            String temp = s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 );
+                            String temp = s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) );
                             log.info( "Temp Response: " + temp );
                             return this.getGson().fromJson( temp, Data.class ); } )
                         : Mono.just( new Data( this.getDataNotFoundErrorResponse.apply( cadaster ) ) ); } )
@@ -304,8 +304,8 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( "getImageByPinfl", pinfl, "Error: " + e.getMessage() ); } )
-            .doOnNext( value -> this.logging( value, Methods.GET_IMAGE_BY_PINFL ) )
-            .doOnSuccess( value -> this.logging( Methods.GET_IMAGE_BY_PINFL, value ) )
+//            .doOnNext( value -> this.logging( value, Methods.GET_IMAGE_BY_PINFL ) )
+//            .doOnSuccess( value -> this.logging( Methods.GET_IMAGE_BY_PINFL, value ) )
             .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
@@ -351,51 +351,51 @@ public class SerDes implements Runnable {
                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final BiFunction< String, String, Mono< com.ssd.mvd.entity.modelForPassport.Data > > getModelForPassport =
-        ( SerialNumber, BirthDate ) -> this.getHttpClient()
-                .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
-                .post()
-                .uri( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
-                .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson(
-                        new RequestForPassport( SerialNumber, BirthDate ) ) ) ) )
-                .responseSingle( ( res, content ) -> {
-                    log.info( "Response in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, res );
-                    if ( res.status().code() == 401 ) {
-                        this.updateTokens();
-                        return this.getGetModelForPassport().apply( SerialNumber, BirthDate ); }
+            ( SerialNumber, BirthDate ) -> this.getHttpClient()
+                    .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+                    .post()
+                    .uri( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
+                    .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson(
+                            new RequestForPassport( SerialNumber, BirthDate ) ) ) ) )
+                    .responseSingle( ( res, content ) -> {
+                        log.info( "Response in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, res );
+                        if ( res.status().code() == 401 ) {
+                            this.updateTokens();
+                            return this.getGetModelForPassport().apply( SerialNumber, BirthDate ); }
 
-                    if ( this.check500ErrorAsync.test( res.status().code() ) ) {
-                        this.saveErrorLog(
-                                res.status().toString(),
+                        if ( this.check500ErrorAsync.test( res.status().code() ) ) {
+                            this.saveErrorLog(
+                                    res.status().toString(),
+                                    IntegratedServiceApis.OVIR.getName(),
+                                    IntegratedServiceApis.OVIR.getDescription() );
+                            return Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
+                                    this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
+
+                        return res.status().code() == 200
+                                && content != null
+                                ? content
+                                .asString()
+                                .map( s -> {
+                                    log.info( "Body in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, s );
+                                    return this.getGson()
+                                            .fromJson( s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ),
+                                                    com.ssd.mvd.entity.modelForPassport.Data.class ); } )
+                                : Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
+                                this.getGetDataNotFoundErrorResponse()
+                                        .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                    .doOnError( e -> {
+                        this.logging( e, Methods.GET_MODEL_FOR_PASSPORT );
+                        this.saveErrorLog( e.getMessage(),
                                 IntegratedServiceApis.OVIR.getName(),
                                 IntegratedServiceApis.OVIR.getDescription() );
-                        return Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
-                                this.getExternalServiceErrorResponse.apply( res.status().toString() ) ) ); }
-
-                    return res.status().code() == 200
-                            && content != null
-                            ? content
-                            .asString()
-                            .map( s -> {
-                                log.info( "Body in {}: {}", Methods.GET_MODEL_FOR_PASSPORT, s );
-                                return this.getGson()
-                                        .fromJson( s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ),
-                                                com.ssd.mvd.entity.modelForPassport.Data.class ); } )
-                            : Mono.just( new com.ssd.mvd.entity.modelForPassport.Data(
-                                    this.getGetDataNotFoundErrorResponse()
-                                            .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
-                .doOnError( e -> {
-                    this.logging( e, Methods.GET_MODEL_FOR_PASSPORT );
-                    this.saveErrorLog( e.getMessage(),
-                            IntegratedServiceApis.OVIR.getName(),
-                            IntegratedServiceApis.OVIR.getDescription() );
-                    this.sendErrorLog( "deserialize Passport Data",
-                            SerialNumber + "_" + BirthDate,
-                            "Error: " + e.getMessage() ); } )
-                .doOnNext( value -> this.logging( value, Methods.GET_MODEL_FOR_PASSPORT ) )
-                .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
-                .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
-                .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.Data(
-                        this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+                        this.sendErrorLog( "deserialize Passport Data",
+                                SerialNumber + "_" + BirthDate,
+                                "Error: " + e.getMessage() ); } )
+                    .doOnNext( value -> this.logging( value, Methods.GET_MODEL_FOR_PASSPORT ) )
+                    .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
+                    .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
+                    .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.Data(
+                            this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
@@ -425,7 +425,7 @@ public class SerDes implements Runnable {
                             return !s.contains( "топилмади" )
                                     ? this.getGson().fromJson( s, Insurance.class )
                                     : new Insurance(
-                                            this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ); } )
+                                    this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ); } )
                         : Mono.just( new Insurance(
                         this.getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -565,8 +565,8 @@ public class SerDes implements Runnable {
                 log.error( "Gosno in getDoverennostList: " + gosno
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
-                this.updateTokens();
-                return this.getDoverennostList.apply( gosno ); }
+                    this.updateTokens();
+                    return this.getDoverennostList.apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -639,19 +639,19 @@ public class SerDes implements Runnable {
 
     private final Predicate< Integer > check500ErrorAsync = statusCode ->
             statusCode == 500
-            ^ statusCode == 501
-            ^ statusCode == 502
-            ^ statusCode == 503;
+                    ^ statusCode == 501
+                    ^ statusCode == 502
+                    ^ statusCode == 503;
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList()
-            .size() > 0;
+                    && psychologyCard
+                    .getModelForCarList()
+                    .getModelForCarList() != null
+                    && psychologyCard
+                    .getModelForCarList()
+                    .getModelForCarList()
+                    .size() > 0;
 
     private final Consumer< PsychologyCard > findAllDataAboutCarAsync = psychologyCard -> {
         if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard
@@ -677,23 +677,23 @@ public class SerDes implements Runnable {
 
     private final Consumer< PsychologyCard > setPersonPrivateDataAsync = psychologyCard ->
             this.getGetCadaster()
-            .apply( psychologyCard.getPinpp().getCadastre() )
-            .subscribe( data -> {
-                psychologyCard.setModelForCadastr( data );
-                if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
-                        .getModelForCadastr()
-                        .getPermanentRegistration()
-                        .parallelStream()
-                        .filter( person -> person
-                                .getPDateBirth()
-                                .equals( psychologyCard
-                                        .getPinpp()
-                                        .getBirthDate() ) )
-                        .forEach( person -> {
-                            this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
-                                    .subscribe( psychologyCard::setModelForPassport );
-                            this.getGetModelForAddress().apply( person.getPCitizen() )
-                                    .subscribe( psychologyCard::setModelForAddress ); } ); } );
+                    .apply( psychologyCard.getPinpp().getCadastre() )
+                    .subscribe( data -> {
+                        psychologyCard.setModelForCadastr( data );
+                        if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
+                                .getModelForCadastr()
+                                .getPermanentRegistration()
+                                .parallelStream()
+                                .filter( person -> person
+                                        .getPDateBirth()
+                                        .equals( psychologyCard
+                                                .getPinpp()
+                                                .getBirthDate() ) )
+                                .forEach( person -> {
+                                    this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                            .subscribe( psychologyCard::setModelForPassport );
+                                    this.getGetModelForAddress().apply( person.getPCitizen() )
+                                            .subscribe( psychologyCard::setModelForAddress ); } ); } );
 
     private final Predicate< Family > checkFamily = family ->
             family != null
@@ -702,41 +702,41 @@ public class SerDes implements Runnable {
 
     private final BiFunction< Results, PsychologyCard, Mono< PsychologyCard > > findAllAboutFamily =
             ( results, psychologyCard ) -> {
-        // личные данные человека чьи данные были переданы на данный сервис
-        psychologyCard.setChildData( results.getChildData() );
+                // личные данные человека чьи данные были переданы на данный сервис
+                psychologyCard.setChildData( results.getChildData() );
 
-        // личные данные матери, того чьи данные были переданы на данный сервис
-        psychologyCard.setMommyData( results.getMommyData() );
-        psychologyCard.setMommyPinfl( results.getMommyPinfl() );
+                // личные данные матери, того чьи данные были переданы на данный сервис
+                psychologyCard.setMommyData( results.getMommyData() );
+                psychologyCard.setMommyPinfl( results.getMommyPinfl() );
 
-        // личные данные отца, того чьи данные были переданы на данный сервис
-        psychologyCard.setDaddyData( results.getDaddyData() );
-        psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
+                // личные данные отца, того чьи данные были переданы на данный сервис
+                psychologyCard.setDaddyData( results.getDaddyData() );
+                psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
-        if ( this.getCheckFamily().test( psychologyCard.getChildData() ) ) psychologyCard
-                .getChildData()
-                .getItems()
-                .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
+                if ( this.getCheckFamily().test( psychologyCard.getChildData() ) ) psychologyCard
+                        .getChildData()
+                        .getItems()
+                        .parallelStream()
+                        .forEach( familyMember -> this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() )
+                                .subscribe( familyMember::setPersonal_image ) );
 
-        if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
-                .getDaddyData()
-                .getItems()
-                .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
+                if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
+                        .getDaddyData()
+                        .getItems()
+                        .parallelStream()
+                        .forEach( familyMember -> this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() )
+                                .subscribe( familyMember::setPersonal_image ) );
 
-        if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
-                .getMommyData()
-                .getItems()
-                .parallelStream()
-                .forEach( familyMember -> this.getGetImageByPinfl()
-                        .apply( familyMember.getPnfl() )
-                        .subscribe( familyMember::setPersonal_image ) );
-        return Mono.just( psychologyCard ); };
+                if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
+                        .getMommyData()
+                        .getItems()
+                        .parallelStream()
+                        .forEach( familyMember -> this.getGetImageByPinfl()
+                                .apply( familyMember.getPnfl() )
+                                .subscribe( familyMember::setPersonal_image ) );
+                return Mono.just( psychologyCard ); };
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
                                                       String token,
@@ -808,7 +808,7 @@ public class SerDes implements Runnable {
                                                 new UserRequest( person, fio, image ) ) ); }
                             return person != null ? person : new PersonTotalDataByFIO(); } )
                         : Mono.just( new PersonTotalDataByFIO(
-                                this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
+                        this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
             .doOnError( e -> {
                 log.error( "Error in getPersonTotalDataByFIO method: {}", e.getMessage() );
                 this.saveErrorLog( e.getMessage(),
