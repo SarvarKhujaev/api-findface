@@ -294,9 +294,7 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> {
-                            log.info( "Body in {}, {}" + s, Methods.GET_IMAGE_BY_PINFL );
-                            return s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ); } )
+                        .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.length() - 2  ))
                         : Mono.just( Errors.DATA_NOT_FOUND.name() ); } )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_IMAGE_BY_PINFL );
@@ -829,18 +827,18 @@ public class SerDes implements Runnable {
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
-                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
-                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
-                        this.getBase64ToLink().apply( psychologyCard
-                                        .getPapilonData()
-                                        .get( 0 )
-                                        .getPhoto() )
-                                .subscribe( image ->
-                                        this.getSaveUserUsageLog().accept(
-                                                new UserRequest( psychologyCard,
-                                                        apiResponseModel,
-                                                        image ) ) );
+//                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
+//                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
+//                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
+//                        this.getBase64ToLink().apply( psychologyCard
+//                                        .getPapilonData()
+//                                        .get( 0 )
+//                                        .getPhoto() )
+//                                .subscribe( image ->
+//                                        this.getSaveUserUsageLog().accept(
+//                                                new UserRequest( psychologyCard,
+//                                                        apiResponseModel,
+//                                                        image ) ) );
                         return psychologyCard; } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
