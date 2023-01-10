@@ -2,6 +2,7 @@ package com.ssd.mvd.entityForLogging;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.controller.SerDes;
 import com.ssd.mvd.constants.Errors;
 
 import lombok.AllArgsConstructor;
@@ -20,9 +21,8 @@ public class PersonInfo {
     private String birthDate;
     private String passportNumber;
 
-    public PersonInfo ( PsychologyCard psychologyCard, String image ) {
+    public PersonInfo ( PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            this.setPhoto( image );
             this.setFullname( psychologyCard.getPinpp() != null ?
                     ( psychologyCard
                             .getPinpp()
@@ -34,8 +34,8 @@ public class PersonInfo {
                             + " "
                             + psychologyCard
                             .getPinpp()
-                            .getPatronym() )
-                    : Errors.DATA_NOT_FOUND.name() );
+                            .getPatronym() ) :
+                    Errors.DATA_NOT_FOUND.name());
             this.setPinfl( psychologyCard
                     .getPinpp() != null
                     ? psychologyCard
@@ -75,9 +75,17 @@ public class PersonInfo {
                     ? psychologyCard
                     .getPinpp()
                     .getCadastre()
-                    : Errors.DATA_NOT_FOUND.name() ); }
+                    : Errors.DATA_NOT_FOUND.name() );
+            if ( psychologyCard.getPapilonData() != null
+                    && psychologyCard.getPapilonData().size() > 0 ) this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( psychologyCard
+                            .getPapilonData()
+                            .get( 0 )
+                            .getPhoto() ) ); }
+
         else {
-            this.setPhoto( image );
             this.setPassportNumber ( psychologyCard
                     .getPapilonData()
                     .get( 0 )
@@ -86,15 +94,26 @@ public class PersonInfo {
             this.setPinfl( psychologyCard
                     .getPapilonData()
                     .get( 0 )
-                    .getPersonal_code() ); } }
+                    .getPersonal_code() );
 
-    public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO, String image ) {
+            this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( psychologyCard
+                            .getPapilonData()
+                            .get( 0 )
+                            .getPhoto() ) ); } }
+
+    public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO ) {
         if ( personTotalDataByFIO.getData() != null
                 && !personTotalDataByFIO.getData().isEmpty() ) {
-            this.setPhoto( image );
             this.setPinfl( personTotalDataByFIO.getData().get( 0 ).getPinpp() );
             this.setCadastre( personTotalDataByFIO.getData().get( 0 ).getCadastre() );
             this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );
+            this.setPhoto( SerDes
+                    .getSerDes()
+                    .getBase64ToLink()
+                    .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
             this.setFullname( personTotalDataByFIO.getData().get( 0 ).getNameLatin()
                     + " "
                     + personTotalDataByFIO.getData().get( 0 ).getSurnameLatin()
