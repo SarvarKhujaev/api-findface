@@ -240,7 +240,7 @@ public class SerDes implements Runnable {
                     this.getGson().toJson( new RequestForCadaster( cadaster ) ) ) ) )
             .uri( this.getConfig().getAPI_FOR_CADASTR() )
             .responseSingle( ( res, content ) -> {
-                log.info( "Pcadastre in deserialize: " + cadaster );
+                log.info( "Pcadastre in: " + Methods.CADASTER + " : " + cadaster );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
                     return this.getGetCadaster().apply( cadaster ); }
@@ -257,10 +257,8 @@ public class SerDes implements Runnable {
                         && res.status().code() == 200
                         ? content
                         .asString()
-                        .map( s -> {
-                            String temp = s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) );
-                            log.info( "Temp Response: " + temp );
-                            return this.getGson().fromJson( temp, Data.class ); } )
+                        .map( s -> this.getGson().fromJson(
+                                s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
                         : Mono.just( new Data( this.getDataNotFoundErrorResponse.apply( cadaster ) ) ); } )
             .doOnError( e -> {
                 this.logging( e, Methods.CADASTER );
@@ -558,11 +556,11 @@ public class SerDes implements Runnable {
             .get()
             .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> {
-                log.error( "Gosno in getDoverennostList: " + gosno
+                log.error( "Gosno in: " + Methods.GET_DOVERENNOST_LIST + " : " + gosno
                         + " With status: " + res.status() );
                 if ( res.status().code() == 401 ) {
                     this.updateTokens();
-                    return this.getDoverennostList.apply( gosno ); }
+                    return this.getGetDoverennostList().apply( gosno ); }
 
                 if ( this.check500ErrorAsync.test( res.status().code() ) ) {
                     this.saveErrorLog(
@@ -578,8 +576,7 @@ public class SerDes implements Runnable {
                         .asString()
                         .map( s -> {
                             log.info( "Body in: {}, {}", Methods.GET_DOVERENNOST_LIST, s );
-                            return new DoverennostList(
-                                    this.stringToArrayList( s, Doverennost[].class ) ); } )
+                            return new DoverennostList( this.stringToArrayList( s, Doverennost[].class ) ); } )
                         : Mono.just( new DoverennostList(
                         this.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) ); } )
             .doOnError( e -> {
@@ -892,20 +889,30 @@ public class SerDes implements Runnable {
                                     error.getMessage(), object ) ) )
                             .onErrorReturn( new Results(
                                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
-            .map( tuple -> {
+            .flatMap( tuple -> {
                 PsychologyCard psychologyCard = new PsychologyCard( data, tuple );
                 this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                this.getSetPersonPrivateDataAsync().accept( psychologyCard );
+//                this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                 this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard );
-//                this.getBase64ToLink().apply( psychologyCard
-//                            .getPapilonData()
-//                            .get( 0 )
-//                            .getPhoto() )
-//                        .subscribe( image -> this.getSaveUserUsageLog().accept(
-//                                new UserRequest( psychologyCard,
-//                                        apiResponseModel,
-//                                        image ) ) );
-                return psychologyCard; } )
+                return this.getGetCadaster()
+                        .apply( psychologyCard.getPinpp().getCadastre() )
+                        .map( data1 -> {
+                            psychologyCard.setModelForCadastr( data1 );
+                            if ( this.getCheckPrivateData().test( psychologyCard ) ) psychologyCard
+                                    .getModelForCadastr()
+                                    .getPermanentRegistration()
+                                    .parallelStream()
+                                    .filter( person -> person
+                                            .getPDateBirth()
+                                            .equals( psychologyCard
+                                                    .getPinpp()
+                                                    .getBirthDate() ) )
+                                    .forEach( person -> {
+                                        this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                                .subscribe( psychologyCard::setModelForPassport );
+                                        this.getGetModelForAddress().apply( person.getPCitizen() )
+                                                .subscribe( psychologyCard::setModelForAddress ); } );
+                            return psychologyCard; } ); } )
             : Mono.just( new PsychologyCard(
                     this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
