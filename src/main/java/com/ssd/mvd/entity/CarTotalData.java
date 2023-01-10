@@ -17,12 +17,13 @@ public class CarTotalData {
     private PsychologyCard psychologyCard;
     private ViolationsList violationsList;
     private DoverennostList doverennostList;
+    private ModelForCarList modelForCarList; // the list of all cars of each citizen
 
     private ErrorResponse errorResponse;
 
-    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public CarTotalData ( Tuple5<
+    public CarTotalData( Tuple5<
             Tonirovka,
             ModelForCar,
             DoverennostList,
