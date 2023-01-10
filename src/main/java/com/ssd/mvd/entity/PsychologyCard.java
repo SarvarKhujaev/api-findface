@@ -34,7 +34,7 @@ public class PsychologyCard {
     private ModelForAddress modelForAddress;
 
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
-    private com.ssd.mvd.entity.modelForPassport.Data modelForPassport;
+    private com.ssd.mvd.entity.modelForPassport.ModelForPassport modelForPassport;
 
     private ErrorResponse errorResponse;
 
@@ -55,7 +55,7 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard ( com.ssd.mvd.entity.modelForPassport.Data data,
+    public PsychologyCard ( com.ssd.mvd.entity.modelForPassport.ModelForPassport data,
                            Tuple6<
                                    Pinpp,
                                    String,
