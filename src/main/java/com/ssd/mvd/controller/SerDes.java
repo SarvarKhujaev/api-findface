@@ -818,7 +818,6 @@ public class SerDes implements Runnable {
                     .flatMap( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                         this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
                         return this.getGetCadaster()
                                 .apply( psychologyCard.getPinpp().getCadastre() )
@@ -840,11 +839,11 @@ public class SerDes implements Runnable {
                                                     .publishOn( Schedulers.single() )
                                                     .single()
                                                     .flatMap( person -> Mono.zip(
-                                                            this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ),
-                                                            this.getGetModelForAddress().apply( person.getPCitizen() ) ) )
+                                                            this.getGetModelForAddress().apply( person.getPCitizen() ),
+                                                            this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ) ) )
                                                     .map( tuple1 -> {
-                                                        psychologyCard.setModelForPassport( tuple1.getT1() );
-                                                        psychologyCard.setModelForAddress( tuple1.getT2() );
+                                                        psychologyCard.setModelForPassport( tuple1.getT2() );
+                                                        psychologyCard.setModelForAddress( tuple1.getT1() );
                                                         return psychologyCard; } )
                                             : Mono.just( psychologyCard ); } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
