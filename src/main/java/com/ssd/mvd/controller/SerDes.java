@@ -827,9 +827,9 @@ public class SerDes implements Runnable {
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
                     .map( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
-//                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-//                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
-//                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
+                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
+                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
+                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
 //                        this.getBase64ToLink().apply( psychologyCard
 //                                        .getPapilonData()
 //                                        .get( 0 )
@@ -897,14 +897,14 @@ public class SerDes implements Runnable {
                 this.getFindAllDataAboutCarAsync().accept( psychologyCard );
                 this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                 this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard );
-                this.getBase64ToLink().apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() )
-                        .subscribe( image -> this.getSaveUserUsageLog().accept(
-                                new UserRequest( psychologyCard,
-                                        apiResponseModel,
-                                        image ) ) );
+//                this.getBase64ToLink().apply( psychologyCard
+//                            .getPapilonData()
+//                            .get( 0 )
+//                            .getPhoto() )
+//                        .subscribe( image -> this.getSaveUserUsageLog().accept(
+//                                new UserRequest( psychologyCard,
+//                                        apiResponseModel,
+//                                        image ) ) );
                 return psychologyCard; } )
             : Mono.just( new PsychologyCard(
                     this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
