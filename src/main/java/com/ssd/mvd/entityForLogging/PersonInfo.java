@@ -52,9 +52,11 @@ public class PersonInfo {
                     .getModelForPassport() != null
                     && psychologyCard
                     .getModelForPassport()
+                    .getData()
                     .getDocument() != null
                     ? psychologyCard
                     .getModelForPassport()
+                    .getData()
                     .getDocument()
                     .getSerialNumber()
                     : Errors.DATA_NOT_FOUND.name() );
