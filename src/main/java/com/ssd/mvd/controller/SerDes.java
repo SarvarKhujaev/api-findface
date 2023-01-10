@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import io.netty.handler.logging.LogLevel;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -35,7 +36,6 @@ import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entityForLogging.UserRequest;
-import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entityForLogging.IntegratedServiceApis;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -818,28 +818,34 @@ public class SerDes implements Runnable {
                     .flatMap( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
                         this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-//                        this.getSetPersonPrivateDataAsync().accept( psychologyCard );
                         this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
                         return this.getGetCadaster()
                                 .apply( psychologyCard.getPinpp().getCadastre() )
-                                .publishOn( Schedulers.boundedElastic() )
-                                .map( data -> {
+                                .flatMap( data -> {
                                     psychologyCard.setModelForCadastr( data );
-                                    if ( this.getCheckPrivateData().test( psychologyCard ) ) {
-                                        for ( Person person : psychologyCard
-                                                .getModelForCadastr()
-                                                .getPermanentRegistration() )
-                                            if ( person
-                                                    .getPDateBirth()
-                                                    .equals( psychologyCard
-                                                            .getPinpp()
-                                                            .getBirthDate() ) ) {
-                                                this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
-                                                        .subscribe( psychologyCard::setModelForPassport );
-                                                this.getGetModelForAddress().apply( person.getPCitizen() )
-                                                        .subscribe( psychologyCard::setModelForAddress ); }
-                                        return psychologyCard; }
-                                    return psychologyCard; } ); } )
+                                    return this.getCheckPrivateData().test( psychologyCard )
+                                            ? Flux.fromStream( psychologyCard
+                                                        .getModelForCadastr()
+                                                        .getPermanentRegistration()
+                                                        .stream() )
+                                                    .parallel()
+                                                    .runOn( Schedulers.parallel() )
+                                                    .filter( person -> person
+                                                            .getPDateBirth()
+                                                            .equals( psychologyCard
+                                                                    .getPinpp()
+                                                                    .getBirthDate() ) )
+                                                    .sequential()
+                                                    .publishOn( Schedulers.single() )
+                                                    .single()
+                                                    .flatMap( person -> Mono.zip(
+                                                            this.getGetModelForAddress().apply( person.getPCitizen() ),
+                                                            this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ) ) )
+                                                    .map( tuple1 -> {
+                                                        psychologyCard.setModelForPassport( tuple1.getT2() );
+                                                        psychologyCard.setModelForAddress( tuple1.getT1() );
+                                                        return psychologyCard; } )
+                                            : Mono.just( psychologyCard ); } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
