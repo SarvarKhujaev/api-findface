@@ -335,7 +335,7 @@ public class SerDes implements Runnable {
                         .map( s -> {
                             log.info( "Body in: {}, {}", Methods.GET_MODEL_FOR_ADDRESS, s );
                             return this.getGson()
-                                    .fromJson( s.substring( s.indexOf( "Data" ) + 7, s.length() - 2 ),
+                                    .fromJson( s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ),
                                             ModelForAddress.class ); } )
                         : Mono.just( new ModelForAddress( this.getDataNotFoundErrorResponse.apply( pinfl ) ) ); } )
             .doOnError( e -> {
@@ -759,11 +759,10 @@ public class SerDes implements Runnable {
                             .getPapilonData()
                             .get( 0 )
                             .getPhoto() )
-                    .subscribe( image ->
-                            this.getSaveUserUsageLog().accept(
-                                    new UserRequest( psychologyCard,
-                                            apiResponseModel,
-                                            image ) ) );
+                    .subscribe( image -> this.getSaveUserUsageLog().accept(
+                            new UserRequest( psychologyCard,
+                                    apiResponseModel,
+                                    image ) ) );
         } catch ( Exception e ) {
             this.sendErrorLog( "getPsychologyCard",
                     psychologyCard
