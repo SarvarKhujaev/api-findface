@@ -300,7 +300,7 @@ public class SerDes implements Runnable {
                         && content != null
                         ? content
                         .asString()
-                        .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.length() - 2  ))
+                        .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.indexOf( ",\"AnswereId" )  ) )
                         : Mono.just( Errors.DATA_NOT_FOUND.name() ); } )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_IMAGE_BY_PINFL );
