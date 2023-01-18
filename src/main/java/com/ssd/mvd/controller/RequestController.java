@@ -186,12 +186,12 @@ public class RequestController {
                 .getSerDes()
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+//                        error.getMessage(), object ) )
+//                .onErrorReturn( new PsychologyCard( SerDes
+//                        .getSerDes()
+//                        .getGetServiceErrorResponse()
+//                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PsychologyCard( SerDes
                 .getSerDes()
                 .getGetServiceErrorResponse()
