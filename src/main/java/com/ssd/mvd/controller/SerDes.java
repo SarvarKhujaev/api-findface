@@ -649,7 +649,10 @@ public class SerDes implements Runnable {
                                         .getModelForCadastr()
                                         .getPermanentRegistration()
                                         .stream() )
-                                .parallel()
+                                .parallel( psychologyCard
+                                        .getModelForCadastr()
+                                        .getPermanentRegistration()
+                                        .size() )
                                 .runOn( Schedulers.parallel() )
                                 .filter( person -> person
                                         .getPDateBirth()
@@ -658,7 +661,7 @@ public class SerDes implements Runnable {
                                                 .getBirthDate() ) )
                                 .sequential()
                                 .publishOn( Schedulers.single() )
-                                .single()
+                                .take( 1 )
                                 .flatMap( person -> Mono.zip(
                                         this.getGetModelForAddress().apply( person.getPCitizen() ),
                                         this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ) ) )
@@ -666,6 +669,7 @@ public class SerDes implements Runnable {
                                     psychologyCard.setModelForPassport( tuple1.getT2() );
                                     psychologyCard.setModelForAddress( tuple1.getT1() );
                                     return psychologyCard; } )
+                                .single()
                                 : Mono.just( psychologyCard ); } );
 
     private final Predicate< Family > checkFamily = family ->
