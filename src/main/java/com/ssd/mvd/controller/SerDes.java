@@ -235,8 +235,8 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.GET_PINPP.name(), pinpp, "Error in service: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_PINPP, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PINPP() ) );
-//            .onErrorReturn( new Pinpp( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PINPP() ) )
+            .onErrorReturn( new Pinpp( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
@@ -304,8 +304,8 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.GET_IMAGE_BY_PINFL.name(), pinfl, "Error: " + e.getMessage() ); } )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) );
-//            .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
+            .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
@@ -597,9 +597,9 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_MODEL_FOR_CAR_LIST.name(), pinfl, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_CAR_LIST, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) );
-//            .onErrorReturn( new ModelForCarList(
-//                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
+            .onErrorReturn( new ModelForCarList(
+                    this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Predicate< Integer > check500ErrorAsync = statusCode ->
             statusCode == 500
