@@ -1,6 +1,7 @@
 package com.ssd.mvd.controller;
 
 import java.util.*;
+import java.time.Duration;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
 
@@ -57,6 +58,7 @@ public class SerDes implements Runnable {
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = HttpClient
             .create()
+            .responseTimeout( Duration.ofSeconds( 30 ) )
             .headers( h -> h.add( "Content-Type", "application/json" ) )
             .wiretap( "reactor.netty.http.client.HttpClient", LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL );
     private final Notification notification = new Notification();
@@ -618,19 +620,6 @@ public class SerDes implements Runnable {
                     .getModelForCarList()
                     .size() > 0;
 
-    private final Consumer< PsychologyCard > findAllDataAboutCarAsync = psychologyCard -> {
-        if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard
-                .getModelForCarList()
-                .getModelForCarList()
-                .parallelStream()
-                .forEach( modelForCar -> {
-                    this.getInsurance().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setInsurance );
-                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setTonirovka );
-                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setDoverennostList ); } ); };
-
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
             this.getCheckCarData().test( psychologyCard )
                     ? Flux.fromStream( psychologyCard
@@ -646,9 +635,9 @@ public class SerDes implements Runnable {
                                     this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
                                     this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
                             .map( tuple -> {
+                                modelForCar.setDoverennostList( tuple.getT3() );
                                 modelForCar.setInsurance( tuple.getT1() );
                                 modelForCar.setTonirovka( tuple.getT2() );
-                                modelForCar.setDoverennostList( tuple.getT3() );
                                 return psychologyCard; } ) )
                     .sequential()
                     .publishOn( Schedulers.single() )
@@ -658,12 +647,12 @@ public class SerDes implements Runnable {
 
     private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
             psychologyCard.getModelForCadastr() != null
-                    && psychologyCard
-                    .getModelForCadastr()
-                    .getPermanentRegistration() != null
-                    && psychologyCard
-                    .getModelForCadastr()
-                    .getPermanentRegistration().size() > 0;
+            && psychologyCard
+            .getModelForCadastr()
+            .getPermanentRegistration() != null
+            && psychologyCard
+            .getModelForCadastr()
+            .getPermanentRegistration().size() > 0;
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
             this.getGetCadaster()
@@ -696,8 +685,8 @@ public class SerDes implements Runnable {
 
     private final Predicate< Family > checkFamily = family ->
             family != null
-                    && family.getItems() != null
-                    && !family.getItems().isEmpty();
+            && family.getItems() != null
+            && !family.getItems().isEmpty();
 
     private final BiFunction< Results, PsychologyCard, Mono< PsychologyCard > > findAllAboutFamily =
             ( results, psychologyCard ) -> {
