@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import reactor.netty.ByteBufFlux;
+import reactor.util.function.Tuple3;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
@@ -166,11 +167,11 @@ public class SerDes implements Runnable {
 
     // сохраняем логи о пользователе который отправил запрос на сервис
     private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
-            () -> { KafkaDataControl
-                    .getInstance()
-                    .getWriteToKafkaServiceUsage()
-                    .accept( this.getGson().toJson( userRequest ) );
-                return Void.TYPE; } )
+                    () -> { KafkaDataControl
+                            .getInstance()
+                            .getWriteToKafkaServiceUsage()
+                            .accept( this.getGson().toJson( userRequest ) );
+                        return Void.TYPE; } )
             .subscribeOn( Schedulers.boundedElastic() )
             .then()
             .subscribe();
@@ -372,8 +373,8 @@ public class SerDes implements Runnable {
                                 .map( s -> this.getGson()
                                         .fromJson( s, com.ssd.mvd.entity.modelForPassport.ModelForPassport.class ) )
                                 : Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
-                                        this.getGetDataNotFoundErrorResponse()
-                                                .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                                this.getGetDataNotFoundErrorResponse()
+                                        .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
                     .doOnError( e -> {
                         this.logging( e, Methods.GET_MODEL_FOR_PASSPORT );
                         this.saveErrorLog( e.getMessage(),
@@ -413,7 +414,7 @@ public class SerDes implements Runnable {
                         .map( s -> !s.contains( "топилмади" )
                                 ? this.getGson().fromJson( s, Insurance.class )
                                 : new Insurance(
-                                        this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) )
+                                this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) )
                         : Mono.just( new Insurance(
                         this.getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
             .doOnError( e -> {
@@ -603,19 +604,19 @@ public class SerDes implements Runnable {
 
     private final Predicate< Integer > check500ErrorAsync = statusCode ->
             statusCode == 500
-            ^ statusCode == 501
-            ^ statusCode == 502
-            ^ statusCode == 503;
+                    ^ statusCode == 501
+                    ^ statusCode == 502
+                    ^ statusCode == 503;
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList()
-            .size() > 0;
+                    && psychologyCard
+                    .getModelForCarList()
+                    .getModelForCarList() != null
+                    && psychologyCard
+                    .getModelForCarList()
+                    .getModelForCarList()
+                    .size() > 0;
 
     private final Consumer< PsychologyCard > findAllDataAboutCarAsync = psychologyCard -> {
         if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard
@@ -630,14 +631,39 @@ public class SerDes implements Runnable {
                     this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
                             .subscribe( modelForCar::setDoverennostList ); } ); };
 
+    private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
+            this.getCheckCarData().test( psychologyCard )
+                    ? Flux.fromStream( psychologyCard
+                            .getModelForCarList()
+                            .getModelForCarList()
+                            .stream() )
+                    .parallel( psychologyCard
+                            .getModelForCarList()
+                            .getModelForCarList()
+                            .size() )
+                    .runOn( Schedulers.parallel() )
+                    .flatMap( modelForCar -> Mono.zip( this.getInsurance().apply( modelForCar.getPlateNumber() ),
+                                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
+                            .map( tuple -> {
+                                modelForCar.setInsurance( tuple.getT1() );
+                                modelForCar.setTonirovka( tuple.getT2() );
+                                modelForCar.setDoverennostList( tuple.getT3() );
+                                return psychologyCard; } ) )
+                    .sequential()
+                    .publishOn( Schedulers.single() )
+                    .take( 1 )
+                    .single()
+                    : Mono.just( psychologyCard );
+
     private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
             psychologyCard.getModelForCadastr() != null
-            && psychologyCard
-            .getModelForCadastr()
-            .getPermanentRegistration() != null
-            && psychologyCard
-            .getModelForCadastr()
-            .getPermanentRegistration().size() > 0;
+                    && psychologyCard
+                    .getModelForCadastr()
+                    .getPermanentRegistration() != null
+                    && psychologyCard
+                    .getModelForCadastr()
+                    .getPermanentRegistration().size() > 0;
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
             this.getGetCadaster()
@@ -649,10 +675,7 @@ public class SerDes implements Runnable {
                                         .getModelForCadastr()
                                         .getPermanentRegistration()
                                         .stream() )
-                                .parallel( psychologyCard
-                                        .getModelForCadastr()
-                                        .getPermanentRegistration()
-                                        .size() )
+                                .parallel()
                                 .runOn( Schedulers.parallel() )
                                 .filter( person -> person
                                         .getPDateBirth()
@@ -661,7 +684,7 @@ public class SerDes implements Runnable {
                                                 .getBirthDate() ) )
                                 .sequential()
                                 .publishOn( Schedulers.single() )
-                                .take( 1 )
+                                .single()
                                 .flatMap( person -> Mono.zip(
                                         this.getGetModelForAddress().apply( person.getPCitizen() ),
                                         this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ) ) )
@@ -669,13 +692,12 @@ public class SerDes implements Runnable {
                                     psychologyCard.setModelForPassport( tuple1.getT2() );
                                     psychologyCard.setModelForAddress( tuple1.getT1() );
                                     return psychologyCard; } )
-                                .single()
                                 : Mono.just( psychologyCard ); } );
 
     private final Predicate< Family > checkFamily = family ->
             family != null
-            && family.getItems() != null
-            && !family.getItems().isEmpty();
+                    && family.getItems() != null
+                    && !family.getItems().isEmpty();
 
     private final BiFunction< Results, PsychologyCard, Mono< PsychologyCard > > findAllAboutFamily =
             ( results, psychologyCard ) -> {
@@ -690,29 +712,29 @@ public class SerDes implements Runnable {
                 psychologyCard.setDaddyData( results.getDaddyData() );
                 psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
 
-                if ( this.getCheckFamily().test( psychologyCard.getChildData() ) ) psychologyCard
-                        .getChildData()
-                        .getItems()
-                        .parallelStream()
-                        .forEach( familyMember -> this.getGetImageByPinfl()
-                                .apply( familyMember.getPnfl() )
-                                .subscribe( familyMember::setPersonal_image ) );
-
-                if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
-                        .getDaddyData()
-                        .getItems()
-                        .parallelStream()
-                        .forEach( familyMember -> this.getGetImageByPinfl()
-                                .apply( familyMember.getPnfl() )
-                                .subscribe( familyMember::setPersonal_image ) );
-
-                if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
-                        .getMommyData()
-                        .getItems()
-                        .parallelStream()
-                        .forEach( familyMember -> this.getGetImageByPinfl()
-                                .apply( familyMember.getPnfl() )
-                                .subscribe( familyMember::setPersonal_image ) );
+//                if ( this.getCheckFamily().test( psychologyCard.getChildData() ) ) psychologyCard
+//                        .getChildData()
+//                        .getItems()
+//                        .parallelStream()
+//                        .forEach( familyMember -> this.getGetImageByPinfl()
+//                                .apply( familyMember.getPnfl() )
+//                                .subscribe( familyMember::setPersonal_image ) );
+//
+//                if ( this.getCheckFamily().test( psychologyCard.getDaddyData() ) ) psychologyCard
+//                        .getDaddyData()
+//                        .getItems()
+//                        .parallelStream()
+//                        .forEach( familyMember -> this.getGetImageByPinfl()
+//                                .apply( familyMember.getPnfl() )
+//                                .subscribe( familyMember::setPersonal_image ) );
+//
+//                if ( this.getCheckFamily().test( psychologyCard.getMommyData() ) ) psychologyCard
+//                        .getMommyData()
+//                        .getItems()
+//                        .parallelStream()
+//                        .forEach( familyMember -> this.getGetImageByPinfl()
+//                                .apply( familyMember.getPnfl() )
+//                                .subscribe( familyMember::setPersonal_image ) );
                 return Mono.just( psychologyCard ); };
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
@@ -801,31 +823,33 @@ public class SerDes implements Runnable {
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
                     .flatMap( tuple -> {
                         PsychologyCard psychologyCard = new PsychologyCard( tuple );
-                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard );
-                        this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
-                        return this.getSetPersonPrivateDataAsync().apply( psychologyCard ); } )
+                        return Mono.zip(
+                                        this.getFindAllDataAboutCar().apply( psychologyCard ),
+                                        this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ),
+                                        this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
+                                .map( Tuple3::getT1 ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
-                    this.getGetPinpp().apply( results
-                            .getResults()
-                            .get( 0 )
-                            .getPersonal_code() ),
-                    this.getGetImageByPinfl().apply( results
-                            .getResults()
-                            .get( 0 )
-                            .getPersonal_code() ),
-                    this.getGetModelForCarList().apply( results
-                            .getResults()
-                            .get( 0 )
-                            .getPersonal_code() ) )
+                            this.getGetPinpp().apply( results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ),
+                            this.getGetImageByPinfl().apply( results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ),
+                            this.getGetModelForCarList().apply( results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ) )
                     .map( tuple -> new PsychologyCard( results, tuple ) )
-                    .flatMap( psychologyCard -> {
-                        this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                        this.getFindAllAboutFamily().apply( results, psychologyCard );
-                        return this.getSetPersonPrivateDataAsync().apply( psychologyCard ); } );
+                    .flatMap( psychologyCard -> Mono.zip(
+                                    this.getFindAllDataAboutCar().apply( psychologyCard ),
+                                    this.getFindAllAboutFamily().apply( results, psychologyCard ),
+                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
+                            .map( Tuple3::getT1 ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> data.getData().getPerson() != null
@@ -849,9 +873,11 @@ public class SerDes implements Runnable {
                                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
             .flatMap( tuple -> {
                 PsychologyCard psychologyCard = new PsychologyCard( data, tuple );
-                this.getFindAllDataAboutCarAsync().accept( psychologyCard );
-                this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard );
-                return this.getSetPersonPrivateDataAsync().apply( psychologyCard ); } )
+                return Mono.zip(
+                                this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
+                                this.getFindAllDataAboutCar().apply( psychologyCard ),
+                                this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard ) )
+                        .map( Tuple3::getT1 ); } )
             : Mono.just( new PsychologyCard( this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
