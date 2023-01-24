@@ -167,15 +167,10 @@ public class SerDes implements Runnable {
                                 .build() ) ); }
 
     // сохраняем логи о пользователе который отправил запрос на сервис
-    private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
-            () -> { KafkaDataControl
-                            .getInstance()
-                            .getWriteToKafkaServiceUsage()
-                            .accept( this.getGson().toJson( userRequest ) );
-                        return Void.TYPE; } )
-            .subscribeOn( Schedulers.boundedElastic() )
-            .then()
-            .subscribe();
+    private final Consumer< UserRequest > saveUserUsageLog = userRequest -> KafkaDataControl
+            .getInstance()
+            .getWriteToKafkaServiceUsage()
+            .accept( this.getGson().toJson( userRequest ) );
 
     private void logging ( Throwable throwable, Methods method ) { log.error( "Error in {}: {}", method, throwable ); }
 
@@ -619,18 +614,30 @@ public class SerDes implements Runnable {
                     .getModelForCarList()
                     .size() > 0;
 
-    private final Consumer< PsychologyCard > findAllDataAboutCarAsync = psychologyCard -> {
-        if ( this.getCheckCarData().test( psychologyCard ) ) psychologyCard
-                .getModelForCarList()
-                .getModelForCarList()
-                .parallelStream()
-                .forEach( modelForCar -> {
-                    this.getInsurance().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setInsurance );
-                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setTonirovka );
-                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
-                            .subscribe( modelForCar::setDoverennostList ); } ); };
+//    private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
+//            this.getCheckCarData().test( psychologyCard )
+//                    ? Flux.fromStream( psychologyCard
+//                            .getModelForCarList()
+//                            .getModelForCarList()
+//                            .stream() )
+//                    .parallel( psychologyCard
+//                            .getModelForCarList()
+//                            .getModelForCarList()
+//                            .size() )
+//                    .runOn( Schedulers.parallel() )
+//                    .flatMap( modelForCar -> Mono.zip( this.getInsurance().apply( modelForCar.getPlateNumber() ),
+//                                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+//                                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
+//                            .map( tuple -> {
+//                                modelForCar.setDoverennostList( tuple.getT3() );
+//                                modelForCar.setInsurance( tuple.getT1() );
+//                                modelForCar.setTonirovka( tuple.getT2() );
+//                                return psychologyCard; } ) )
+//                    .sequential()
+//                    .publishOn( Schedulers.single() )
+//                    .take( 1 )
+//                    .single()
+//                    : Mono.just( psychologyCard );
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
             this.getCheckCarData().test( psychologyCard )
@@ -643,13 +650,17 @@ public class SerDes implements Runnable {
                             .getModelForCarList()
                             .size() )
                     .runOn( Schedulers.parallel() )
-                    .flatMap( modelForCar -> Mono.zip( this.getInsurance().apply( modelForCar.getPlateNumber() ),
-                                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
-                                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
-                            .map( tuple -> {
-                                modelForCar.setDoverennostList( tuple.getT3() );
-                                modelForCar.setInsurance( tuple.getT1() );
-                                modelForCar.setTonirovka( tuple.getT2() );
+                    .flatMap( modelForCar -> this.getInsurance().apply( modelForCar.getPlateNumber() )
+                            .map( insurance1 -> {
+                                modelForCar.setInsurance( insurance1 );
+                                return modelForCar; } ) )
+                    .flatMap( modelForCar -> this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() )
+                            .map( tonirovka -> {
+                                modelForCar.setTonirovka( tonirovka );
+                                return modelForCar; } ) )
+                    .flatMap( modelForCar -> this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
+                            .map( doverennostList -> {
+                                modelForCar.setDoverennostList( doverennostList );
                                 return psychologyCard; } ) )
                     .sequential()
                     .publishOn( Schedulers.single() )
