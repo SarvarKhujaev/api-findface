@@ -58,7 +58,7 @@ public class SerDes implements Runnable {
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = HttpClient
             .create()
-            .responseTimeout( Duration.ofSeconds( 30 ) )
+            .responseTimeout( Duration.ofMinutes( 1 ) )
             .headers( h -> h.add( "Content-Type", "application/json" ) )
             .wiretap( "reactor.netty.http.client.HttpClient", LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL );
     private final Notification notification = new Notification();
@@ -169,7 +169,7 @@ public class SerDes implements Runnable {
 
     // сохраняем логи о пользователе который отправил запрос на сервис
     private final Consumer< UserRequest > saveUserUsageLog = userRequest -> Mono.fromCallable(
-                    () -> { KafkaDataControl
+            () -> { KafkaDataControl
                             .getInstance()
                             .getWriteToKafkaServiceUsage()
                             .accept( this.getGson().toJson( userRequest ) );
@@ -606,9 +606,9 @@ public class SerDes implements Runnable {
 
     private final Predicate< Integer > check500ErrorAsync = statusCode ->
             statusCode == 500
-                    ^ statusCode == 501
-                    ^ statusCode == 502
-                    ^ statusCode == 503;
+            ^ statusCode == 501
+            ^ statusCode == 502
+            ^ statusCode == 503;
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
@@ -680,7 +680,10 @@ public class SerDes implements Runnable {
                                         .getModelForCadastr()
                                         .getPermanentRegistration()
                                         .stream() )
-                                .parallel()
+                                .parallel( psychologyCard
+                                        .getModelForCadastr()
+                                        .getPermanentRegistration()
+                                        .size() )
                                 .runOn( Schedulers.parallel() )
                                 .filter( person -> person
                                         .getPDateBirth()
