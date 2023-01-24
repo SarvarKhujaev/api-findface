@@ -182,7 +182,7 @@ public class SerDes implements Runnable {
 
     private void logging ( Methods method, Object o ) { log.info( "Method {} has completed successfully {}", method, o ); }
 
-    private void logging ( String method ) { log.info( method + " was cancelled" ); }
+    private void logging ( String method ) { log.info( method + " has subscribed" ); }
 
     private final Function< String, String > base64ToLink = base64 -> {
         this.getFields().clear();
@@ -238,7 +238,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.GET_PINPP.name(), pinpp, "Error in service: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_PINPP, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PINPP() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_PINPP() ) )
             .onErrorReturn( new Pinpp( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
@@ -275,7 +275,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.CADASTER.name(), cadaster, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.CADASTER, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_CADASTR() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_CADASTR() ) )
             .onErrorReturn( new Data( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
@@ -307,7 +307,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getName(),
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.GET_IMAGE_BY_PINFL.name(), pinfl, "Error: " + e.getMessage() ); } )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
@@ -344,7 +344,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.OVIR.getDescription() );
                 this.sendErrorLog( Methods.GET_MODEL_FOR_ADDRESS.name(), pinfl, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() ) )
             .onErrorReturn( new ModelForAddress(
                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
@@ -386,7 +386,7 @@ public class SerDes implements Runnable {
                                 SerialNumber + "_" + BirthDate,
                                 "Error: " + e.getMessage() ); } )
                     .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
-                    .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
+                    .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
                     .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                             this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
@@ -426,7 +426,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_INSURANCE.name(), gosno, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_INSURANCE, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_FOR_INSURANCE() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_FOR_INSURANCE() ) )
             .onErrorReturn( new Insurance( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
@@ -461,7 +461,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_VEHILE_DATA.name(), gosno, e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_VEHILE_DATA, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_VEHICLE_DATA() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_VEHICLE_DATA() ) )
             .onErrorReturn( new ModelForCar( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
@@ -496,7 +496,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_TONIROVKA.name(), gosno, e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_TONIROVKA, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_TONIROVKA() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_TONIROVKA() ) )
             .onErrorReturn( new Tonirovka( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
@@ -531,7 +531,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_VIOLATION_LIST.name(), gosno, e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_VIOLATION_LIST, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_VIOLATION_LIST() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_VIOLATION_LIST() ) )
             .onErrorReturn( new ViolationsList( this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
@@ -566,7 +566,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_DOVERENNOST_LIST.name(), gosno, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_DOVERENNOST_LIST, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() ) )
             .onErrorReturn( new DoverennostList( this.getGetServiceErrorResponse().apply( gosno ) ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
@@ -600,7 +600,7 @@ public class SerDes implements Runnable {
                         IntegratedServiceApis.GAI.getDescription() );
                 this.sendErrorLog( Methods.GET_MODEL_FOR_CAR_LIST.name(), pinfl, "Error: " + e.getMessage() ); } )
             .doOnSuccess( value -> this.logging( Methods.GET_MODEL_FOR_CAR_LIST, value ) )
-            .doOnCancel( () -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
+            .doOnSubscribe( value -> this.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
             .onErrorReturn( new ModelForCarList(
                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
