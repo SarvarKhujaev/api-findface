@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import reactor.netty.ByteBufFlux;
-import reactor.util.function.Tuple3;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
@@ -836,7 +835,9 @@ public class SerDes implements Runnable {
                                         this.getFindAllDataAboutCar().apply( psychologyCard ),
                                         this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ),
                                         this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                                .map( Tuple3::getT1 ); } )
+                                .map( tuple1 -> {
+                                    this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                                    return tuple1.getT1(); } ); } )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
@@ -858,7 +859,9 @@ public class SerDes implements Runnable {
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getFindAllAboutFamily().apply( results, psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( Tuple3::getT1 ) );
+                            .map( tuple1 -> {
+                                this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                                return tuple1.getT1(); } ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> data.getData().getPerson() != null
@@ -886,7 +889,9 @@ public class SerDes implements Runnable {
                                 this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
                                 this.getFindAllDataAboutCar().apply( psychologyCard ),
                                 this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard ) )
-                        .map( Tuple3::getT1 ); } )
+                        .map( tuple1 -> {
+                            this.getSaveUserUsageLog().accept( new UserRequest( psychologyCard, apiResponseModel ) );
+                            return tuple1.getT1(); } ); } )
             : Mono.just( new PsychologyCard( this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
