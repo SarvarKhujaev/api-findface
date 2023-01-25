@@ -1,6 +1,8 @@
 package com.ssd.mvd.controller;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import reactor.core.publisher.Flux;
@@ -15,6 +17,7 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import reactor.util.retry.Retry;
 
 @Slf4j
 @RestController
@@ -103,11 +106,12 @@ public class RequestController {
                             carTotalData.setPsychologyCard( psychologyCard );
                             return carTotalData; } )
                         : Mono.just( carTotalData ) )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
+                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
+//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+//                        error.getMessage(), object ) )
                 .onErrorReturn( new CarTotalData( SerDes
                         .getSerDes()
-                        .getGetServiceErrorResponse()
+                        .getGetExternalServiceErrorResponse()
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
 
@@ -166,11 +170,12 @@ public class RequestController {
                                         .getSerDes()
                                         .getGetPsychologyCardByData()
                                         .apply( data1, apiResponseModel ) ) )
-                        .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                                error.getMessage(), object ) )
+                        .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
+//                        .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+//                                error.getMessage(), object ) )
                         .onErrorReturn( new PsychologyCard( SerDes
                                 .getSerDes()
-                                .getGetServiceErrorResponse()
+                                .getGetExternalServiceErrorResponse()
                                 .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                         : Flux.just( new PsychologyCard( SerDes
                         .getSerDes()
@@ -186,8 +191,9 @@ public class RequestController {
                 .getSerDes()
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
+                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
+//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+//                        error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes
                         .getSerDes()
                         .getGetServiceErrorResponse()
@@ -217,8 +223,9 @@ public class RequestController {
                         .getSerDes()
                         .getGetPsychologyCardByData()
                         .apply( data, apiResponseModel ) )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
+                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
+//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
+//                        error.getMessage(), object ) )
                 .onErrorReturn( new PsychologyCard( SerDes
                         .getSerDes()
                         .getGetServiceErrorResponse()
