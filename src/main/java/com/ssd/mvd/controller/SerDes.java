@@ -795,6 +795,7 @@ public class SerDes implements Runnable {
                                                 .getBirthDate() ) )
                                 .sequential()
                                 .publishOn( Schedulers.single() )
+                                .take( 1 )
                                 .single()
                                 .flatMap( person -> Mono.zip(
                                         this.getGetModelForAddress().apply( person.getPCitizen() ),
@@ -803,6 +804,8 @@ public class SerDes implements Runnable {
                                     psychologyCard.setModelForPassport( tuple1.getT2() );
                                     psychologyCard.setModelForAddress( tuple1.getT1() );
                                     return psychologyCard; } )
+                                .onErrorResume( throwable -> Mono.just( new PsychologyCard(
+                                        this.getGetConnectionError().apply( throwable.getMessage() ) ) ) )
                                 : Mono.just( psychologyCard ); } )
                     : Mono.just( psychologyCard );
 
