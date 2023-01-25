@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import io.netty.handler.logging.LogLevel;
 
+import reactor.util.retry.Retry;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -43,7 +44,6 @@ import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entityForLogging.IntegratedServiceApis;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
-import reactor.util.retry.Retry;
 
 @Slf4j
 @lombok.Data
@@ -97,16 +97,6 @@ public class SerDes implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
-//            this.setTokenForFio(
-//                    String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_FIO_TOKEN() )
-//                            .header("Content-Type", "application/json" )
-//                            .body("{\r\n    \"Login\": \"" + this.getConfig().getLOGIN_FOR_FIO_TOKEN()
-//                                    + "\",\r\n    \"Password\": \"" + this.getConfig().getPASSWORD_FOR_FIO_TOKEN()
-//                                    + "\",\r\n    \"CurrentSystem\": \"" + this.getConfig().getCURRENT_SYSTEM_FOR_FIO() + "\"\r\n}")
-//                            .asJson()
-//                            .getBody()
-//                            .getObject()
-//                            .get( "access_token" ) ) );
             this.setFlag( true );
         } catch ( UnirestException e ) {
             this.setFlag( false );
@@ -181,7 +171,7 @@ public class SerDes implements Runnable {
 
     private void logging ( Throwable throwable, Methods method ) { log.error( "Error in {}: {}", method, throwable ); }
 
-    private void logging ( Methods method, Object o ) { /*log.info( "Method {} has completed successfully {}", method, o );*/ }
+    private void logging ( Methods method, Object o ) { log.info( "Method {} has completed successfully {}", method, o ); }
 
     private void logging ( String method ) { log.info( method + " has subscribed" ); }
 
@@ -281,11 +271,11 @@ public class SerDes implements Runnable {
                     .doAfterRetry( retrySignal -> log.debug( "Retrying in {} has finished {}: ", Methods.CADASTER, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> Mono.just( new Data( this.getGetServiceErrorResponse()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                    throwable -> Mono.just( new Data( this.getGetConnectionError()
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new Data( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.CADASTER );
                 this.saveErrorLog( e.getMessage(),
@@ -320,13 +310,15 @@ public class SerDes implements Runnable {
                         .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.indexOf( ",\"AnswereId" ) - 1 ) )
                         : Mono.just( Errors.DATA_NOT_FOUND.name() ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
-                    .doBeforeRetry( retrySignal -> log.debug( "Retrying in {} has started {}: ", Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
-                    .doAfterRetry( retrySignal -> log.debug( "Retrying in {} has finished {}: ", Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
+                    .doBeforeRetry( retrySignal -> log.debug( "Retrying in {} has started {}: ",
+                            Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
+                    .doAfterRetry( retrySignal -> log.debug( "Retrying in {} has finished {}: ",
+                            Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> Mono.just( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) )
+                    throwable -> Mono.just( throwable.getMessage() ) )
             .onErrorResume( IllegalArgumentException.class,
-                    throwable -> Mono.just( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) )
+                    throwable -> Mono.just( throwable.getMessage() ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_IMAGE_BY_PINFL );
                 this.saveErrorLog( e.getMessage(),
@@ -364,15 +356,17 @@ public class SerDes implements Runnable {
                                 ModelForAddress.class ) )
                         : Mono.just( new ModelForAddress( this.getGetDataNotFoundErrorResponse().apply( pinfl ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
-                    .doBeforeRetry( retrySignal -> log.debug( "Retrying in {} has started {}: ", Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
-                    .doAfterRetry( retrySignal -> log.debug( "Retrying in {} has finished {}: ", Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
+                    .doBeforeRetry( retrySignal -> log.debug( "Retrying in {} has started {}: ",
+                            Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
+                    .doAfterRetry( retrySignal -> log.debug( "Retrying in {} has finished {}: ",
+                            Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new ModelForAddress( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new ModelForAddress( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_MODEL_FOR_ADDRESS );
                 this.saveErrorLog( e.getMessage(),
@@ -422,11 +416,11 @@ public class SerDes implements Runnable {
                     .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                             throwable -> Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                                     this.getGetConnectionError()
-                                    .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                                    .apply( throwable.getMessage() ) ) ) )
                     .onErrorResume( IllegalArgumentException.class,
                             throwable -> Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                                     this.getGetConnectionError()
-                                    .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                                    .apply( throwable.getMessage() ) ) ) )
                     .doOnError( e -> {
                         this.logging( e, Methods.GET_MODEL_FOR_PASSPORT );
                         this.saveErrorLog( e.getMessage(),
@@ -477,10 +471,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new Insurance( this.getGetConnectionError()
-                                    .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                                    .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new Insurance( this.getGetConnectionError()
-                                    .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                                    .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_INSURANCE );
                 this.saveErrorLog( e.getMessage(),
@@ -524,10 +518,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new ModelForCar( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new ModelForCar( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_VEHILE_DATA );
                 this.saveErrorLog( e.getMessage(),
@@ -571,10 +565,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new Tonirovka( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new Tonirovka( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_TONIROVKA );
                 this.saveErrorLog( e.getMessage(),
@@ -618,10 +612,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new ViolationsList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new ViolationsList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_VIOLATION_LIST );
                 this.saveErrorLog( e.getMessage(),
@@ -665,10 +659,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new DoverennostList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new DoverennostList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_DOVERENNOST_LIST );
                 this.saveErrorLog( e.getMessage(),
@@ -711,10 +705,10 @@ public class SerDes implements Runnable {
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new ModelForCarList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new ModelForCarList( this.getGetConnectionError()
-                            .apply( Errors.RESPONSE_FROM_SERVICE_NOT_RECIEVED.name() ) ) ) )
+                            .apply( throwable.getMessage() ) ) ) )
             .doOnError( e -> {
                 this.logging( e, Methods.GET_MODEL_FOR_CAR_LIST );
                 this.saveErrorLog( e.getMessage(),
@@ -734,13 +728,13 @@ public class SerDes implements Runnable {
 
     private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
             psychologyCard.getModelForCarList() != null
-                    && psychologyCard
-                    .getModelForCarList()
-                    .getModelForCarList() != null
-                    && psychologyCard
-                    .getModelForCarList()
-                    .getModelForCarList()
-                    .size() > 0;
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList() != null
+            && psychologyCard
+            .getModelForCarList()
+            .getModelForCarList()
+            .size() > 0;
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
             this.getCheckCarData().test( psychologyCard )

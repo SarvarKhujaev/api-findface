@@ -102,8 +102,13 @@ public class RequestController {
                         .map( psychologyCard -> {
                             carTotalData.setPsychologyCard( psychologyCard );
                             return carTotalData; } )
+                        .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                                throwable -> Mono.just( new CarTotalData( SerDes
+                                        .getSerDes()
+                                        .getGetConnectionError()
+                                        .apply( throwable.getMessage() ) ) ) )
                         : Mono.just( carTotalData ) )
-                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> Mono.just( new CarTotalData( SerDes
                                 .getSerDes()
                                 .getGetConnectionError()
@@ -138,7 +143,7 @@ public class RequestController {
                                 .getSerDes()
                                 .getGetPsychologyCardByImage()
                                 .apply( results, apiResponseModel )
-                                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                                         throwable -> Mono.just( new PsychologyCard( SerDes
                                                 .getSerDes()
                                                 .getGetConnectionError()
@@ -173,9 +178,16 @@ public class RequestController {
                                 .flatMap( data1 -> SerDes
                                         .getSerDes()
                                         .getGetPsychologyCardByData()
-                                        .apply( data1, apiResponseModel ) ) )
-                        .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                                throwable -> Mono.just( new PsychologyCard( SerDes
+                                        .apply( data1, apiResponseModel )
+                                        .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                                                throwable -> Mono.just( new PsychologyCard(
+                                                        SerDes
+                                                        .getSerDes()
+                                                        .getGetConnectionError()
+                                                        .apply( throwable.getMessage() ) ) ) ) ) )
+                        .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                                throwable -> Mono.just( new PsychologyCard(
+                                        SerDes
                                         .getSerDes()
                                         .getGetConnectionError()
                                         .apply( throwable.getMessage() ) ) ) )
@@ -183,10 +195,11 @@ public class RequestController {
                                 .getSerDes()
                                 .getGetExternalServiceErrorResponse()
                                 .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                        : Flux.just( new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetDataNotFoundErrorResponse()
-                        .apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
+                        : Flux.just( new PsychologyCard(
+                                SerDes
+                                .getSerDes()
+                                .getGetDataNotFoundErrorResponse()
+                                .apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
@@ -197,7 +210,7 @@ public class RequestController {
                 .getSerDes()
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
-                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> Mono.just( new PsychologyCard( SerDes
                                 .getSerDes()
                                 .getGetConnectionError()
@@ -227,7 +240,7 @@ public class RequestController {
                         .getSerDes()
                         .getGetPsychologyCardByData()
                         .apply( data, apiResponseModel ) )
-                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> Mono.just( new PsychologyCard( SerDes
                                 .getSerDes()
                                 .getGetConnectionError()
