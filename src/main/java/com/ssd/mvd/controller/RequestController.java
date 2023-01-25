@@ -1,8 +1,6 @@
 package com.ssd.mvd.controller;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.Duration;
 import java.util.function.Supplier;
 
 import reactor.core.publisher.Flux;
@@ -17,7 +15,6 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import reactor.util.retry.Retry;
 
 @Slf4j
 @RestController
@@ -106,9 +103,11 @@ public class RequestController {
                             carTotalData.setPsychologyCard( psychologyCard );
                             return carTotalData; } )
                         : Mono.just( carTotalData ) )
-                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
-//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-//                        error.getMessage(), object ) )
+                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                        throwable -> Mono.just( new CarTotalData( SerDes
+                                .getSerDes()
+                                .getGetConnectionError()
+                                .apply( throwable.getMessage() ) ) ) )
                 .onErrorReturn( new CarTotalData( SerDes
                         .getSerDes()
                         .getGetExternalServiceErrorResponse()
@@ -139,6 +138,11 @@ public class RequestController {
                                 .getSerDes()
                                 .getGetPsychologyCardByImage()
                                 .apply( results, apiResponseModel )
+                                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                                        throwable -> Mono.just( new PsychologyCard( SerDes
+                                                .getSerDes()
+                                                .getGetConnectionError()
+                                                .apply( throwable.getMessage() ) ) ) )
                                 : SerDes
                                 .getSerDes()
                                 .getPsychologyCard(
@@ -170,9 +174,11 @@ public class RequestController {
                                         .getSerDes()
                                         .getGetPsychologyCardByData()
                                         .apply( data1, apiResponseModel ) ) )
-                        .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
-//                        .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-//                                error.getMessage(), object ) )
+                        .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                                throwable -> Mono.just( new PsychologyCard( SerDes
+                                        .getSerDes()
+                                        .getGetConnectionError()
+                                        .apply( throwable.getMessage() ) ) ) )
                         .onErrorReturn( new PsychologyCard( SerDes
                                 .getSerDes()
                                 .getGetExternalServiceErrorResponse()
@@ -191,13 +197,11 @@ public class RequestController {
                 .getSerDes()
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
-                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
-//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-//                        error.getMessage(), object ) )
-                .onErrorReturn( new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                        throwable -> Mono.just( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetConnectionError()
+                                .apply( throwable.getMessage() ) ) ) )
                 : Mono.just( new PsychologyCard( SerDes
                 .getSerDes()
                 .getGetServiceErrorResponse()
@@ -223,9 +227,11 @@ public class RequestController {
                         .getSerDes()
                         .getGetPsychologyCardByData()
                         .apply( data, apiResponseModel ) )
-                .retryWhen( Retry.backoff( 5, Duration.ofSeconds( 2 ) ) )
-//                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-//                        error.getMessage(), object ) )
+                .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
+                        throwable -> Mono.just( new PsychologyCard( SerDes
+                                .getSerDes()
+                                .getGetConnectionError()
+                                .apply( throwable.getMessage() ) ) ) )
                 .onErrorReturn( new PsychologyCard( SerDes
                         .getSerDes()
                         .getGetServiceErrorResponse()
