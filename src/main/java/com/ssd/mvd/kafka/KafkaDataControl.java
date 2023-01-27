@@ -62,36 +62,30 @@ public class KafkaDataControl {
     // записывает все ошибки в работе сервиса
     private final Consumer< String > writeErrorLog = errorLog -> this.getKafkaSender()
             .createOutbound()
-            .send( Mono.just( new ProducerRecord<>( this.getERROR_LOGS(),
-                    errorLog ) ) )
+            .send( Mono.just( new ProducerRecord<>( this.getERROR_LOGS(), errorLog ) ) )
             .then()
             .doOnError( error -> logger.info( error.getMessage() ) )
             .doOnSuccess( success -> logger.info( "Kafka got error: " +
-                    errorLog +
-                    " at: " + new Date() ) )
+                    errorLog + " at: " + new Date() ) )
             .subscribe();
 
     // записывает случае когда сервисы выдают ошибки
     private final Consumer< String > writeToKafkaErrorLog = errorLog -> this.getKafkaSender()
             .createOutbound()
-            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL_ERROR_LOG(),
-                    errorLog ) ) )
+            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL_ERROR_LOG(), errorLog ) ) )
             .then()
             .doOnError( error -> logger.info( error.getMessage() ) )
             .doOnSuccess( success -> logger.info( "Kafka got error for ADMIN_PANEL_ERROR_LOG: " +
-                    errorLog +
-                    " at: " + new Date() ) )
+                    errorLog + " at: " + new Date() ) )
             .subscribe();
 
     // регистрирует каждого оператора который запрашивает данные у сервиса
     private final Consumer< String > writeToKafkaServiceUsage = serviceUsage -> this.getKafkaSender()
             .createOutbound()
-            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL(),
-                    serviceUsage ) ) )
+            .send( Mono.just( new ProducerRecord<>( this.getADMIN_PANEL(), serviceUsage ) ) )
             .then()
             .doOnError( error -> logger.info( error.getMessage() ) )
             .doOnSuccess( success -> logger.info( "New user exposed your service: "
-                    + serviceUsage +
-                    " at: " + new Date() ) )
+                    + serviceUsage + " at: " + new Date() ) )
             .subscribe();
 }

@@ -1,5 +1,6 @@
 package com.ssd.mvd.entity;
 
+import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
@@ -8,6 +9,7 @@ import com.ssd.mvd.entity.family.Family;
 import reactor.util.function.Tuple6;
 import reactor.util.function.Tuple5;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple2;
 
 import lombok.NoArgsConstructor;
 import java.util.List;
@@ -38,6 +40,17 @@ public class PsychologyCard {
 
     private ErrorResponse errorResponse;
 
+    public PsychologyCard save ( com.ssd.mvd.entity.modelForCadastr.Data data ) {
+        this.setModelForCadastr( data );
+        return this; }
+
+    public PsychologyCard save ( Tuple2<
+            ModelForAddress,
+            ModelForPassport > tuple2 ) {
+        this.setModelForPassport( tuple2.getT2() );
+        this.setModelForAddress( tuple2.getT1() );
+        return this; }
+
     public PsychologyCard ( Results results ) {
         this.setPapilonData( results.getResults() );
         this.setViolationList( results.getViolationList() ); }
@@ -56,13 +69,13 @@ public class PsychologyCard {
         this.setPinpp( tuple.getT1() ); }
 
     public PsychologyCard ( com.ssd.mvd.entity.modelForPassport.ModelForPassport data,
-                           Tuple6<
-                                   Pinpp,
-                                   String,
-                                   ModelForCarList,
-                                   ModelForAddress,
-                                   List,
-                                   Results > tuple ) {
+                            Tuple6<
+                                    Pinpp,
+                                    String,
+                                    ModelForCarList,
+                                    ModelForAddress,
+                                    List,
+                                    Results > tuple ) {
         this.setModelForAddress( tuple.getT4() );
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT5() );

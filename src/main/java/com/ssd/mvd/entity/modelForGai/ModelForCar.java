@@ -1,6 +1,8 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.entity.PsychologyCard;
+import reactor.util.function.Tuple3;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Data;
@@ -36,6 +38,15 @@ public class ModelForCar {
     private DoverennostList doverennostList;
 
     private ErrorResponse errorResponse;
+
+    public PsychologyCard save ( Tuple3<
+            Insurance,
+            Tonirovka,
+            DoverennostList > tuple3, PsychologyCard psychologyCard ) {
+        this.setDoverennostList( tuple3.getT3() );
+        this.setInsurance( tuple3.getT1() );
+        this.setTonirovka( tuple3.getT2() );
+        return psychologyCard; }
 
     public ModelForCar ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }
