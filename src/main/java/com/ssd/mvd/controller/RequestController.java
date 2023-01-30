@@ -99,9 +99,7 @@ public class RequestController {
                                         .build() )
                                 .user( apiResponseModel.getUser() )
                                 .build() )
-                        .map( psychologyCard -> {
-                            carTotalData.setPsychologyCard( psychologyCard );
-                            return carTotalData; } )
+                        .map( carTotalData::save )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                                 throwable -> Mono.just( new CarTotalData( SerDes
                                         .getSerDes()

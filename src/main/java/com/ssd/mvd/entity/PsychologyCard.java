@@ -62,6 +62,15 @@ public class PsychologyCard {
                                     Pinpp,
                                     String,
                                     ModelForCarList > tuple ) {
+        this.setChildData( results.getChildData() );
+
+        // личные данные матери, того чьи данные были переданы на данный сервис
+        this.setMommyData( results.getMommyData() );
+        this.setMommyPinfl( results.getMommyPinfl() );
+
+        // личные данные отца, того чьи данные были переданы на данный сервис
+        this.setDaddyData( results.getDaddyData() );
+        this.setDaddyPinfl( results.getDaddyPinfl() );
         this.setViolationList( results.getViolationList() );
         this.setPapilonData( results.getResults() );
         this.setModelForCarList( tuple.getT3() );
@@ -76,6 +85,16 @@ public class PsychologyCard {
                                     ModelForAddress,
                                     List,
                                     Results > tuple ) {
+        this.setChildData( tuple.getT6().getChildData() );
+
+        // личные данные матери, того чьи данные были переданы на данный сервис
+        this.setMommyData( tuple.getT6().getMommyData() );
+        this.setMommyPinfl( tuple.getT6().getMommyPinfl() );
+
+        // личные данные отца, того чьи данные были переданы на данный сервис
+        this.setDaddyData( tuple.getT6().getDaddyData() );
+        this.setDaddyPinfl( tuple.getT6().getDaddyPinfl() );
+
         this.setModelForAddress( tuple.getT4() );
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT5() );
@@ -90,6 +109,16 @@ public class PsychologyCard {
             ModelForCarList,
             List,
             Results > tuple ) {
+        this.setChildData( tuple.getT5().getChildData() );
+
+        // личные данные матери, того чьи данные были переданы на данный сервис
+        this.setMommyData( tuple.getT5().getMommyData() );
+        this.setMommyPinfl( tuple.getT5().getMommyPinfl() );
+
+        // личные данные отца, того чьи данные были переданы на данный сервис
+        this.setDaddyData( tuple.getT5().getDaddyData() );
+        this.setDaddyPinfl( tuple.getT5().getDaddyPinfl() );
+
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT4() );
         this.setPersonImage( tuple.getT2() );

@@ -21,6 +21,10 @@ public class CarTotalData {
 
     private ErrorResponse errorResponse;
 
+    public CarTotalData save ( PsychologyCard psychologyCard ) {
+        this.setPsychologyCard( psychologyCard );
+        return this; }
+
     public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
     public CarTotalData( Tuple5<

@@ -382,8 +382,7 @@ public class SerDes implements Runnable {
                                 .map( s -> this.getGson()
                                         .fromJson( s, com.ssd.mvd.entity.modelForPassport.ModelForPassport.class ) )
                                 : Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
-                                this.getGetDataNotFoundErrorResponse()
-                                        .apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                                this.getGetDataNotFoundErrorResponse().apply( SerialNumber + " : " + SerialNumber ) ) ); } )
                     .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                             .doBeforeRetry( retrySignal -> this.logging( retrySignal, Methods.GET_MODEL_FOR_PASSPORT ) )
                             .doAfterRetry( retrySignal -> this.logging( Methods.GET_MODEL_FOR_PASSPORT, retrySignal ) )
@@ -578,18 +577,30 @@ public class SerDes implements Runnable {
             .onErrorReturn( new ModelForCarList(
                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
-    private final Predicate< PsychologyCard > checkCarData = psychologyCard ->
-            psychologyCard.getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList() != null
-            && psychologyCard
-            .getModelForCarList()
-            .getModelForCarList()
-            .size() > 0;
+    private final BiFunction< Integer, PsychologyCard, Boolean > checkData = ( integer, psychologyCard ) -> switch ( integer ) {
+        case 1 -> psychologyCard.getModelForCarList() != null
+                && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList() != null
+                && psychologyCard
+                .getModelForCarList()
+                .getModelForCarList()
+                .size() > 0;
+
+        case 2 -> psychologyCard.getModelForCadastr() != null
+                && psychologyCard
+                .getModelForCadastr()
+                .getPermanentRegistration() != null
+                && psychologyCard
+                .getModelForCadastr()
+                .getPermanentRegistration().size() > 0;
+
+        default -> psychologyCard.getPinpp() != null
+                && psychologyCard.getPinpp().getCadastre() != null
+                && psychologyCard.getPinpp().getCadastre().length() > 1; };
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
-            this.getCheckCarData().test( psychologyCard )
+            this.getCheckData().apply( 1, psychologyCard )
                     ? Flux.fromStream( psychologyCard
                             .getModelForCarList()
                             .getModelForCarList()
@@ -609,22 +620,11 @@ public class SerDes implements Runnable {
                     .single()
                     : Mono.just( psychologyCard );
 
-    private final Predicate< PsychologyCard > checkPrivateData = psychologyCard ->
-            psychologyCard.getModelForCadastr() != null
-            && psychologyCard
-            .getModelForCadastr()
-            .getPermanentRegistration() != null
-            && psychologyCard
-            .getModelForCadastr()
-            .getPermanentRegistration().size() > 0;
-
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
-            psychologyCard.getPinpp() != null
-            && psychologyCard.getPinpp().getCadastre() != null
-            && psychologyCard.getPinpp().getCadastre().length() > 1
+            this.getCheckData().apply( 0, psychologyCard )
                     ? this.getGetCadaster()
                     .apply( psychologyCard.getPinpp().getCadastre() )
-                    .flatMap( data -> this.getCheckPrivateData().test( psychologyCard.save( data ) )
+                    .flatMap( data -> this.getCheckData().apply( 2, psychologyCard.save( data ) )
                             ? Flux.fromStream( psychologyCard
                                     .getModelForCadastr()
                                     .getPermanentRegistration()
@@ -651,20 +651,6 @@ public class SerDes implements Runnable {
                                     this.getGetServiceErrorResponse().apply( throwable.getMessage() ) ) ) )
                             : Mono.just( psychologyCard ) )
                     : Mono.just( psychologyCard );
-
-    private final BiFunction< Results, PsychologyCard, Mono< PsychologyCard > > findAllAboutFamily =
-            ( results, psychologyCard ) -> {
-                // личные данные человека чьи данные были переданы на данный сервис
-                psychologyCard.setChildData( results.getChildData() );
-
-                // личные данные матери, того чьи данные были переданы на данный сервис
-                psychologyCard.setMommyData( results.getMommyData() );
-                psychologyCard.setMommyPinfl( results.getMommyPinfl() );
-
-                // личные данные отца, того чьи данные были переданы на данный сервис
-                psychologyCard.setDaddyData( results.getDaddyData() );
-                psychologyCard.setDaddyPinfl( results.getDaddyPinfl() );
-                return Mono.just( psychologyCard ); };
 
     public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
                                                       String token,
@@ -737,12 +723,11 @@ public class SerDes implements Runnable {
                             FindFaceComponent
                                     .getInstance()
                                     .getFamilyMembersData( apiResponseModel.getStatus().getMessage() ) )
-                    .flatMap( tuple -> Mono.just( new PsychologyCard( tuple ) )
-                            .flatMap( psychologyCard -> Mono.zip(
-                                    this.getFindAllDataAboutCar().apply( psychologyCard ),
-                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
-                                    this.getFindAllAboutFamily().apply( tuple.getT5(), psychologyCard ) )
-                                    .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) ) )
+                    .map( PsychologyCard::new )
+                    .flatMap( psychologyCard -> Mono.zip(
+                            this.getFindAllDataAboutCar().apply( psychologyCard ),
+                            this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
+                            .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
                     : Mono.just( new PsychologyCard( this.getGetServiceErrorResponse().apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
@@ -762,8 +747,7 @@ public class SerDes implements Runnable {
                     .map( tuple -> new PsychologyCard( results, tuple ) )
                     .flatMap( psychologyCard -> Mono.zip(
                             this.getFindAllDataAboutCar().apply( psychologyCard ),
-                            this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
-                            this.getFindAllAboutFamily().apply( results, psychologyCard ) )
+                            this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
                             .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
@@ -782,13 +766,13 @@ public class SerDes implements Runnable {
                             .getFamilyMembersData( data.getData().getPerson().getPinpp() )
                             .onErrorReturn( new Results(
                                     this.getGetServiceErrorResponse().apply( Errors.SERVICE_WORK_ERROR.name() ) ) ) )
-            .flatMap( tuple -> Mono.just( new PsychologyCard( data, tuple ) )
-                    .flatMap( psychologyCard -> Mono.zip(
-                            this.getFindAllDataAboutCar().apply( psychologyCard ),
-                            this.getSetPersonPrivateDataAsync().apply( psychologyCard ),
-                            this.getFindAllAboutFamily().apply( tuple.getT6(), psychologyCard ) )
-                            .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) ) )
-            : Mono.just( new PsychologyCard( this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
+            .map( tuple -> new PsychologyCard( data, tuple ) )
+            .flatMap( psychologyCard -> Mono.zip(
+                    this.getFindAllDataAboutCar().apply( psychologyCard ),
+                    this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
+                    .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
+            : Mono.just( new PsychologyCard(
+                    this.getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
     public void run () {
