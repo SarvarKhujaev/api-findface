@@ -1,6 +1,5 @@
 package com.ssd.mvd.entityForLogging;
 
-import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.controller.SerDes;
 import com.ssd.mvd.constants.Errors;
@@ -103,21 +102,4 @@ public class PersonInfo {
                             .getPapilonData()
                             .get( 0 )
                             .getPhoto() ) ); } }
-
-    public PersonInfo ( PersonTotalDataByFIO personTotalDataByFIO ) {
-        if ( personTotalDataByFIO.getData() != null
-                && !personTotalDataByFIO.getData().isEmpty() ) {
-            this.setPinfl( personTotalDataByFIO.getData().get( 0 ).getPinpp() );
-            this.setCadastre( personTotalDataByFIO.getData().get( 0 ).getCadastre() );
-            this.setAddress( personTotalDataByFIO.getData().get( 0 ).getBirthPlace() );
-            this.setPhoto( SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( personTotalDataByFIO.getData().get( 0 ).getPersonImage() ) );
-            this.setFullname( personTotalDataByFIO.getData().get( 0 ).getNameLatin()
-                    + " "
-                    + personTotalDataByFIO.getData().get( 0 ).getSurnameLatin()
-                    + " "
-                    + personTotalDataByFIO.getData().get( 0 ).getPatronymLatin() );
-            this.setBirthDate( personTotalDataByFIO.getData().get( 0 ).getDateOfBirth() ); } }
 }
