@@ -163,8 +163,6 @@ public class RequestController {
     @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
         log.info( apiResponseModel.getStatus().getMessage() );
-        log.info( "User: " + ( apiResponseModel.getUser() != null
-                ? apiResponseModel.getUser().getPassportNumber() : null ) );
         if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( this.getErrorResponse.get() ) );
         return SerDes
                 .getSerDes()
@@ -205,8 +203,6 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
-        log.info( "User: " + ( apiResponseModel.getUser() != null
-                ? apiResponseModel.getUser().getPassportNumber() : null ) );
         return SerDes.getSerDes().getFlag()
                 ? apiResponseModel.getStatus().getMessage() != null
                 && apiResponseModel.getStatus().getMessage().length() > 0
@@ -227,8 +223,6 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
-        log.info( "User: " + ( apiResponseModel.getUser() != null
-                ? apiResponseModel.getUser().getPassportNumber() : null ) );
         if ( apiResponseModel
                 .getStatus()
                 .getMessage() == null ) return Mono.just(
