@@ -30,20 +30,6 @@ public class RequestController {
     @MessageMapping ( value = "ping" )
     public Mono< Boolean > ping () { return Mono.just( true ); }
 
-    @MessageMapping ( value = "getFamilyMembersData" )
-    public Mono< Results > getFamilyMembersData ( String pinfl ) {
-        return SerDes.getSerDes().getFlag()
-                ? FindFaceComponent
-                .getInstance()
-                .getFamilyMembersData( pinfl )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
-                .onErrorReturn( new Results( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Mono.just( new Results( this.getErrorResponse.get() ) ); }
-
     @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
         return SerDes.getSerDes().getFlag()
@@ -85,9 +71,10 @@ public class RequestController {
                                 .getGetViolationList()
                                 .apply( apiResponseModel.getStatus().getMessage() ) )
                 .map( CarTotalData::new )
-                .flatMap( carTotalData -> carTotalData.getModelForCar() != null
-                        && carTotalData.getModelForCar().getPinpp() != null
-                        && !carTotalData.getModelForCar().getPinpp().isEmpty()
+                .flatMap( carTotalData -> DataValidationInspector
+                        .getInstance()
+                        .getCheckCarTotalData()
+                        .test( carTotalData )
                         ? SerDes
                         .getSerDes()
                         .getGetPsychologyCardByPinfl()
@@ -107,7 +94,8 @@ public class RequestController {
                                         .apply( throwable.getMessage() ) ) ) )
                         : Mono.just( carTotalData ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> Mono.just( new CarTotalData( SerDes
+                        throwable -> Mono.just( new CarTotalData(
+                                SerDes
                                 .getSerDes()
                                 .getGetConnectionError()
                                 .apply( throwable.getMessage() ) ) ) )
@@ -122,12 +110,17 @@ public class RequestController {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
         base64url = base64url.split( "@" )[ 0 ];
-        return base64url != null && base64url.length() > 0
+        return DataValidationInspector
+                .getInstance()
+                .getCheckParam()
+                .test( base64url )
                 ? FindFaceComponent
                 .getInstance()
                 .getPapilonList( base64url )
-                .filter( value -> value.getResults() != null
-                        && value.getResults().size() > 0 )
+                .filter( results -> DataValidationInspector
+                        .getInstance()
+                        .getCheckList()
+                        .test( results.getResults() ) )
                 .flatMap( results ->
                         SerDes
                                 .getSerDes()
@@ -166,9 +159,13 @@ public class RequestController {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> data.getPermanentRegistration() != null
-                        && !data.getPermanentRegistration().isEmpty()
-                        ? Flux.fromStream( data.getPermanentRegistration().stream() )
+                .flatMapMany( data -> DataValidationInspector
+                        .getInstance()
+                        .getCheckList()
+                        .test( data.getPermanentRegistration() )
+                        ? Flux.fromStream( data
+                                .getPermanentRegistration()
+                                .stream() )
                         .flatMap( person -> SerDes
                                 .getSerDes()
                                 .getGetModelForPassport()
@@ -202,8 +199,12 @@ public class RequestController {
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
         return SerDes.getSerDes().getFlag()
-                ? apiResponseModel.getStatus().getMessage() != null
-                && apiResponseModel.getStatus().getMessage().length() > 0
+                ? DataValidationInspector
+                .getInstance()
+                .getCheckParam()
+                .test( apiResponseModel
+                        .getStatus()
+                        .getMessage() )
                 ? SerDes
                 .getSerDes()
                 .getGetPsychologyCardByPinfl()
@@ -213,21 +214,27 @@ public class RequestController {
                                 .getSerDes()
                                 .getGetConnectionError()
                                 .apply( throwable.getMessage() ) ) ) )
-                : Mono.just( new PsychologyCard( SerDes
-                .getSerDes()
-                .getGetServiceErrorResponse()
-                .apply( Errors.WRONG_PARAMS.name() ) ) )
+                : Mono.just( new PsychologyCard(
+                        SerDes
+                        .getSerDes()
+                        .getGetServiceErrorResponse()
+                        .apply( Errors.WRONG_PARAMS.name() ) ) )
                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
-        if ( apiResponseModel
-                .getStatus()
-                .getMessage() == null ) return Mono.just(
-                new PsychologyCard( SerDes
-                        .getSerDes()
-                        .getGetServiceErrorResponse()
-                        .apply( Errors.WRONG_PARAMS.name() ) ) );
+        if ( DataValidationInspector
+                .getInstance()
+                .getCheckParam()
+                .test( apiResponseModel
+                        .getStatus()
+                        .getMessage() ) )
+            return Mono.just(
+                    new PsychologyCard(
+                                SerDes
+                                .getSerDes()
+                                .getGetServiceErrorResponse()
+                                .apply( Errors.WRONG_PARAMS.name() ) ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
