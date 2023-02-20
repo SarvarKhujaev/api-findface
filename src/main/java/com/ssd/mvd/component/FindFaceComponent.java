@@ -3,15 +3,14 @@ package com.ssd.mvd.component;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.ssd.mvd.controller.DataValidationInspector;
 import com.ssd.mvd.entity.Results;
 import com.ssd.mvd.FindFaceServiceApplication;
+import com.ssd.mvd.controller.DataValidationInspector;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import reactor.core.publisher.Mono;
-import io.rsocket.RSocketErrorException;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 @Data
