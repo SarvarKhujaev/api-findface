@@ -31,20 +31,6 @@ public class FindFaceComponent {
                 .onErrorReturn( new Results() ); }
         catch ( Exception e ) { return Mono.just( new Results() ); } }
 
-    public Mono< Results > getFamilyMembersData ( String pinfl ) {
-        try { return DataValidationInspector
-                .getInstance()
-                .getCheckParam()
-                .test( pinfl )
-                ? this.getRequester()
-                .route( "getFamilyMembersData" )
-                .data( pinfl )
-                .retrieveMono( Results.class )
-                .defaultIfEmpty( new Results() )
-                .onErrorReturn( new Results() )
-                : Mono.just( new Results() );
-        } catch ( Exception e ) { return Mono.just( new Results() ); } }
-
     public Mono< List > getViolationListByPinfl ( String pinfl ) {
         try { return DataValidationInspector
                 .getInstance()

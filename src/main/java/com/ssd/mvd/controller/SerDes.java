@@ -284,8 +284,10 @@ public class SerDes implements Runnable {
                 case 401 -> this.updateTokens().getGetCadaster().apply( cadaster );
                 case 501 | 502 | 503 -> ( Mono< Data > ) this.getSaveErrorLog()
                         .apply( res.status().toString(), Methods.CADASTER );
-                default -> content != null
-                        && res.status().code() == 200
+                default -> DataValidationInspector
+                        .getInstance()
+                        .getCheckResponse()
+                        .apply( res, content )
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson(
