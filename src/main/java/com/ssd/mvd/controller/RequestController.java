@@ -223,7 +223,7 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
-        if ( DataValidationInspector
+        if ( !DataValidationInspector
                 .getInstance()
                 .getCheckParam()
                 .test( apiResponseModel
