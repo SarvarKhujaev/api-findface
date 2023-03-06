@@ -198,6 +198,9 @@ public class RequestController {
 
     @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
+        log.info( "Pinfl: " + apiResponseModel
+                .getUser()
+                .getPinfl() );
         return SerDes.getSerDes().getFlag()
                 ? DataValidationInspector
                 .getInstance()
