@@ -1,5 +1,6 @@
 package com.ssd.mvd.controller;
 
+import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
@@ -50,10 +51,7 @@ public class RequestController {
         log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
-                        SerDes
-                                .getSerDes()
-                                .getGetVehicleTonirovka()
-                                .apply( apiResponseModel.getStatus().getMessage() ),
+                        Mono.just( new Tonirovka() ),
                         SerDes
                                 .getSerDes()
                                 .getGetVehicleData()

@@ -614,7 +614,7 @@ public class SerDes implements Runnable {
                     .runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
                             this.getInsurance().apply( modelForCar.getPlateNumber() ),
-                            this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                                    Mono.just( new Tonirovka() ),
                             this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
                             .map( tuple3 -> modelForCar.save( tuple3, psychologyCard ) ) )
                     .sequential()
