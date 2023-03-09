@@ -1,6 +1,7 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.entity.modelForGai.Tonirovka;
+import io.netty.handler.timeout.ReadTimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
@@ -46,7 +47,7 @@ public class RequestController {
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new PersonTotalDataByFIO( this.getErrorResponse.get() ) ); }
 
-    @MessageMapping ( value = "getCarTotalData" ) // возвращает данные по номеру машины
+    @MessageMapping ( value = "GET_CAR_TOTAL_DATA" ) // возвращает данные по номеру машины
     public Mono< CarTotalData > getCarTotalData ( ApiResponseModel apiResponseModel ) {
         log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
@@ -103,7 +104,50 @@ public class RequestController {
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
 
-    @MessageMapping ( value = "getPersonTotalData" ) // возвращает данные по фотографии
+    // возвращает данные по номеру машины в слуцчае если у человека роль IMITATION
+    @MessageMapping ( value = "GET_CAR_TOTAL_DATA_BY_PINFL" )
+    public Mono< CarTotalData > getCarTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
+        log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetModelForCarList()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                .flatMap( modelForCarList -> modelForCarList != null
+                        && DataValidationInspector
+                        .getInstance()
+                        .getCheckList()
+                        .test( modelForCarList.getModelForCarList() )
+                        ? this.getCarTotalData( ApiResponseModel
+                        .builder()
+                        .status( Status
+                                .builder()
+                                .message( modelForCarList
+                                        .getModelForCarList()
+                                        .get( 0 )
+                                        .getPlateNumber() )
+                                .build() )
+                        .build() )
+                        : this.getCarTotalData( ApiResponseModel
+                        .builder()
+                        .status( Status
+                                .builder()
+                                .message( "01Y456MA" )
+                                .build() )
+                        .build() ) )
+                .onErrorResume( ReadTimeoutException.class,
+                        throwable -> Mono.just( new CarTotalData(
+                                SerDes
+                                        .getSerDes()
+                                        .getGetConnectionError()
+                                        .apply( throwable.getMessage() ) ) ) )
+                .onErrorReturn( new CarTotalData( SerDes
+                        .getSerDes()
+                        .getGetExternalServiceErrorResponse()
+                        .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
+
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
     public Mono< PsychologyCard > getPersonTotalData ( ApiResponseModel apiResponseModel ) {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
@@ -149,7 +193,7 @@ public class RequestController {
                 .getGetServiceErrorResponse()
                 .apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
-    @MessageMapping ( value = "getPersonalCadastor" ) // возвращает данные по номеру кадастра
+    @MessageMapping ( value = "GET_PERSONAL_CADASTOR" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
         log.info( apiResponseModel.getStatus().getMessage() );
         if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( this.getErrorResponse.get() ) );
@@ -194,11 +238,9 @@ public class RequestController {
                                 .getGetDataNotFoundErrorResponse()
                                 .apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
-    @MessageMapping ( value = "getPersonTotalDataByPinfl" ) // возвращает данные по Пинфл
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
-        log.info( "Pinfl: " + apiResponseModel
-                .getUser()
-                .getPinfl() );
+        log.info( "Pinfl: " + apiResponseModel.getUser().getPinfl() );
         return SerDes.getSerDes().getFlag()
                 ? DataValidationInspector
                 .getInstance()
@@ -222,7 +264,7 @@ public class RequestController {
                         .apply( Errors.WRONG_PARAMS.name() ) ) )
                 : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
 
-    @MessageMapping ( value = "getPersonDataByPassportSeriesAndBirthdate" ) // возвращает данные по номеру паспорта
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
         if ( !DataValidationInspector
                 .getInstance()
