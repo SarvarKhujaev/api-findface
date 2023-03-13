@@ -1,33 +1,23 @@
 package com.ssd.mvd.controller;
 
-import com.ssd.mvd.entity.modelForGai.Tonirovka;
-import io.netty.handler.timeout.ReadTimeoutException;
-import lombok.extern.slf4j.Slf4j;
-import java.util.function.Supplier;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import io.netty.handler.timeout.ReadTimeoutException;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
-import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.component.FindFaceComponent;
+import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 
-@Slf4j
 @RestController
 public class RequestController {
     private static String token;
-
-    private final Supplier< ErrorResponse > getErrorResponse = () -> ErrorResponse
-            .builder()
-            .message( "GAI token is unavailable" )
-            .errors( Errors.GAI_TOKEN_ERROR )
-            .build();
 
     @MessageMapping ( value = "ping" )
     public Mono< Boolean > ping () { return Mono.just( true ); }
@@ -39,17 +29,23 @@ public class RequestController {
                 .getSerDes()
                 .getGetPersonTotalDataByFIO()
                 .apply( fio )
-                .onErrorContinue( ( error, object ) -> log.error( "Error: {} and reason: {}: ",
-                        error.getMessage(), object ) )
-                .onErrorReturn( new PersonTotalDataByFIO( SerDes
-                        .getSerDes()
+                .onErrorContinue( ( error, object ) -> LogInspector
+                        .getInstance()
+                        .logging( error, Methods.GET_PERSON_TOTAL_DATA_BY_FIO, fio.toString() ) )
+                .onErrorReturn( new PersonTotalDataByFIO( ErrorController
+                        .getInstance()
                         .getGetServiceErrorResponse()
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Mono.just( new PersonTotalDataByFIO( this.getErrorResponse.get() ) ); }
+                : Mono.just( new PersonTotalDataByFIO( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) ); }
 
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA" ) // возвращает данные по номеру машины
     public Mono< CarTotalData > getCarTotalData ( ApiResponseModel apiResponseModel ) {
-        log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
+        LogInspector
+                .getInstance()
+                .logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
                         Mono.just( new Tonirovka() ),
@@ -87,27 +83,33 @@ public class RequestController {
                                 .build() )
                         .map( carTotalData::save )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                throwable -> Mono.just( new CarTotalData( SerDes
-                                        .getSerDes()
-                                        .getGetConnectionError()
-                                        .apply( throwable.getMessage() ) ) ) )
+                                throwable -> Mono.just( new CarTotalData(
+                                        ErrorController
+                                                .getInstance()
+                                                .getGetConnectionError()
+                                                .apply( throwable.getMessage() ) ) ) )
                         : Mono.just( carTotalData ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> Mono.just( new CarTotalData(
-                                SerDes
-                                .getSerDes()
+                                ErrorController
+                                                .getInstance()
                                 .getGetConnectionError()
                                 .apply( throwable.getMessage() ) ) ) )
-                .onErrorReturn( new CarTotalData( SerDes
-                        .getSerDes()
+                .onErrorReturn( new CarTotalData( ErrorController
+                        .getInstance()
                         .getGetExternalServiceErrorResponse()
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
+                : Mono.just( new CarTotalData( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) ); }
 
     // возвращает данные по номеру машины в слуцчае если у человека роль IMITATION
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA_BY_PINFL" )
     public Mono< CarTotalData > getCarTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
-        log.info( "Gos number: " + apiResponseModel.getStatus().getMessage() );
+        LogInspector
+                .getInstance()
+                .logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()
@@ -137,15 +139,18 @@ public class RequestController {
                         .build() ) )
                 .onErrorResume( ReadTimeoutException.class,
                         throwable -> Mono.just( new CarTotalData(
-                                SerDes
-                                        .getSerDes()
+                                ErrorController
+                                                .getInstance()
                                         .getGetConnectionError()
                                         .apply( throwable.getMessage() ) ) ) )
-                .onErrorReturn( new CarTotalData( SerDes
-                        .getSerDes()
+                .onErrorReturn( new CarTotalData( ErrorController
+                        .getInstance()
                         .getGetExternalServiceErrorResponse()
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Mono.just( new CarTotalData( this.getErrorResponse.get() ) ); }
+                : Mono.just( new CarTotalData( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
     public Mono< PsychologyCard > getPersonTotalData ( ApiResponseModel apiResponseModel ) {
@@ -177,26 +182,35 @@ public class RequestController {
                                 .getGetPsychologyCardByImage()
                                 .apply( results, apiResponseModel )
                                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                        throwable -> Mono.just( new PsychologyCard( SerDes
-                                                .getSerDes()
-                                                .getGetConnectionError()
-                                                .apply( throwable.getMessage() ) ) ) )
+                                        throwable -> Mono.just( new PsychologyCard(
+                                                ErrorController
+                                                        .getInstance()
+                                                        .getGetConnectionError()
+                                                        .apply( throwable.getMessage() ) ) ) )
                                 : SerDes
                                 .getSerDes()
                                 .getPsychologyCard(
                                         new PsychologyCard( results ),
                                         token,
                                         apiResponseModel )
-                                : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ) )
-                : Mono.just( new PsychologyCard( SerDes
-                .getSerDes()
+                                : Mono.just( new PsychologyCard( ErrorController
+                                .getInstance()
+                                .getGetErrorResponse()
+                                .get() ) ) )
+                : Mono.just( new PsychologyCard( ErrorController
+                        .getInstance()
                 .getGetServiceErrorResponse()
                 .apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
-        log.info( apiResponseModel.getStatus().getMessage() );
-        if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( this.getErrorResponse.get() ) );
+        LogInspector
+                .getInstance()
+                .logging( "Cadaster value: " + apiResponseModel.getStatus().getMessage() );
+        if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) );
         return SerDes
                 .getSerDes()
                 .getGetCadaster()
@@ -218,29 +232,31 @@ public class RequestController {
                                         .apply( data1, apiResponseModel )
                                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                                                 throwable -> Mono.just( new PsychologyCard(
-                                                        SerDes
-                                                        .getSerDes()
-                                                        .getGetConnectionError()
-                                                        .apply( throwable.getMessage() ) ) ) ) ) )
+                                                        ErrorController
+                                                                .getInstance()
+                                                                .getGetConnectionError()
+                                                                .apply( throwable.getMessage() ) ) ) ) ) )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                                 throwable -> Mono.just( new PsychologyCard(
-                                        SerDes
-                                        .getSerDes()
-                                        .getGetConnectionError()
-                                        .apply( throwable.getMessage() ) ) ) )
-                        .onErrorReturn( new PsychologyCard( SerDes
-                                .getSerDes()
+                                        ErrorController
+                                                .getInstance()
+                                                .getGetConnectionError()
+                                                .apply( throwable.getMessage() ) ) ) )
+                        .onErrorReturn( new PsychologyCard( ErrorController
+                                .getInstance()
                                 .getGetExternalServiceErrorResponse()
                                 .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                         : Flux.just( new PsychologyCard(
-                                SerDes
-                                .getSerDes()
+                                ErrorController
+                                .getInstance()
                                 .getGetDataNotFoundErrorResponse()
                                 .apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
-        log.info( "Pinfl: " + apiResponseModel.getUser().getPinfl() );
+        LogInspector
+                .getInstance()
+                .logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? DataValidationInspector
                 .getInstance()
@@ -253,16 +269,20 @@ public class RequestController {
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> Mono.just( new PsychologyCard( SerDes
-                                .getSerDes()
-                                .getGetConnectionError()
-                                .apply( throwable.getMessage() ) ) ) )
+                        throwable -> Mono.just( new PsychologyCard(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetConnectionError()
+                                        .apply( throwable.getMessage() ) ) ) )
                 : Mono.just( new PsychologyCard(
-                        SerDes
-                        .getSerDes()
+                        ErrorController
+                        .getInstance()
                         .getGetServiceErrorResponse()
                         .apply( Errors.WRONG_PARAMS.name() ) ) )
-                : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
+                : Mono.just( new PsychologyCard( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
@@ -274,10 +294,10 @@ public class RequestController {
                         .getMessage() ) )
             return Mono.just(
                     new PsychologyCard(
-                                SerDes
-                                .getSerDes()
-                                .getGetServiceErrorResponse()
-                                .apply( Errors.WRONG_PARAMS.name() ) ) );
+                            ErrorController
+                                    .getInstance()
+                                    .getGetServiceErrorResponse()
+                                    .apply( Errors.WRONG_PARAMS.name() ) ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
@@ -289,13 +309,17 @@ public class RequestController {
                         .getGetPsychologyCardByData()
                         .apply( data, apiResponseModel ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> Mono.just( new PsychologyCard( SerDes
-                                .getSerDes()
-                                .getGetConnectionError()
-                                .apply( throwable.getMessage() ) ) ) )
-                .onErrorReturn( new PsychologyCard( SerDes
-                        .getSerDes()
+                        throwable -> Mono.just( new PsychologyCard(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetConnectionError()
+                                        .apply( throwable.getMessage() ) ) ) )
+                .onErrorReturn( new PsychologyCard( ErrorController
+                        .getInstance()
                         .getGetServiceErrorResponse()
                         .apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                : Mono.just( new PsychologyCard( this.getErrorResponse.get() ) ); }
+                : Mono.just( new PsychologyCard( ErrorController
+                .getInstance()
+                .getGetErrorResponse()
+                .get() ) ); }
 }

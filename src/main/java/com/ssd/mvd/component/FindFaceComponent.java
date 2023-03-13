@@ -4,17 +4,15 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ssd.mvd.entity.Results;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.FindFaceServiceApplication;
 import com.ssd.mvd.controller.DataValidationInspector;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 @Data
-@Slf4j
 public class FindFaceComponent {
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
@@ -25,7 +23,7 @@ public class FindFaceComponent {
 
     public Mono< Results > getPapilonList ( String base64url ) {
         try { return this.getRequester()
-                .route( "getFaceCard" )
+                .route( Methods.GET_FACE_CARD.name() )
                 .data( base64url )
                 .retrieveMono( Results.class )
                 .onErrorReturn( new Results() ); }
@@ -37,7 +35,7 @@ public class FindFaceComponent {
                 .getCheckParam()
                 .test( pinfl )
                 ? this.getRequester()
-                        .route( "getViolationListByPinfl" )
+                        .route( Methods.GET_VIOLATION_LIST_BY_PINFL.name() )
                         .data( pinfl )
                         .retrieveMono( List.class )
                         .defaultIfEmpty( new ArrayList() )
