@@ -212,9 +212,11 @@ public class SerDes implements Runnable {
                         .asString()
                         .map( s -> this.getGson().fromJson(
                                 s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
-                        : Mono.just( new Data( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( cadaster ) ) ); } )
+                        : Mono.just( new Data(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( cadaster ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                             .getInstance()
@@ -226,13 +228,15 @@ public class SerDes implements Runnable {
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new Data(
                             ErrorController
-                                        .getInstance()
-                                    .getGetConnectionError().apply( throwable.getMessage() ) ) ) )
+                                    .getInstance()
+                                    .getGetConnectionError()
+                                    .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new Data(
                             ErrorController
                                     .getInstance()
-                                    .getGetTooManyRetriesError().apply( Methods.CADASTER ) ) ) )
+                                    .getGetTooManyRetriesError()
+                                    .apply( Methods.CADASTER ) ) ) )
             .doOnError( e -> LogInspector
                     .getInstance()
                     .logging( e, Methods.CADASTER, cadaster ) )
@@ -378,8 +382,9 @@ public class SerDes implements Runnable {
                     .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                             throwable -> Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                                     ErrorController
-                                        .getInstance()
-                                            .getGetConnectionError().apply( throwable.getMessage() ) ) ) )
+                                            .getInstance()
+                                            .getGetConnectionError()
+                                            .apply( throwable.getMessage() ) ) ) )
                     .onErrorResume( IllegalArgumentException.class,
                             throwable -> Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                                     ErrorController
@@ -387,14 +392,14 @@ public class SerDes implements Runnable {
                                             .getGetTooManyRetriesError()
                                             .apply( Methods.GET_MODEL_FOR_PASSPORT ) ) ) )
                     .doOnError( e -> LogInspector
-                    .getInstance()
-                    .logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
+                            .getInstance()
+                            .logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
                     .doOnSuccess( value -> LogInspector
-                    .getInstance()
-                    .logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
+                            .getInstance()
+                            .logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
                     .doOnSubscribe( value -> LogInspector
-                    .getInstance()
-                    .logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
+                            .getInstance()
+                            .logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
                     .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                             ErrorController
                                     .getInstance()
@@ -421,11 +426,13 @@ public class SerDes implements Runnable {
                                 ? this.getGson().fromJson( s, Insurance.class )
                                 : new Insurance(
                                 ErrorController
-                                .getInstance()
+                                        .getInstance()
                                         .getGetDataNotFoundErrorResponse().apply( gosno ) ) )
-                        : Mono.just( new Insurance( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+                        : Mono.just( new Insurance(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( gosno ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                             .getInstance()
@@ -475,9 +482,11 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
-                        : Mono.just( new ModelForCar( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+                        : Mono.just( new ModelForCar(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( gosno ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                             .getInstance()
@@ -487,15 +496,17 @@ public class SerDes implements Runnable {
                             .logging( Methods.GET_VEHILE_DATA, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> Mono.just( new ModelForCar( ErrorController
-                                        .getInstance()
-                            .getGetConnectionError()
-                            .apply( throwable.getMessage() ) ) ) )
+                    throwable -> Mono.just( new ModelForCar(
+                            ErrorController
+                                    .getInstance()
+                                    .getGetConnectionError()
+                                    .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
-                    throwable -> Mono.just( new ModelForCar( ErrorController
-                            .getInstance()
-                            .getGetTooManyRetriesError()
-                            .apply( Methods.GET_VEHILE_DATA ) ) ) )
+                    throwable -> Mono.just( new ModelForCar(
+                            ErrorController
+                                    .getInstance()
+                                    .getGetTooManyRetriesError()
+                                    .apply( Methods.GET_VEHILE_DATA ) ) ) )
             .doOnError( e -> LogInspector
                     .getInstance()
                     .logging( e, Methods.GET_VEHILE_DATA, gosno ) )
@@ -527,9 +538,11 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
-                        : Mono.just( new Tonirovka( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+                        : Mono.just( new Tonirovka(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( gosno ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                             .getInstance()
@@ -579,9 +592,11 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> new ViolationsList( this.stringToArrayList( s, ViolationsInformation[].class ) ) )
-                        : Mono.just( new ViolationsList( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+                        : Mono.just( new ViolationsList(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( gosno ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                             .getInstance()
@@ -633,9 +648,11 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> new DoverennostList( this.stringToArrayList( s, Doverennost[].class ) ) )
-                        : Mono.just( new DoverennostList( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( gosno ) ) ); } )
+                        : Mono.just( new DoverennostList(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( gosno ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
                     .getInstance()
@@ -645,10 +662,11 @@ public class SerDes implements Runnable {
                             .logging( Methods.GET_DOVERENNOST_LIST, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> Mono.just( new DoverennostList( ErrorController
-                            .getInstance()
-                            .getGetConnectionError()
-                            .apply( throwable.getMessage() ) ) ) )
+                    throwable -> Mono.just( new DoverennostList(
+                            ErrorController
+                                    .getInstance()
+                                    .getGetConnectionError()
+                                    .apply( throwable.getMessage() ) ) ) )
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( new DoverennostList(
                             ErrorController
@@ -664,10 +682,11 @@ public class SerDes implements Runnable {
             .doOnSubscribe( value -> LogInspector
                     .getInstance()
                     .logging( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() ) )
-            .onErrorReturn( new DoverennostList( ErrorController
-                    .getInstance()
-                    .getGetServiceErrorResponse()
-                    .apply( gosno ) ) );
+            .onErrorReturn( new DoverennostList(
+                    ErrorController
+                            .getInstance()
+                            .getGetServiceErrorResponse()
+                            .apply( gosno ) ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
@@ -686,17 +705,18 @@ public class SerDes implements Runnable {
                         ? content
                         .asString()
                         .map( s -> new ModelForCarList( this.stringToArrayList( s, ModelForCar[].class ) ) )
-                        : Mono.just( new ModelForCarList( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse()
-                        .apply( pinfl ) ) ); } )
+                        : Mono.just( new ModelForCarList(
+                                ErrorController
+                                        .getInstance()
+                                        .getGetDataNotFoundErrorResponse()
+                                        .apply( pinfl ) ) ); } )
             .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
                     .doBeforeRetry( retrySignal -> LogInspector
-                    .getInstance()
-                    .logging( retrySignal, Methods.GET_MODEL_FOR_CAR_LIST ) )
+                            .getInstance()
+                            .logging( retrySignal, Methods.GET_MODEL_FOR_CAR_LIST ) )
                     .doAfterRetry( retrySignal -> LogInspector
-                    .getInstance()
-                    .logging( Methods.GET_MODEL_FOR_CAR_LIST, retrySignal ) )
+                            .getInstance()
+                            .logging( Methods.GET_MODEL_FOR_CAR_LIST, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
             .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
                     throwable -> Mono.just( new ModelForCarList(
@@ -719,10 +739,11 @@ public class SerDes implements Runnable {
             .doOnSubscribe( value -> LogInspector
                     .getInstance()
                     .logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
-            .onErrorReturn( new ModelForCarList( ErrorController
-                    .getInstance()
-                    .getGetServiceErrorResponse()
-                    .apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+            .onErrorReturn( new ModelForCarList(
+                    ErrorController
+                            .getInstance()
+                            .getGetServiceErrorResponse()
+                            .apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
             DataValidationInspector
@@ -844,16 +865,19 @@ public class SerDes implements Runnable {
                                         .apply( person1.getPinpp() )
                                         .subscribe( person1::setPersonImage ) );
                         return person != null ? person : new PersonTotalDataByFIO(); } )
-                    : Mono.just( new PersonTotalDataByFIO( ErrorController
-                    .getInstance()
-                    .getGetDataNotFoundErrorResponse().apply( fio.getName() ) ) ) )
+                    : Mono.just( new PersonTotalDataByFIO(
+                            ErrorController
+                                    .getInstance()
+                                    .getGetDataNotFoundErrorResponse()
+                                    .apply( fio.getName() ) ) ) )
             .doOnError( e -> LogInspector
                     .getInstance()
                     .logging( e, Methods.GET_DATA_BY_FIO, fio.getName() ) )
-            .onErrorReturn( new PersonTotalDataByFIO( ErrorController
-                    .getInstance()
-                    .getGetServiceErrorResponse()
-                    .apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
+            .onErrorReturn( new PersonTotalDataByFIO(
+                    ErrorController
+                            .getInstance()
+                            .getGetServiceErrorResponse()
+                            .apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
             apiResponseModel -> DataValidationInspector
@@ -873,10 +897,11 @@ public class SerDes implements Runnable {
                             this.getFindAllDataAboutCar().apply( psychologyCard ),
                             this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
                             .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
-                    : Mono.just( new PsychologyCard( ErrorController
-                    .getInstance()
-                    .getGetServiceErrorResponse()
-                    .apply( Errors.WRONG_PARAMS.name() ) ) );
+                    : Mono.just( new PsychologyCard(
+                            ErrorController
+                                    .getInstance()
+                                    .getGetServiceErrorResponse()
+                                    .apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
@@ -915,9 +940,11 @@ public class SerDes implements Runnable {
                 .map( tuple -> new PsychologyCard( data, tuple ) )
                 .flatMap( psychologyCard -> this.getFindAllDataAboutCar().apply( psychologyCard )
                         .map( psychologyCard1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
-                : Mono.just( new PsychologyCard( ErrorController
-                        .getInstance()
-                        .getGetDataNotFoundErrorResponse().apply( Errors.DATA_NOT_FOUND.name() ) ) );
+                : Mono.just( new PsychologyCard(
+                        ErrorController
+                                .getInstance()
+                                .getGetDataNotFoundErrorResponse()
+                                .apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override
     public void run () {
