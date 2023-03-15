@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import com.ssd.mvd.entity.Results;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.FindFaceServiceApplication;
-import com.ssd.mvd.controller.DataValidationInspector;
 
 import lombok.Data;
 import reactor.core.publisher.Mono;
@@ -30,10 +29,8 @@ public class FindFaceComponent {
         catch ( Exception e ) { return Mono.just( new Results() ); } }
 
     public Mono< List > getViolationListByPinfl ( String pinfl ) {
-        try { return DataValidationInspector
-                .getInstance()
-                .getCheckParam()
-                .test( pinfl )
+        try { return pinfl != null
+                && pinfl.length() > 1
                 ? this.getRequester()
                         .route( Methods.GET_VIOLATION_LIST_BY_PINFL.name() )
                         .data( pinfl )
