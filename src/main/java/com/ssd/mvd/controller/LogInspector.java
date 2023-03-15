@@ -5,12 +5,10 @@ import org.apache.logging.log4j.Logger;
 import com.ssd.mvd.constants.Methods;
 import reactor.util.retry.Retry;
 
-@lombok.Data
-public class LogInspector {
-    private final static LogInspector INSTANCE = new LogInspector();
+public class LogInspector extends ErrorController {
     private final Logger LOGGER = LogManager.getLogger( "LOGGER_WITH_JSON_LAYOUT" );
 
-    public static LogInspector getInstance () { return INSTANCE; }
+    public Logger getLOGGER() { return LOGGER; }
 
     // log on error
     public void logging (
@@ -18,15 +16,11 @@ public class LogInspector {
             Methods method,
             String params ) {
         this.getLOGGER().error( "Error in {}: {}", method, throwable );
-        ErrorController
-                .getInstance()
-                .saveErrorLog(
-                        method.name(),
-                        params,
-                        "Error: " + throwable.getMessage() );
-        ErrorController
-                .getInstance()
-                .saveErrorLog( throwable.getMessage() ); }
+        this.saveErrorLog(
+                method.name(),
+                params,
+                "Error: " + throwable.getMessage() );
+        this.saveErrorLog( throwable.getMessage() ); }
 
     public void logging ( Retry.RetrySignal retrySignal, Methods methods ) {
         this.getLOGGER().info( "Retrying in {} has started {}: ", methods, retrySignal ); }

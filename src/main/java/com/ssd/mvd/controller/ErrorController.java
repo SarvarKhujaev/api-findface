@@ -22,10 +22,6 @@ import java.util.Date;
 
 @lombok.Data
 public class ErrorController {
-    private final static ErrorController INSTANCE = new ErrorController();
-
-    public static ErrorController getInstance () { return INSTANCE; }
-
     private final Notification notification = new Notification();
 
     private final Supplier< ErrorResponse > getErrorResponse = () -> ErrorResponse
