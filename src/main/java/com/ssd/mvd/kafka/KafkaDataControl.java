@@ -24,27 +24,27 @@ public class KafkaDataControl {
     private final String KAFKA_BROKER = FindFaceServiceApplication
             .context
             .getEnvironment()
-            .getProperty( "variables.KAFKA_BROKER" );
+            .getProperty( "variables.KAFKA_VARIABLES.KAFKA_BROKER" );
 
     private final String GROUP_ID_FOR_KAFKA = FindFaceServiceApplication
             .context
             .getEnvironment()
-            .getProperty( "variables.GROUP_ID_FOR_KAFKA" );
+            .getProperty( "variables.KAFKA_VARIABLES.GROUP_ID_FOR_KAFKA" );
 
     private final String ERROR_LOGS = FindFaceServiceApplication
             .context
             .getEnvironment()
-            .getProperty( "variables.ERROR_LOGS" );
+            .getProperty( "variables.KAFKA_VARIABLES.ERROR_LOGS" );
 
     private final String ADMIN_PANEL = FindFaceServiceApplication
             .context
             .getEnvironment()
-            .getProperty( "variables.ADMIN_PANEL" );
+            .getProperty( "variables.KAFKA_VARIABLES.ADMIN_PANEL" );
 
     private final String ADMIN_PANEL_ERROR_LOG = FindFaceServiceApplication
             .context
             .getEnvironment()
-            .getProperty( "variables.ADMIN_PANEL_ERROR_LOG" );
+            .getProperty( "variables.KAFKA_VARIABLES.ADMIN_PANEL_ERROR_LOG" );
 
     private final Supplier< Map< String, Object > > getKafkaSenderOptions = () -> Map.of(
             ProducerConfig.ACKS_CONFIG, "1",

@@ -7,9 +7,9 @@ import org.springframework.messaging.rsocket.RSocketRequester;
 
 @Configuration
 public class RSocketConfigs {
-    @Value( "${variables.LOAD_BALANCER}" )
+    @Value( "${variables.RSOCKET_VARIABLES.LOAD_BALANCER}" )
     private String host;
-    @Value( "${variables.PRODUCER_PORT}" )
+    @Value( "${variables.RSOCKET_VARIABLES.PRODUCER_PORT}" )
     private Integer port;
 
     @Bean
