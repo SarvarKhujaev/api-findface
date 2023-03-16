@@ -14,9 +14,7 @@ import java.util.List;
 
 @Data
 public class DataValidationInspector {
-    public final Predicate< String > checkParam = param ->
-            param != null
-            && !param.isEmpty();
+    public final Predicate< String > checkParam = param -> param != null && !param.isEmpty();
 
     public final Predicate< ModelForPassport > checkPassport = modelForPassport ->
             modelForPassport != null
@@ -30,9 +28,7 @@ public class DataValidationInspector {
             && carTotalData.getModelForCar().getPinpp() != null
             && !carTotalData.getModelForCar().getPinpp().isEmpty();
 
-    public final Predicate< List< ? > > checkList = list ->
-            list != null
-            && list.size() > 0;
+    public final Predicate< List< ? > > checkList = list -> list != null && list.size() > 0;
 
     public final BiFunction< HttpClientResponse, ByteBufMono, Boolean > checkResponse =
             ( httpClientResponse, byteBufMono ) -> byteBufMono != null && httpClientResponse.status().code() == 200;

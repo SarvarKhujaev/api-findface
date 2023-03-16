@@ -580,8 +580,7 @@ public class SerDes extends LogInspector implements Runnable {
                             .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
-            getPsychologyCardByData = ( data, apiResponseModel ) -> this.getCheckPassport()
-            .test( data )
+            getPsychologyCardByData = ( data, apiResponseModel ) -> this.getCheckPassport().test( data )
             ? Mono.zip(
                     this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
                     this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ),

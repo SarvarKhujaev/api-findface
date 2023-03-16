@@ -16,11 +16,11 @@ public class LogInspector extends ErrorController {
             Methods method,
             String params ) {
         this.getLOGGER().error( "Error in {}: {}", method, throwable );
-        this.saveErrorLog(
+        super.saveErrorLog(
                 method.name(),
                 params,
                 "Error: " + throwable.getMessage() );
-        this.saveErrorLog( throwable.getMessage() ); }
+        super.saveErrorLog( throwable.getMessage() ); }
 
     public void logging ( Retry.RetrySignal retrySignal, Methods methods ) {
         this.getLOGGER().info( "Retrying in {} has started {}: ", methods, retrySignal ); }
