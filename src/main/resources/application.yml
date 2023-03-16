@@ -15,7 +15,7 @@ variables:
 
     KAFKA_VARIABLES:
         ERROR_LOGS: ${ERROR_LOGS:ERROR_LOGS}
-        ADMIN_PANEL: ${ADMIN_PANEL:adminpanel_integratedServicesUserLog_0.0.1}
+        ADMIN_PANEL: adminpanel_integratedServicesUserLog_0.0.1
         ADMIN_PANEL_ERROR_LOG: ${ADMIN_PANEL_ERROR_LOG:adminpanel_integratedServicesLog_0.0.1}
 
         KAFKA_BROKER: ${KAFKA_BROKER:10.254.6.1, 10.254.6.2, 10.254.6.3}
@@ -23,9 +23,9 @@ variables:
 
     GAI_VARIABLES:
         API_FOR_GAI_TOKEN: ${API_FOR_GAI_TOKEN:http://172.250.1.65:7101/Agency/token}
-        LOGIN_FOR_GAI_TOKEN: ${LOGIN_FOR_GAI_TOKEN:SharafIT_PSP}
-        CURRENT_SYSTEM_FOR_GAI: ${CURRENT_SYSTEM_FOR_GAI:40}
-        PASSWORD_FOR_GAI_TOKEN: ${PASSWORD_FOR_GAI_TOKEN:Sh@r@fITP@$P}
+        LOGIN_FOR_GAI_TOKEN: SharafIT_PSP
+        CURRENT_SYSTEM_FOR_GAI: 40
+        PASSWORD_FOR_GAI_TOKEN: Sh@r@fITP@$P
 
         API_FOR_TONIROVKA: ${API_FOR_TONIROVKA:http://172.250.1.67:7145/api/Vehicle/TintingInformation?platenumber=}
         API_FOR_VEHICLE_DATA: ${API_FOR_VEHICLE_DATA:http://172.250.1.67:7145/api/Vehicle/VehicleInformation?platenumber=}
@@ -41,8 +41,8 @@ variables:
         API_FOR_PERSON_IMAGE: ${API_FOR_PERSON_IMAGE:http://172.250.1.67:7145/GetPhotoByPinpp?pinpp=}
         API_FOR_PASSPORT_MODEL: ${API_FOR_PASSPORT_MODEL:http://172.250.1.67:7121/api/CensusOut/GetPerson}
         API_FOR_MODEL_FOR_ADDRESS: ${API_FOR_MODEL_FOR_ADDRESS:http://172.250.1.67:7121/api/CensusOut/GetAddress}
-        BASE64_IMAGE_TO_LINK_CONVERTER_API: ${BASE64_IMAGE_TO_LINK_CONVERTER_API:https://ms.ssd.uz/files/api/v1/image/base64}
+        BASE64_IMAGE_TO_LINK_CONVERTER_API: https://ms.ssd.uz/files/api/v1/image/base64
 
-        LOGIN_FOR_FIO_TOKEN : ${LOGIN_FOR_FIO_TOKEN:SharafIT_PSP}
-        CURRENT_SYSTEM_FOR_FIO : ${CURRENT_SYSTEM_FOR_FIO:40}
-        PASSWORD_FOR_FIO_TOKEN : ${PASSWORD_FOR_FIO_TOKEN:Sh@r@fITP@$P}
+        LOGIN_FOR_FIO_TOKEN : SharafIT_PSP
+        CURRENT_SYSTEM_FOR_FIO : 40
+        PASSWORD_FOR_FIO_TOKEN : Sh@r@fITP@$P
