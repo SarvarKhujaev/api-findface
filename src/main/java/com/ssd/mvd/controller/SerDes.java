@@ -79,6 +79,10 @@ public class SerDes extends LogInspector implements Runnable {
 
     private SerDes updateTokens () {
         super.logging( "Updating tokens..." );
+        super.logging( this.getConfig().getAPI_FOR_GAI_TOKEN() );
+        super.logging( this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
+        super.logging( this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
+        super.logging( this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
         this.getFields().put( "Login", this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
         this.getFields().put( "Password" , this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
         this.getFields().put( "CurrentSystem", this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
