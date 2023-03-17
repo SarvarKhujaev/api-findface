@@ -1,10 +1,9 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.FindFaceServiceApplication;
-import lombok.Data;
 
-@Data
-public class Config {
+@lombok.Data
+public class Config extends LogInspector {
     private final String API_FOR_GAI_TOKEN = FindFaceServiceApplication
             .context
             .getEnvironment()

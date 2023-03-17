@@ -40,14 +40,13 @@ import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
-public class SerDes extends LogInspector implements Runnable {
+public class SerDes extends Config implements Runnable {
     private Boolean flag = true;
     private String tokenForGai;
     private String tokenForFio;
     private String tokenForPassport;
 
     private final Gson gson = new Gson();
-    private final Config config = new Config();
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = HttpClient
             .create()
@@ -79,10 +78,10 @@ public class SerDes extends LogInspector implements Runnable {
 
     private SerDes updateTokens () {
         super.logging( "Updating tokens..." );
-        this.getFields().put( "Login", this.getConfig().getLOGIN_FOR_GAI_TOKEN() );
-        this.getFields().put( "Password" , this.getConfig().getPASSWORD_FOR_GAI_TOKEN() );
-        this.getFields().put( "CurrentSystem", this.getConfig().getCURRENT_SYSTEM_FOR_GAI() );
-        try { this.setTokenForGai( String.valueOf( Unirest.post( this.getConfig().getAPI_FOR_GAI_TOKEN() )
+        this.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
+        this.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
+        this.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
+        try { this.setTokenForGai( String.valueOf( Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
                 .fields( this.getFields() )
                 .asJson()
                 .getBody()
@@ -115,7 +114,7 @@ public class SerDes extends LogInspector implements Runnable {
         this.getFields().put( "photo", base64 );
         this.getFields().put( "serviceName", "psychologyCard" );
         try { super.logging( "Converting image to Link in: " + Methods.CONVERT_BASE64_TO_LINK );
-            response = Unirest.post( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+            response = Unirest.post( super.getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
                     .header("Content-Type", "application/json")
                     .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
                     .asJson();
@@ -128,7 +127,7 @@ public class SerDes extends LogInspector implements Runnable {
                     : Errors.DATA_NOT_FOUND.name(); }
         catch ( UnirestException e ) {
             super.logging( e, Methods.BASE64_TO_LINK, base64 );
-            super.saveErrorLog( this.getConfig().getBASE64_IMAGE_TO_LINK_CONVERTER_API(),
+            super.saveErrorLog( super.getBASE64_IMAGE_TO_LINK_CONVERTER_API(),
                     Methods.CONVERT_BASE64_TO_LINK.name(),
                     "Error: " + e.getMessage() );
             return Errors.SERVICE_WORK_ERROR.name(); } };
@@ -136,7 +135,7 @@ public class SerDes extends LogInspector implements Runnable {
     private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_PINPP() + pinfl )
+            .uri( super.getAPI_FOR_PINPP() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetPinpp().apply( pinfl );
                 case 500 | 501 | 502 | 503 -> ( Mono< Pinpp > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_PINPP );
@@ -155,13 +154,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new Pinpp( super.getTooManyRetriesError.apply( Methods.GET_PINPP ) ) ) )
             .doOnError( throwable -> super.logging( throwable, Methods.GET_PINPP, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_PINPP, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_PINPP() ) );
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PINPP() ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
             .post()
             .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson( new RequestForCadaster( cadaster ) ) ) ) )
-            .uri( this.getConfig().getAPI_FOR_CADASTR() )
+            .uri( super.getAPI_FOR_CADASTR() )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetCadaster().apply( cadaster );
                 case 501 | 502 | 503 -> ( Mono< Data > ) super.saveErrorLog.apply( res.status().toString(), Methods.CADASTER );
@@ -180,13 +179,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new Data( super.getTooManyRetriesError.apply( Methods.CADASTER ) ) ) )
             .doOnError( e -> super.logging( e, Methods.CADASTER, cadaster ) )
             .doOnSuccess( value -> super.logging( Methods.CADASTER, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_CADASTR() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_CADASTR() ) )
             .onErrorReturn( new Data( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_PERSON_IMAGE() + pinfl )
+            .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetImageByPinfl().apply( pinfl );
                 case 501 | 502 | 503 -> ( Mono< String > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_IMAGE_BY_PINFL );
@@ -204,19 +203,18 @@ public class SerDes extends LogInspector implements Runnable {
             .onErrorResume( IllegalArgumentException.class,
                     throwable -> Mono.just( Errors.TOO_MANY_RETRIES_ERROR + " : " + throwable.getMessage() ) )
             .doOnError( e -> super.logging( e, Methods.GET_IMAGE_BY_PINFL, pinfl ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_PERSON_IMAGE() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .post()
-            .uri( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() )
+            .uri( super.getAPI_FOR_MODEL_FOR_ADDRESS() )
             .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson( new RequestForModelOfAddress( pinfl ) ) ) ) )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetModelForAddress().apply( pinfl );
                 case 501 | 502 | 503 -> ( Mono< ModelForAddress > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_MODEL_FOR_ADDRESS );
-                default -> super.getCheckResponse()
-                        .apply( res, content )
+                default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson(
@@ -233,22 +231,21 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new ModelForAddress( super.getTooManyRetriesError.apply( Methods.GET_MODEL_FOR_ADDRESS ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_ADDRESS, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_MODEL_FOR_ADDRESS() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_ADDRESS() ) )
             .onErrorReturn( new ModelForAddress( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final BiFunction< String, String, Mono< com.ssd.mvd.entity.modelForPassport.ModelForPassport > > getModelForPassport =
             ( SerialNumber, BirthDate ) -> this.getHttpClient()
                     .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
                     .post()
-                    .uri( this.getConfig().getAPI_FOR_PASSPORT_MODEL() )
+                    .uri( super.getAPI_FOR_PASSPORT_MODEL() )
                     .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson(
                             new RequestForPassport( SerialNumber, BirthDate ) ) ) ) )
                     .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                         case 401 -> this.updateTokens().getGetModelForPassport().apply( SerialNumber, BirthDate );
                         case 501 | 502 | 503 -> ( Mono< com.ssd.mvd.entity.modelForPassport.ModelForPassport > )
                                 super.saveErrorLog.apply( res.status().toString(), Methods.GET_MODEL_FOR_PASSPORT );
-                        default -> res.status().code() == 200
-                                && content != null
+                        default -> super.getCheckResponse().apply( res, content )
                                 ? content
                                 .asString()
                                 .map( s -> this.getGson().fromJson( s, com.ssd.mvd.entity.modelForPassport.ModelForPassport.class ) )
@@ -266,14 +263,14 @@ public class SerDes extends LogInspector implements Runnable {
                                     super.getTooManyRetriesError.apply( Methods.GET_MODEL_FOR_PASSPORT ) ) ) )
                     .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
                     .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
-                    .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_PASSPORT_MODEL() ) )
+                    .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PASSPORT_MODEL() ) )
                     .onErrorReturn( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                             super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_FOR_INSURANCE() + gosno )
+            .uri( super.getAPI_FOR_FOR_INSURANCE() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getInsurance().apply( gosno );
                 case 501 | 502 | 503 -> ( Mono< Insurance > ) super.saveErrorLog
@@ -295,13 +292,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new Insurance( super.getTooManyRetriesError.apply( Methods.GET_INSURANCE ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_INSURANCE, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_INSURANCE, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_FOR_INSURANCE() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_FOR_INSURANCE() ) )
             .onErrorReturn( new Insurance( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_VEHICLE_DATA() + gosno )
+            .uri( super.getAPI_FOR_VEHICLE_DATA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetVehicleData().apply( gosno );
                 case 501 | 502 | 503 -> ( Mono< ModelForCar > ) super.saveErrorLog
@@ -321,19 +318,18 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new ModelForCar( super.getTooManyRetriesError.apply( Methods.GET_VEHILE_DATA ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_VEHILE_DATA, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_VEHILE_DATA, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_VEHICLE_DATA() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VEHICLE_DATA() ) )
             .onErrorReturn( new ModelForCar( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_TONIROVKA() + gosno )
+            .uri( super.getAPI_FOR_TONIROVKA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetVehicleTonirovka().apply( gosno );
                 case 501 | 502 | 503 -> ( Mono< Tonirovka > ) super.saveErrorLog
                         .apply( res.status().toString(), Methods.GET_TONIROVKA );
-                default -> super.getCheckResponse()
-                        .apply( res, content )
+                default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
@@ -348,13 +344,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new Tonirovka( super.getTooManyRetriesError.apply( Methods.GET_TONIROVKA ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_TONIROVKA, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_TONIROVKA, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_TONIROVKA() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_TONIROVKA() ) )
             .onErrorReturn( new Tonirovka( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_VIOLATION_LIST() + gosno )
+            .uri( super.getAPI_FOR_VIOLATION_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetViolationList().apply( gosno );
                 case 501 | 502 | 503 -> ( Mono< ViolationsList > ) super.saveErrorLog
@@ -374,13 +370,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new ViolationsList( super.getTooManyRetriesError.apply( Methods.GET_VIOLATION_LIST ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_VIOLATION_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_VIOLATION_LIST, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_VIOLATION_LIST() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VIOLATION_LIST() ) )
             .onErrorReturn( new ViolationsList( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() + gosno )
+            .uri( super.getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetDoverennostList().apply( gosno );
                 case 501 | 502 | 503 -> ( Mono< DoverennostList > ) super.saveErrorLog
@@ -400,13 +396,13 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new DoverennostList( super.getTooManyRetriesError.apply( Methods.GET_DOVERENNOST_LIST ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_DOVERENNOST_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_DOVERENNOST_LIST, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_DOVERENNOST_LIST() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_DOVERENNOST_LIST() ) )
             .onErrorReturn( new DoverennostList( super.getServiceErrorResponse.apply( gosno ) ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
             .get()
-            .uri( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
+            .uri( super.getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getModelForCarList.apply( pinfl );
                 case 501 | 502 | 503 -> ( Mono< ModelForCarList > ) super.saveErrorLog
@@ -426,7 +422,7 @@ public class SerDes extends LogInspector implements Runnable {
                     throwable -> Mono.just( new ModelForCarList( super.getTooManyRetriesError.apply( Methods.GET_MODEL_FOR_CAR_LIST ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_CAR_LIST, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_CAR_LIST, value ) )
-            .doOnSubscribe( value -> super.logging( this.getConfig().getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
+            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
             .onErrorReturn( new ModelForCarList( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
@@ -492,7 +488,7 @@ public class SerDes extends LogInspector implements Runnable {
         try { this.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList( Unirest.get(
-                                    this.getConfig().getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
+                                    super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
                                             psychologyCard
                                                     .getPapilonData()
                                                     .get( 0 )
@@ -517,7 +513,7 @@ public class SerDes extends LogInspector implements Runnable {
     private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForFio() ) )
             .post()
-            .uri( this.getConfig().getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
+            .uri( super.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
             .send( ByteBufFlux.fromString( Mono.just( this.getGson().toJson( new RequestForFio( fio ) ) ) ) )
             .responseSingle( ( res, content ) -> res.status().code() == 401
                     ? this.updateTokens().getGetPersonTotalDataByFIO().apply( fio )
@@ -527,7 +523,7 @@ public class SerDes extends LogInspector implements Runnable {
                     .map( s -> {
                         PersonTotalDataByFIO person = this.getGson()
                                 .fromJson( s, PersonTotalDataByFIO.class );
-                        if ( person != null && person.getData().size() > 0 ) person
+                        if ( person != null && super.getCheckList().test( person.getData() ) ) person
                                 .getData()
                                 .parallelStream()
                                 .forEach( person1 -> this.getGetImageByPinfl()
