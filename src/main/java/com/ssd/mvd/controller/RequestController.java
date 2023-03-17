@@ -22,7 +22,7 @@ public class RequestController extends LogInspector {
     @MessageMapping ( value = "ping" )
     public Mono< Boolean > ping () { return Mono.just( true ); }
 
-    @MessageMapping ( value = "getPersonTotalDataByFIO" ) // возвращает данные по ФИО человека
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
         return SerDes.getSerDes().getFlag()
                 ? SerDes
