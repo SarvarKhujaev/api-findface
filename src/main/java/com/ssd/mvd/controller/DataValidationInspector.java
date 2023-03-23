@@ -1,18 +1,19 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
+import com.ssd.mvd.entity.modelForCadastr.Person;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.entity.CarTotalData;
+import com.ssd.mvd.entity.Pinpp;
 
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.ByteBufMono;
-import lombok.Data;
 
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.List;
 
-@Data
+@lombok.Data
 public class DataValidationInspector {
     public final Predicate< String > checkParam = param -> param != null && !param.isEmpty();
 
@@ -54,4 +55,8 @@ public class DataValidationInspector {
         default -> psychologyCard.getPinpp() != null
                 && psychologyCard.getPinpp().getCadastre() != null
                 && psychologyCard.getPinpp().getCadastre().length() > 1; };
+
+    public final BiFunction< Person, Pinpp, Boolean > checkPerson = ( person, pinpp ) ->
+            person.getPDateBirth().equals( pinpp.getBirthDate() )
+            && person.getPPerson().contains( pinpp.getName() );
 }

@@ -463,16 +463,7 @@ public class SerDes extends Config implements Runnable {
                                     .getPermanentRegistration()
                                     .size() )
                             .runOn( Schedulers.parallel() )
-                            .filter( person -> person
-                                    .getPDateBirth()
-                                    .equals( psychologyCard
-                                            .getPinpp()
-                                            .getBirthDate() )
-                                    && person
-                                    .getPPerson()
-                                    .contains( psychologyCard
-                                            .getPinpp()
-                                            .getName() ) )
+                            .filter( person -> super.getCheckPerson().apply( person, psychologyCard.getPinpp() ) )
                             .sequential()
                             .publishOn( Schedulers.single() )
                             .take( 1 )
