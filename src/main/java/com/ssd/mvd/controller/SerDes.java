@@ -449,8 +449,7 @@ public class SerDes extends Config implements Runnable {
                     : Mono.just( psychologyCard );
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
-            this.getCheckData()
-                    .apply( 0, psychologyCard )
+            this.getCheckData().apply( 0, psychologyCard )
                     ? this.getGetCadaster()
                     .apply( psychologyCard.getPinpp().getCadastre() )
                     .flatMap( data -> this.getCheckData()
@@ -468,7 +467,12 @@ public class SerDes extends Config implements Runnable {
                                     .getPDateBirth()
                                     .equals( psychologyCard
                                             .getPinpp()
-                                            .getBirthDate() ) )
+                                            .getBirthDate() )
+                                    && person
+                                    .getPPerson()
+                                    .contains( psychologyCard
+                                            .getPinpp()
+                                            .getName() ) )
                             .sequential()
                             .publishOn( Schedulers.single() )
                             .take( 1 )
