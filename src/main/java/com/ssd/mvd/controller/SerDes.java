@@ -144,7 +144,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Pinpp.class ) )
                         : Mono.just( new Pinpp ( super.getDataNotFoundErrorResponse.apply( pinfl ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_PINPP ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_PINPP, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -169,7 +169,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> this.getGson().fromJson( s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
                         : Mono.just( new Data ( super.getDataNotFoundErrorResponse.apply( cadaster ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.CADASTER ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.CADASTER, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -194,7 +194,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.indexOf( ",\"AnswereId" ) - 1 ) )
                         : Mono.just( Errors.DATA_NOT_FOUND.name() ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_IMAGE_BY_PINFL ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -221,7 +221,7 @@ public class SerDes extends Config implements Runnable {
                                 s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ),
                                 ModelForAddress.class ) )
                         : Mono.just( new ModelForAddress ( super.getDataNotFoundErrorResponse.apply( pinfl ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_ADDRESS ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -251,7 +251,7 @@ public class SerDes extends Config implements Runnable {
                                 .map( s -> this.getGson().fromJson( s, com.ssd.mvd.entity.modelForPassport.ModelForPassport.class ) )
                                 : Mono.just( new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
                                         super.getDataNotFoundErrorResponse.apply( SerialNumber + " : " + SerialNumber ) ) ); } )
-                    .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+                    .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                             .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_PASSPORT ) )
                             .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, retrySignal ) )
                             .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -282,7 +282,7 @@ public class SerDes extends Config implements Runnable {
                                 ? this.getGson().fromJson( s, Insurance.class )
                                 : new Insurance( super.getDataNotFoundErrorResponse.apply( gosno ) ) )
                         : Mono.just( new Insurance ( super.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_INSURANCE ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_INSURANCE, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -308,7 +308,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
                         : Mono.just( new ModelForCar ( super.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VEHILE_DATA ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_VEHILE_DATA, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -327,14 +327,13 @@ public class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_TONIROVKA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetVehicleTonirovka().apply( gosno );
-                case 501 | 502 | 503 -> ( Mono< Tonirovka > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_TONIROVKA );
+                case 501 | 502 | 503 -> ( Mono< Tonirovka > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_TONIROVKA );
                 default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
                         : Mono.just( new Tonirovka ( super.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_TONIROVKA ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_TONIROVKA, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -360,7 +359,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> new ViolationsList( this.stringToArrayList( s, ViolationsInformation[].class ) ) )
                         : Mono.just( new ViolationsList ( super.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VIOLATION_LIST ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_VIOLATION_LIST, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -386,7 +385,7 @@ public class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> new DoverennostList( this.stringToArrayList( s, Doverennost[].class ) ) )
                         : Mono.just( new DoverennostList ( super.getDataNotFoundErrorResponse.apply( gosno ) ) ); } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                     .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_DOVERENNOST_LIST ) )
                     .doAfterRetry( retrySignal -> super.logging( Methods.GET_DOVERENNOST_LIST, retrySignal ) )
                     .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
@@ -547,6 +546,16 @@ public class SerDes extends Config implements Runnable {
                             .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
                     : Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
+    private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinflInitial =
+            apiResponseModel -> this.getCheckParam()
+                    .test( apiResponseModel.getStatus().getMessage() )
+                    ? Mono.zip(
+                            this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
+                            this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) )
+                    .map( PsychologyCard::new )
+                    .flatMap( psychologyCard -> this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
+                    : Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
+
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
                     this.getGetPinpp().apply(
@@ -570,6 +579,21 @@ public class SerDes extends Config implements Runnable {
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
                             .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) );
 
+    private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImageInitial =
+            ( results, apiResponseModel ) -> Mono.zip(
+                            this.getGetPinpp().apply(
+                                    results
+                                            .getResults()
+                                            .get( 0 )
+                                            .getPersonal_code() ),
+                            this.getGetImageByPinfl().apply(
+                                    results
+                                            .getResults()
+                                            .get( 0 )
+                                            .getPersonal_code() ) )
+                    .map( tuple -> new PsychologyCard( results, tuple ) )
+                    .flatMap( psychologyCard -> this.getSetPersonPrivateDataAsync().apply( psychologyCard ) );
+
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> this.getCheckPassport().test( data )
             ? Mono.zip(
@@ -584,6 +608,14 @@ public class SerDes extends Config implements Runnable {
             .map( tuple -> new PsychologyCard( data, tuple ) )
             .flatMap( psychologyCard -> this.getFindAllDataAboutCar().apply( psychologyCard )
                     .map( psychologyCard1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
+            : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
+
+    private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
+            getPsychologyCardByDataInitial = ( data, apiResponseModel ) -> this.getCheckPassport().test( data )
+            ? Mono.zip(
+                    this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
+                    this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ) )
+            .map( tuple -> new PsychologyCard( data, tuple ) )
             : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
 
     @Override

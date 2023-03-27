@@ -45,6 +45,12 @@ public class PsychologyCard {
 
     public PsychologyCard ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
+    public PsychologyCard( Results results, Tuple2< Pinpp, String > tuple ) {
+        this.setViolationList( results.getViolationList() );
+        this.setPapilonData( results.getResults() );
+        this.setPersonImage( tuple.getT2() );
+        this.setPinpp( tuple.getT1() ); }
+
     public PsychologyCard ( Results results,
                             Tuple3<
                                     Pinpp,
@@ -56,6 +62,14 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 
+    // for Passport request
+    public PsychologyCard( ModelForPassport data,
+                           Tuple2< Pinpp, String> tuple ) {
+        this.setPersonImage( tuple.getT2() );
+        this.setModelForPassport( data );
+        this.setPinpp( tuple.getT1() ); }
+
+    // for Passport request
     public PsychologyCard ( ModelForPassport data,
                             Tuple5<
                                     Pinpp,
@@ -71,6 +85,7 @@ public class PsychologyCard {
         this.setModelForPassport( data );
         this.setPinpp( tuple.getT1() ); }
 
+    // for PINFL request
     public PsychologyCard ( Tuple4<
                 Pinpp,
                 String,
@@ -78,6 +93,11 @@ public class PsychologyCard {
                 List > tuple ) {
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT4() );
+        this.setPersonImage( tuple.getT2() );
+        this.setPinpp( tuple.getT1() ); }
+
+    // for PINFL request
+    public PsychologyCard ( Tuple2< Pinpp, String > tuple ) {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 }
