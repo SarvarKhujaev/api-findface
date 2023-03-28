@@ -2,11 +2,9 @@ package com.ssd.mvd.entity;
 
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.modelForGai.*;
-
 import reactor.util.function.Tuple5;
-import lombok.Data;
 
-@Data
+@lombok.Data
 public class CarTotalData {
     private String gosNumber;
     private String cameraImage; // image which was made by camera
@@ -25,9 +23,9 @@ public class CarTotalData {
         this.setPsychologyCard( psychologyCard );
         return this; }
 
-    public CarTotalData( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public CarTotalData( Tuple5<
+    public CarTotalData ( Tuple5<
             Tonirovka,
             ModelForCar,
             DoverennostList,

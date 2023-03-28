@@ -5,13 +5,11 @@ import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
 
-import lombok.NoArgsConstructor;
 import reactor.util.function.*;
 import java.util.List;
-import lombok.Data;
 
-@Data
-@NoArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
 public class PsychologyCard {
     private Pinpp pinpp;
     private String personImage; // the image of the person

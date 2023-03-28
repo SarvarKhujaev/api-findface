@@ -1,15 +1,13 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import reactor.util.function.Tuple3;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class ModelForCar {
     private String Stir;
     private String Year;
@@ -47,6 +45,15 @@ public class ModelForCar {
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
         return psychologyCard; }
+
+    public ModelForCarList save (Tuple3<
+            Insurance,
+            Tonirovka,
+            DoverennostList > tuple3, ModelForCarList modelForCarList ) {
+        this.setDoverennostList( tuple3.getT3() );
+        this.setInsurance( tuple3.getT1() );
+        this.setTonirovka( tuple3.getT2() );
+        return modelForCarList; }
 
     public ModelForCar ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

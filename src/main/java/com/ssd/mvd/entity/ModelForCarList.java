@@ -5,15 +5,12 @@ import com.ssd.mvd.entity.modelForGai.ModelForCar;
 import com.ssd.mvd.constants.ErrorResponse;
 
 import lombok.extern.jackson.Jacksonized;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import java.util.List;
-import lombok.Data;
 
-@Data
+@lombok.Data
 @Jacksonized
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class ModelForCarList {
     private ErrorResponse errorResponse;
     @JsonDeserialize

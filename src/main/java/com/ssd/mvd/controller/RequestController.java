@@ -229,8 +229,8 @@ public class RequestController extends LogInspector {
                 : Mono.just( new ArrayList() )
                 : Mono.just( new ArrayList() ); }
 
-    @MessageMapping ( value = "GET_CAR_DATA_BY_PINFL_INITIAL" ) // возвращает данные по номеру машины
-    public Mono< CarTotalData > GET_CAR_DATA_BY_PINFL_INITIAL ( ApiResponseModel apiResponseModel ) {
+    @MessageMapping ( value = "GET_CAR_DATA_BY_GOS_NUMBER_INITIAL" ) // используется при запросе по номеру машины
+    public Mono< CarTotalData > GET_CAR_DATA_BY_GOS_NUMBER_INITIAL ( ApiResponseModel apiResponseModel ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
@@ -261,6 +261,27 @@ public class RequestController extends LogInspector {
                 .onErrorReturn( new CarTotalData(
                         super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : Mono.just( new CarTotalData( super.getErrorResponse.get() ) ); }
+
+    @MessageMapping ( value = "GET_MODEL_FOR_CAR_LIST_INITIAL" ) // используется при запросе по пинфл человека
+    public Mono< ModelForCarList > GET_MODEL_FOR_CAR_LIST_INITIAL ( ApiResponseModel apiResponseModel ) {
+        super.logging( "PINFL in GET_CAR_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetModelForCarList()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                .flatMap( modelForCarList -> super.getCheckCarList().test( modelForCarList )
+                        ? SerDes
+                        .getSerDes()
+                        .getFindAllAboutCarList()
+                        .apply( modelForCarList )
+                        : Mono.just( modelForCarList ) )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> Mono.just( new ModelForCarList(
+                                super.getConnectionError.apply( throwable.getMessage() ) ) ) )
+                .onErrorReturn( new ModelForCarList(
+                        super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                : Mono.just( new ModelForCarList( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > GET_PERSONALINITIAL_CADASTOR ( ApiResponseModel apiResponseModel ) {

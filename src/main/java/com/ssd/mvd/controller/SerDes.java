@@ -424,9 +424,26 @@ public class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
             .onErrorReturn( new ModelForCarList( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
+    private final Function< ModelForCarList, Mono< ModelForCarList > > findAllAboutCarList = modelForCarList ->
+            Flux.fromStream( modelForCarList
+                            .getModelForCarList()
+                            .stream() )
+                    .parallel( modelForCarList
+                            .getModelForCarList()
+                            .size() )
+                    .runOn( Schedulers.parallel() )
+                    .flatMap( modelForCar -> Mono.zip(
+                            this.getInsurance().apply( modelForCar.getPlateNumber() ),
+                            this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                            this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
+                            .map( tuple3 -> modelForCar.save( tuple3, modelForCarList ) ) )
+                    .sequential()
+                    .publishOn( Schedulers.single() )
+                    .take( 1 )
+                    .single();
+
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
-            this.getCheckData()
-                    .apply( 1, psychologyCard )
+            super.getCheckData().apply( 1, psychologyCard )
                     ? Flux.fromStream( psychologyCard
                             .getModelForCarList()
                             .getModelForCarList()
@@ -437,9 +454,9 @@ public class SerDes extends Config implements Runnable {
                             .size() )
                     .runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
-                                    this.getInsurance().apply( modelForCar.getPlateNumber() ),
-                                    this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
-                                    this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
+                            this.getInsurance().apply( modelForCar.getPlateNumber() ),
+                            this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                            this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
                             .map( tuple3 -> modelForCar.save( tuple3, psychologyCard ) ) )
                     .sequential()
                     .publishOn( Schedulers.single() )
@@ -448,10 +465,10 @@ public class SerDes extends Config implements Runnable {
                     : Mono.just( psychologyCard );
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
-            this.getCheckData().apply( 0, psychologyCard )
+            super.getCheckData().apply( 0, psychologyCard )
                     ? this.getGetCadaster()
                     .apply( psychologyCard.getPinpp().getCadastre() )
-                    .flatMap( data -> this.getCheckData()
+                    .flatMap( data -> super.getCheckData()
                             .apply( 2, psychologyCard.save( data ) )
                             ? Flux.fromStream( psychologyCard
                                     .getModelForCadastr()
