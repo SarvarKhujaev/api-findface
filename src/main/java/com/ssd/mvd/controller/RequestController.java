@@ -363,6 +363,7 @@ public class RequestController extends LogInspector {
         if ( !super.getCheckParam().test( apiResponseModel.getStatus().getMessage() ) )
             return Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
+        super.logging( "Passport: " + strings[0] + " : " + strings[1] );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()

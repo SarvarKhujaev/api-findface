@@ -23,10 +23,10 @@ public class DataValidationInspector {
 
     public final Predicate< ModelForPassport > checkPassport = modelForPassport ->
             this.checkObject.test( modelForPassport )
-            && Predicate.not( this.checkObject ).test( modelForPassport.getData() )
-            && Predicate.not( this.checkObject ).test( modelForPassport.getData().getPerson() )
-            && Predicate.not( this.checkObject ).test( modelForPassport.getData().getPerson().getPinpp() )
-            && Predicate.not( this.checkObject ).test( modelForPassport.getData().getPerson().getPCitizen() );
+            && modelForPassport.getData() != null
+            && modelForPassport.getData().getPerson() != null
+            && modelForPassport.getData().getPerson().getPinpp() != null
+            && modelForPassport.getData().getPerson().getPCitizen() != null;
 
     public final Predicate< CarTotalData > checkCarTotalData = carTotalData ->
             this.checkObject.test( carTotalData.getModelForCar() )
