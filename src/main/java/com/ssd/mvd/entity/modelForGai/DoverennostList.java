@@ -2,9 +2,8 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.constants.ErrorResponse;
 import java.util.List;
-import lombok.Data;
 
-@Data
+@lombok.Data
 public class DoverennostList {
     private ErrorResponse errorResponse;
     private List< Doverennost > doverennostsList;

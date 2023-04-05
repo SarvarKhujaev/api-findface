@@ -3,11 +3,9 @@ package com.ssd.mvd.entityForLogging;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.constants.Errors;
-
 import java.util.Date;
-import lombok.Data;
 
-@Data
+@lombok.Data
 public class UserRequest {
     private Long createdAt;
     private PersonInfo personInfo;

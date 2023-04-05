@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import lombok.Data;
 
-@Data
+@lombok.Data
 @Jacksonized
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class ModelForAddress {
     private RequestGuid RequestGuid;
     private PermanentRegistration PermanentRegistration;
@@ -24,5 +24,5 @@ public class ModelForAddress {
 
     private ErrorResponse errorResponse;
 
-    public ModelForAddress( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ModelForAddress ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

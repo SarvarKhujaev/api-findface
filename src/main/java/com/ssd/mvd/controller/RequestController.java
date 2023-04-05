@@ -25,7 +25,7 @@ public class RequestController extends LogInspector {
     public Mono< Boolean > ping () { return Mono.just( true ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
-    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( FIO fio ) {
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( final FIO fio ) {
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()
@@ -39,7 +39,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new PersonTotalDataByFIO( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA" ) // возвращает данные по номеру машины
-    public Mono< CarTotalData > getCarTotalData ( ApiResponseModel apiResponseModel ) {
+    public Mono< CarTotalData > getCarTotalData ( final ApiResponseModel apiResponseModel ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
@@ -90,7 +90,7 @@ public class RequestController extends LogInspector {
 
     // возвращает данные по номеру машины в слуцчае если у человека роль IMITATION
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA_BY_PINFL" )
-    public Mono< CarTotalData > getCarTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
+    public Mono< CarTotalData > getCarTotalDataByPinfl ( final ApiResponseModel apiResponseModel ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
@@ -124,7 +124,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
-    public Mono< PsychologyCard > getPersonTotalData ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > getPersonTotalData ( final ApiResponseModel apiResponseModel ) {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
         base64url = base64url.split( "@" )[ 0 ];
@@ -157,7 +157,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR" ) // возвращает данные по номеру кадастра
-    public Flux< PsychologyCard > getPersonalCadastor ( ApiResponseModel apiResponseModel ) {
+    public Flux< PsychologyCard > getPersonalCadastor ( final ApiResponseModel apiResponseModel ) {
         super.logging( "Cadaster value: " + apiResponseModel.getStatus().getMessage() );
         if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( super.getErrorResponse.get() ) );
         return SerDes
@@ -185,7 +185,7 @@ public class RequestController extends LogInspector {
                         : Flux.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" ) // возвращает данные по Пинфл
-    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > getPersonTotalDataByPinfl ( final ApiResponseModel apiResponseModel ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? super.getCheckParam().test( apiResponseModel.getStatus().getMessage() )
@@ -199,7 +199,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
-    public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( final ApiResponseModel apiResponseModel ) {
         if ( !super.getCheckParam().test( apiResponseModel.getStatus().getMessage() ) )
             return Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
@@ -220,7 +220,7 @@ public class RequestController extends LogInspector {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" )
-    public Mono< List > GET_VIOLATION_LIST_BY_PINFL ( ApiResponseModel apiResponseModel ) {
+    public Mono< List > GET_VIOLATION_LIST_BY_PINFL ( final ApiResponseModel apiResponseModel ) {
         return SerDes.getSerDes().getFlag()
                 ? super.checkParam.test( apiResponseModel.getStatus().getMessage() )
                 ? FindFaceComponent
@@ -230,7 +230,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new ArrayList() ); }
 
     @MessageMapping ( value = "GET_CAR_DATA_BY_GOS_NUMBER_INITIAL" ) // используется при запросе по номеру машины
-    public Mono< CarTotalData > GET_CAR_DATA_BY_GOS_NUMBER_INITIAL ( ApiResponseModel apiResponseModel ) {
+    public Mono< CarTotalData > GET_CAR_DATA_BY_GOS_NUMBER_INITIAL ( final ApiResponseModel apiResponseModel ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? Mono.zip(
@@ -263,7 +263,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_MODEL_FOR_CAR_LIST_INITIAL" ) // используется при запросе по пинфл человека
-    public Mono< ModelForCarList > GET_MODEL_FOR_CAR_LIST_INITIAL ( ApiResponseModel apiResponseModel ) {
+    public Mono< ModelForCarList > GET_MODEL_FOR_CAR_LIST_INITIAL ( final ApiResponseModel apiResponseModel ) {
         super.logging( "PINFL in GET_CAR_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
@@ -284,7 +284,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new ModelForCarList( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" ) // возвращает данные по номеру кадастра
-    public Flux< PsychologyCard > GET_PERSONALINITIAL_CADASTOR ( ApiResponseModel apiResponseModel ) {
+    public Flux< PsychologyCard > GET_PERSONALINITIAL_CADASTOR ( final ApiResponseModel apiResponseModel ) {
         super.logging( "Cadaster value in GET_PERSONALINITIAL_CADASTOR: " + apiResponseModel.getStatus().getMessage() );
         if ( !SerDes.getSerDes().getFlag() ) return Flux.just( new PsychologyCard( super.getErrorResponse.get() ) );
         return SerDes
@@ -312,7 +312,7 @@ public class RequestController extends LogInspector {
                         : Flux.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( apiResponseModel.getStatus().getMessage() ) ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_INITIAL" ) // возвращает данные по фотографии
-    public Mono< PsychologyCard > GET_PERSON_INITIAL_TOTAL_DATA ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > GET_PERSON_INITIAL_TOTAL_DATA ( final ApiResponseModel apiResponseModel ) {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
         base64url = base64url.split( "@" )[ 0 ];
@@ -345,7 +345,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL" ) // возвращает данные по Пинфл
-    public Mono< PsychologyCard > GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL ( final ApiResponseModel apiResponseModel ) {
         super.logging( "PINFL in GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? super.getCheckParam().test( apiResponseModel.getStatus().getMessage() )
@@ -359,7 +359,7 @@ public class RequestController extends LogInspector {
                 : Mono.just( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_DATA_BY_PASSPORT_AND_BIRTHDATE_INITIAL" ) // возвращает данные по номеру паспорта
-    public Mono< PsychologyCard > GET_PERSON_INITIAL_DATA_BY_PASSPORT_AND_BIRTHDATE ( ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > GET_PERSON_INITIAL_DATA_BY_PASSPORT_AND_BIRTHDATE ( final ApiResponseModel apiResponseModel ) {
         if ( !super.getCheckParam().test( apiResponseModel.getStatus().getMessage() ) )
             return Mono.just( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
         String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );

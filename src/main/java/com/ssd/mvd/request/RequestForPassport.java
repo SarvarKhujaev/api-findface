@@ -1,8 +1,6 @@
 package com.ssd.mvd.request;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public class RequestForPassport {
     private final String SerialNumber;
     private final String BirthDate;

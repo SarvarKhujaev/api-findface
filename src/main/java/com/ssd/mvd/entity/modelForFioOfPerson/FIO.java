@@ -1,13 +1,10 @@
 package com.ssd.mvd.entity.modelForFioOfPerson;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import com.ssd.mvd.entity.User;
-import lombok.Data;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class FIO {
     private User user;
     private String name;

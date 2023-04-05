@@ -4,13 +4,9 @@ import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.controller.SerDes;
 import com.ssd.mvd.constants.Errors;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class PersonInfo {
     private String pinfl;
     private String photo;

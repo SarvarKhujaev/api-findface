@@ -1,8 +1,6 @@
 package com.ssd.mvd.entity.modelForGai;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public class Doverennost {
     private String DateBegin;
     private String DateValid;

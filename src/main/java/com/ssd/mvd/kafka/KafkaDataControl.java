@@ -1,6 +1,5 @@
 package com.ssd.mvd.kafka;
 
-import lombok.Data;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.function.Supplier;
@@ -14,7 +13,7 @@ import reactor.kafka.sender.SenderOptions;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-@Data
+@lombok.Data
 public class KafkaDataControl {
     private static KafkaDataControl instance = new KafkaDataControl();
     private final Logger logger = Logger.getLogger( KafkaDataControl.class.toString() );

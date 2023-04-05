@@ -1,12 +1,8 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class pStatus {
     private Integer Id;
     private String Value;

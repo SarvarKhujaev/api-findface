@@ -1,8 +1,6 @@
 package com.ssd.mvd.request;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public class RequestForModelOfAddress {
     private final String Pcitizen;
 

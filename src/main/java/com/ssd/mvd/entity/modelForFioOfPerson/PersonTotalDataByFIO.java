@@ -3,16 +3,14 @@ package com.ssd.mvd.entity.modelForFioOfPerson;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ssd.mvd.constants.ErrorResponse;
-import lombok.extern.jackson.Jacksonized;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import java.util.List;
-import lombok.Data;
 
-@Data
+import lombok.extern.jackson.Jacksonized;
+import java.util.List;
+
+@lombok.Data
 @Jacksonized
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class PersonTotalDataByFIO {
     private Integer AnswereId;

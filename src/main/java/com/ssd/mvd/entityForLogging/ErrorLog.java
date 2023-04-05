@@ -1,10 +1,7 @@
 package com.ssd.mvd.entityForLogging;
 
-import lombok.Builder;
-import lombok.Data;
-
-@Data
-@Builder
+@lombok.Data
+@lombok.Builder
 public class ErrorLog {
     private Long createdAt;
     private String errorMessage;

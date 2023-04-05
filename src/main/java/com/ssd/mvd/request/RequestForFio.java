@@ -2,9 +2,8 @@ package com.ssd.mvd.request;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import java.util.Locale;
-import lombok.Data;
 
-@Data
+@lombok.Data
 public class RequestForFio {
     private final String Name;
     private final String Surname;

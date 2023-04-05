@@ -1,8 +1,6 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public class ModelForCadastor {
     private com.ssd.mvd.entity.modelForCadastr.Data Data;
 }

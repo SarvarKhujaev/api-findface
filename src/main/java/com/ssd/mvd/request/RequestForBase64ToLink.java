@@ -1,8 +1,6 @@
 package com.ssd.mvd.request;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public final class RequestForBase64ToLink {
     private final String serviceName;
     private final String photo;

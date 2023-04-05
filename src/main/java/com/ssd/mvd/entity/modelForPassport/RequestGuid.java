@@ -1,6 +1,4 @@
 package com.ssd.mvd.entity.modelForPassport;
 
-import lombok.Data;
-
-@Data
+@lombok.Data
 public class RequestGuid {}

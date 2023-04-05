@@ -2,13 +2,10 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class TexPassport {
     private Double weight; // вес без груза
     private Double totalWeight; // общий вес
