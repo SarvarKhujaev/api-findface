@@ -19,13 +19,13 @@ public class CarTotalData {
 
     private ErrorResponse errorResponse;
 
-    public CarTotalData save ( PsychologyCard psychologyCard ) {
+    public CarTotalData save ( final PsychologyCard psychologyCard ) {
         this.setPsychologyCard( psychologyCard );
         return this; }
 
-    public CarTotalData ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public CarTotalData ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public CarTotalData ( Tuple5<
+    public CarTotalData ( final Tuple5<
             Tonirovka,
             ModelForCar,
             DoverennostList,

@@ -20,5 +20,5 @@ public class Pinpp {
 
     private ErrorResponse errorResponse;
 
-    public Pinpp( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public Pinpp ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

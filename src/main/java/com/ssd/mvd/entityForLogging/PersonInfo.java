@@ -16,7 +16,7 @@ public class PersonInfo {
     private String birthDate;
     private String passportNumber;
 
-    public PersonInfo ( PsychologyCard psychologyCard ) {
+    public PersonInfo ( final PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
             this.setFullname( psychologyCard.getPinpp() != null ?
                     ( psychologyCard

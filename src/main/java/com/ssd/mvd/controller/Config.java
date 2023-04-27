@@ -4,6 +4,10 @@ import com.ssd.mvd.FindFaceServiceApplication;
 
 @lombok.Data
 public class Config extends LogInspector {
+    // how many minutes to wait for Thread in SerDes class
+    // 180 mins by default
+    private Integer waitingMins = 180;
+
     private final String API_FOR_GAI_TOKEN = FindFaceServiceApplication
             .context
             .getEnvironment()
@@ -113,4 +117,29 @@ public class Config extends LogInspector {
             .context
             .getEnvironment()
             .getProperty( "variables.OVIR_VARIABLES.BASE64_IMAGE_TO_LINK_CONVERTER_API" );
+
+    private final String KAFKA_BROKER = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.KAFKA_VARIABLES.KAFKA_BROKER" );
+
+    private final String GROUP_ID_FOR_KAFKA = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.KAFKA_VARIABLES.GROUP_ID_FOR_KAFKA" );
+
+    private final String ERROR_LOGS = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.KAFKA_VARIABLES.ERROR_LOGS" );
+
+    private final String ADMIN_PANEL = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.KAFKA_VARIABLES.ADMIN_PANEL" );
+
+    private final String ADMIN_PANEL_ERROR_LOG = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.KAFKA_VARIABLES.ADMIN_PANEL_ERROR_LOG" );
 }

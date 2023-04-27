@@ -23,11 +23,13 @@ import java.util.Date;
 public class ErrorController extends DataValidationInspector {
     private final Notification notification = new Notification();
 
-    public final Supplier< ErrorResponse > getErrorResponse = () -> ErrorResponse
-            .builder()
-            .message( "GAI token is unavailable" )
-            .errors( Errors.GAI_TOKEN_ERROR )
-            .build();
+    public final Supplier< ErrorResponse > getErrorResponse = () -> {
+            SerDes.getSerDes().updateTokens();
+            return ErrorResponse
+                    .builder()
+                    .message( "GAI token is unavailable" )
+                    .errors( Errors.GAI_TOKEN_ERROR )
+                    .build(); };
 
     // используется когда внешние сервисы возвращают 500 ошибку
     public final Function< String, ErrorResponse> getExternalServiceErrorResponse = error -> ErrorResponse

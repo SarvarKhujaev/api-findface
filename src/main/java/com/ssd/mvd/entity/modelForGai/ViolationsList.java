@@ -16,7 +16,7 @@ public class ViolationsList {
 
     private ErrorResponse errorResponse;
 
-    public ViolationsList ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ViolationsList ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public ViolationsList ( List< ViolationsInformation > violationsInformationsList ) { this.setViolationsInformationsList( violationsInformationsList ); }
+    public ViolationsList ( final List< ViolationsInformation > violationsInformationsList ) { this.setViolationsInformationsList( violationsInformationsList ); }
 }

@@ -46,6 +46,7 @@ public class SerDes extends Config implements Runnable {
     private String tokenForFio;
     private String tokenForPassport;
 
+    private Thread thread;
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = HttpClient
@@ -74,9 +75,11 @@ public class SerDes extends Config implements Runnable {
             public <T> T readValue( String s, Class<T> aClass ) {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
-        this.getHeaders().put( "accept", "application/json" ); }
+        this.getHeaders().put( "accept", "application/json" );
+        this.setThread( new Thread( this, this.getClass().getName() ) );
+        this.getThread().start(); }
 
-    private SerDes updateTokens () {
+    public SerDes updateTokens () {
         super.logging( "Updating tokens..." );
         this.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
         this.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
@@ -88,10 +91,12 @@ public class SerDes extends Config implements Runnable {
                 .getObject()
                 .get( "access_token" ) ) );
             this.setTokenForPassport( this.getTokenForGai() );
+            super.setWaitingMins( 180 );
             this.setFlag( true );
             return this; }
         catch ( UnirestException e ) {
             this.setFlag( false );
+            super.setWaitingMins( 3 );
             super.saveErrorLog( e.getMessage() );
             super.saveErrorLog( Methods.UPDATE_TOKENS.name(),
                             "access_token",
@@ -110,7 +115,7 @@ public class SerDes extends Config implements Runnable {
 
     private final Function< String, String > base64ToLink = base64 -> {
         this.getFields().clear();
-        HttpResponse< JsonNode > response;
+        final HttpResponse< JsonNode > response;
         this.getFields().put( "photo", base64 );
         this.getFields().put( "serviceName", "psychologyCard" );
         try { super.logging( "Converting image to Link in: " + Methods.CONVERT_BASE64_TO_LINK );
@@ -301,8 +306,7 @@ public class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_VEHICLE_DATA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetVehicleData().apply( gosno );
-                case 501 | 502 | 503 -> ( Mono< ModelForCar > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_VEHILE_DATA );
+                case 501 | 502 | 503 -> ( Mono< ModelForCar > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_VEHILE_DATA );
                 default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
@@ -352,8 +356,7 @@ public class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_VIOLATION_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetViolationList().apply( gosno );
-                case 501 | 502 | 503 -> ( Mono< ViolationsList > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_VIOLATION_LIST );
+                case 501 | 502 | 503 -> ( Mono< ViolationsList > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_VIOLATION_LIST );
                 default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
@@ -378,8 +381,7 @@ public class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getGetDoverennostList().apply( gosno );
-                case 501 | 502 | 503 -> ( Mono< DoverennostList > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_DOVERENNOST_LIST );
+                case 501 | 502 | 503 -> ( Mono< DoverennostList > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_DOVERENNOST_LIST );
                 default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
@@ -404,8 +406,7 @@ public class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.updateTokens().getModelForCarList.apply( pinfl );
-                case 501 | 502 | 503 -> ( Mono< ModelForCarList > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_MODEL_FOR_CAR_LIST );
+                case 501 | 502 | 503 -> ( Mono< ModelForCarList > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_MODEL_FOR_CAR_LIST );
                 default -> super.getCheckResponse().apply( res, content )
                         ? content
                         .asString()
@@ -428,9 +429,10 @@ public class SerDes extends Config implements Runnable {
             Flux.fromStream( modelForCarList
                             .getModelForCarList()
                             .stream() )
-                    .parallel( modelForCarList
-                            .getModelForCarList()
-                            .size() )
+                    .parallel( super.getCheckDifference().apply(
+                            modelForCarList
+                                    .getModelForCarList()
+                                    .size() ) )
                     .runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
                             this.getInsurance().apply( modelForCar.getPlateNumber() ),
@@ -448,10 +450,11 @@ public class SerDes extends Config implements Runnable {
                             .getModelForCarList()
                             .getModelForCarList()
                             .stream() )
-                    .parallel( psychologyCard
-                            .getModelForCarList()
-                            .getModelForCarList()
-                            .size() )
+                    .parallel( super.getCheckDifference().apply(
+                            psychologyCard
+                                    .getModelForCarList()
+                                    .getModelForCarList()
+                                    .size() ) )
                     .runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
                             this.getInsurance().apply( modelForCar.getPlateNumber() ),
@@ -466,18 +469,17 @@ public class SerDes extends Config implements Runnable {
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > setPersonPrivateDataAsync = psychologyCard ->
             super.getCheckData().apply( 0, psychologyCard )
-                    ? this.getGetCadaster()
-                    .apply( psychologyCard.getPinpp().getCadastre() )
-                    .flatMap( data -> super.getCheckData()
-                            .apply( 2, psychologyCard.save( data ) )
+                    ? this.getGetCadaster().apply( psychologyCard.getPinpp().getCadastre() )
+                    .flatMap( data -> super.getCheckData().apply( 2, psychologyCard.save( data ) )
                             ? Flux.fromStream( psychologyCard
                                     .getModelForCadastr()
                                     .getPermanentRegistration()
                                     .stream() )
-                            .parallel( psychologyCard
-                                    .getModelForCadastr()
-                                    .getPermanentRegistration()
-                                    .size() )
+                            .parallel( super.getCheckDifference().apply(
+                                    psychologyCard
+                                            .getModelForCadastr()
+                                            .getPermanentRegistration()
+                                            .size() ) )
                             .runOn( Schedulers.parallel() )
                             .filter( person -> super.getCheckPerson().apply( person, psychologyCard.getPinpp() ) )
                             .sequential()
@@ -532,15 +534,14 @@ public class SerDes extends Config implements Runnable {
                     ? content
                     .asString()
                     .map( s -> {
-                        PersonTotalDataByFIO person = this.getGson()
-                                .fromJson( s, PersonTotalDataByFIO.class );
-                        if ( person != null && super.getCheckList().test( person.getData() ) ) person
+                        final PersonTotalDataByFIO person = this.getGson().fromJson( s, PersonTotalDataByFIO.class );
+                        if ( super.getCheckObject().test( person ) && super.getCheckData().apply( 5, person.getData() ) ) person
                                 .getData()
                                 .parallelStream()
                                 .forEach( person1 -> this.getGetImageByPinfl()
                                         .apply( person1.getPinpp() )
                                         .subscribe( person1::setPersonImage ) );
-                        return person != null ? person : new PersonTotalDataByFIO(); } )
+                        return super.getCheckObject().test( person ) ? person : new PersonTotalDataByFIO(); } )
                     : Mono.just( new PersonTotalDataByFIO( super.getDataNotFoundErrorResponse.apply( fio.getName() ) ) ) )
             .doOnError( e -> super.logging( e, Methods.GET_DATA_BY_FIO, fio.getName() ) )
             .onErrorReturn( new PersonTotalDataByFIO( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
@@ -554,7 +555,8 @@ public class SerDes extends Config implements Runnable {
                             this.getGetModelForCarList().apply( apiResponseModel.getStatus().getMessage() ),
                             FindFaceComponent
                                     .getInstance()
-                                    .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                                    .getGetViolationListByPinfl()
+                                    .apply( apiResponseModel.getStatus().getMessage() )
                                     .onErrorReturn( new ArrayList() ) )
                     .map( PsychologyCard::new )
                     .flatMap( psychologyCard -> Mono.zip(
@@ -598,21 +600,21 @@ public class SerDes extends Config implements Runnable {
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImageInitial =
             ( results, apiResponseModel ) -> Mono.zip(
-                            this.getGetPinpp().apply(
-                                    results
-                                            .getResults()
-                                            .get( 0 )
-                                            .getPersonal_code() ),
-                            this.getGetImageByPinfl().apply(
-                                    results
-                                            .getResults()
-                                            .get( 0 )
-                                            .getPersonal_code() ) )
+                    this.getGetPinpp().apply(
+                            results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ),
+                    this.getGetImageByPinfl().apply(
+                            results
+                                    .getResults()
+                                    .get( 0 )
+                                    .getPersonal_code() ) )
                     .map( tuple -> new PsychologyCard( results, tuple ) )
                     .flatMap( psychologyCard -> this.getSetPersonPrivateDataAsync().apply( psychologyCard ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
-            getPsychologyCardByData = ( data, apiResponseModel ) -> this.getCheckPassport().test( data )
+            getPsychologyCardByData = ( data, apiResponseModel ) -> this.getCheckData().apply( 3, data )
             ? Mono.zip(
                     this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
                     this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ),
@@ -620,24 +622,34 @@ public class SerDes extends Config implements Runnable {
                     this.getGetModelForAddress().apply( data.getData().getPerson().getPCitizen() ),
                     FindFaceComponent
                             .getInstance()
-                            .getViolationListByPinfl( data.getData().getPerson().getPinpp() )
+                            .getGetViolationListByPinfl()
+                            .apply( data.getData().getPerson().getPinpp() )
                             .onErrorReturn( new ArrayList() ) )
             .map( tuple -> new PsychologyCard( data, tuple ) )
             .flatMap( psychologyCard -> this.getFindAllDataAboutCar().apply( psychologyCard )
                     .map( psychologyCard1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
-            : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
+            : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( data.getData().getPerson().getPinpp() ) ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
-            getPsychologyCardByDataInitial = ( data, apiResponseModel ) -> this.getCheckPassport().test( data )
+            getPsychologyCardByDataInitial = ( data, apiResponseModel ) -> this.getCheckData().apply( 3, data )
             ? Mono.zip(
                     this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
                     this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ) )
             .map( tuple -> new PsychologyCard( data, tuple ) )
-            : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( Errors.DATA_NOT_FOUND.name() ) ) );
+            : Mono.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( data.getData().getPerson().getPinpp() ) ) );
 
     @Override
     public void run () {
-        while ( serDes != null ) {
+        while ( this.getThread().isAlive() ) {
             this.updateTokens();
-            try { TimeUnit.HOURS.sleep( 3 ); } catch ( InterruptedException e ) { e.printStackTrace(); } } }
+            try {
+                super.logging( "Waiting for: " + super.getWaitingMins() + " mins" );
+                TimeUnit.MINUTES.sleep( super.getWaitingMins() ); }
+            catch ( InterruptedException e ) {
+                serDes = null;
+                this.setFlag( false );
+                this.getThread().stop();
+                super.logging( e, Methods.UPDATE_TOKENS, "" );
+                SerDes.getSerDes(); } }
+        SerDes.getSerDes(); }
 }

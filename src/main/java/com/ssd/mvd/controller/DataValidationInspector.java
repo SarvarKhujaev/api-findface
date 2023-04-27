@@ -11,61 +11,61 @@ import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.ByteBufMono;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.Objects;
 import java.util.List;
 
 @lombok.Data
 public class DataValidationInspector {
-    public final Predicate< Object > checkObject = Objects::nonNull;
+    private final Predicate< Object > checkObject = Objects::nonNull;
 
-    public final Predicate< String > checkParam = param -> param != null && !param.isEmpty();
+    private final Predicate< String > checkParam = param -> param != null && !param.isEmpty();
 
-    public final Predicate< ModelForPassport > checkPassport = modelForPassport ->
-            this.checkObject.test( modelForPassport )
-            && modelForPassport.getData() != null
-            && modelForPassport.getData().getPerson() != null
-            && modelForPassport.getData().getPerson().getPinpp() != null
-            && modelForPassport.getData().getPerson().getPCitizen() != null;
+    private final Function< Integer, Integer > checkDifference = integer -> integer > 0 && integer < 100 ? integer : 10;
 
-    public final Predicate< CarTotalData > checkCarTotalData = carTotalData ->
-            this.checkObject.test( carTotalData.getModelForCar() )
-            && this.checkObject.test( carTotalData.getModelForCar().getPinpp() )
-            && !carTotalData.getModelForCar().getPinpp().isEmpty();
+    private final BiFunction< HttpClientResponse, ByteBufMono, Boolean > checkResponse =
+            ( httpClientResponse, byteBufMono ) -> this.getCheckObject().test( byteBufMono )
+            && httpClientResponse.status().code() == 200;
 
-    public final Predicate< List< ? > > checkList = list -> this.checkObject.test( list ) && list.size() > 0;
-
-    public final BiFunction< HttpClientResponse, ByteBufMono, Boolean > checkResponse =
-            ( httpClientResponse, byteBufMono ) -> this.checkObject.test( byteBufMono ) && httpClientResponse.status().code() == 200;
-
-    public final BiFunction< Integer, PsychologyCard, Boolean > checkData = ( integer, psychologyCard ) -> switch ( integer ) {
-        case 1 -> this.checkObject.test( psychologyCard.getModelForCarList() )
-                && this.checkObject.test( psychologyCard
-                .getModelForCarList()
-                .getModelForCarList() )
-                && psychologyCard
-                .getModelForCarList()
-                .getModelForCarList()
-                .size() > 0;
-
-        case 2 -> this.checkObject.test( psychologyCard.getModelForCadastr() )
-                && this.checkObject.test( psychologyCard
-                .getModelForCadastr()
-                .getPermanentRegistration() )
-                && psychologyCard
-                .getModelForCadastr()
-                .getPermanentRegistration().size() > 0;
-
-        default -> this.checkObject.test( psychologyCard.getPinpp() )
-                && this.checkObject.test( psychologyCard.getPinpp().getCadastre() )
-                && psychologyCard.getPinpp().getCadastre().length() > 1; };
-
-    public final BiFunction< Person, Pinpp, Boolean > checkPerson = ( person, pinpp ) ->
+    private final BiFunction< Person, Pinpp, Boolean > checkPerson = ( person, pinpp ) ->
             person.getPDateBirth().equals( pinpp.getBirthDate() )
             && person.getPPerson().contains( pinpp.getName() );
 
-    public final Predicate< ModelForCarList > checkCarList = modelForCarList ->
-            this.checkObject.test( modelForCarList )
-            && this.checkObject.test( modelForCarList.getModelForCarList() )
-            && modelForCarList.getModelForCarList().size() > 0;
+    private final BiFunction< Integer, Object, Boolean > checkData = ( integer, o ) -> switch ( integer ) {
+            case 1 -> this.getCheckObject().test( ( (PsychologyCard) o ).getModelForCarList() )
+                    && this.getCheckObject().test( ( (PsychologyCard) o )
+                    .getModelForCarList()
+                    .getModelForCarList() )
+                    && ( (PsychologyCard) o )
+                    .getModelForCarList()
+                    .getModelForCarList()
+                    .size() > 0;
+
+            case 2 -> this.getCheckObject().test( ( (PsychologyCard) o).getModelForCadastr() )
+                    && this.getCheckObject().test( ( (PsychologyCard) o )
+                    .getModelForCadastr()
+                    .getPermanentRegistration() )
+                    && ( (PsychologyCard) o )
+                    .getModelForCadastr()
+                    .getPermanentRegistration().size() > 0;
+
+            case 3 -> this.getCheckObject().test( ( o ) )
+                    && ( (ModelForPassport) o ).getData() != null
+                    && ( (ModelForPassport) o ).getData().getPerson() != null
+                    && ( (ModelForPassport) o ).getData().getPerson().getPinpp() != null
+                    && ( (ModelForPassport) o ).getData().getPerson().getPCitizen() != null;
+
+            case 4 -> this.getCheckObject().test( ( (CarTotalData) o ).getModelForCar() )
+                    && this.getCheckObject().test( ( (CarTotalData) o ).getModelForCar().getPinpp() )
+                    && !( (CarTotalData) o ).getModelForCar().getPinpp().isEmpty();
+
+            case 5 -> this.getCheckObject().test( o ) && ( (List< ? >) o ).size() > 0;
+
+            case 6 -> this.getCheckObject().test( ( o ) )
+                    && this.getCheckData().apply( 5, ( (ModelForCarList) o ).getModelForCarList() );
+
+            default -> this.getCheckObject().test( ( (PsychologyCard) o ).getPinpp() )
+                    && this.getCheckObject().test( ( (PsychologyCard) o ).getPinpp().getCadastre() )
+                    && ( (PsychologyCard) o).getPinpp().getCadastre().length() > 1; };
 }

@@ -64,7 +64,7 @@ public class RequestController extends LogInspector {
                                 .getGetViolationList()
                                 .apply( apiResponseModel.getStatus().getMessage() ) )
                 .map( CarTotalData::new )
-                .flatMap( carTotalData -> super.getCheckCarTotalData().test( carTotalData )
+                .flatMap( carTotalData -> super.getCheckData().apply( 4, carTotalData )
                         ? SerDes
                         .getSerDes()
                         .getGetPsychologyCardByPinfl()
@@ -98,7 +98,7 @@ public class RequestController extends LogInspector {
                 .getGetModelForCarList()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .flatMap( modelForCarList -> modelForCarList != null
-                        && super.getCheckList().test( modelForCarList.getModelForCarList() )
+                        && super.getCheckData().apply( 5, modelForCarList.getModelForCarList() )
                         ? this.getCarTotalData(
                                 ApiResponseModel
                                         .builder()
@@ -131,8 +131,9 @@ public class RequestController extends LogInspector {
         return super.getCheckParam().test( base64url )
                 ? FindFaceComponent
                 .getInstance()
-                .getPapilonList( base64url )
-                .filter( results -> super.getCheckList().test( results.getResults() ) )
+                .getGetPapilonList()
+                .apply( base64url )
+                .filter( results -> super.getCheckData().apply( 5, results.getResults() ) )
                 .flatMap( results -> SerDes
                         .getSerDes()
                         .getFlag()
@@ -164,7 +165,7 @@ public class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> super.getCheckList().test( data.getPermanentRegistration() )
+                .flatMapMany( data -> super.getCheckData().apply( 5, data.getPermanentRegistration() )
                         ? Flux.fromStream( data
                                 .getPermanentRegistration()
                                 .stream() )
@@ -175,7 +176,7 @@ public class RequestController extends LogInspector {
                                 .flatMap( data1 -> SerDes
                                         .getSerDes()
                                         .getGetPsychologyCardByData()
-                                        .apply( data1, apiResponseModel )
+                                         .apply( data1, apiResponseModel )
                                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                                                 throwable -> Mono.just( new PsychologyCard(
                                                         super.getConnectionError.apply( throwable.getMessage() ) ) ) ) ) )
@@ -222,10 +223,11 @@ public class RequestController extends LogInspector {
     @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" )
     public Mono< List > GET_VIOLATION_LIST_BY_PINFL ( final ApiResponseModel apiResponseModel ) {
         return SerDes.getSerDes().getFlag()
-                ? super.checkParam.test( apiResponseModel.getStatus().getMessage() )
+                ? super.getCheckParam().test( apiResponseModel.getStatus().getMessage() )
                 ? FindFaceComponent
                 .getInstance()
-                .getViolationListByPinfl( apiResponseModel.getStatus().getMessage() )
+                .getGetViolationListByPinfl()
+                .apply( apiResponseModel.getStatus().getMessage() )
                 : Mono.just( new ArrayList() )
                 : Mono.just( new ArrayList() ); }
 
@@ -270,7 +272,7 @@ public class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetModelForCarList()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMap( modelForCarList -> super.getCheckCarList().test( modelForCarList )
+                .flatMap( modelForCarList -> super.getCheckData().apply( 6, modelForCarList )
                         ? SerDes
                         .getSerDes()
                         .getFindAllAboutCarList()
@@ -291,7 +293,7 @@ public class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> super.getCheckList().test( data.getPermanentRegistration() )
+                .flatMapMany( data -> super.getCheckData().apply( 5, data.getPermanentRegistration() )
                         ? Flux.fromStream( data
                                 .getPermanentRegistration()
                                 .stream() )
@@ -319,8 +321,9 @@ public class RequestController extends LogInspector {
         return super.getCheckParam().test( base64url )
                 ? FindFaceComponent
                 .getInstance()
-                .getPapilonList( base64url )
-                .filter( results -> super.getCheckList().test( results.getResults() ) )
+                .getGetPapilonList()
+                .apply( base64url )
+                .filter( results -> super.getCheckData().apply( 5, results.getResults() ) )
                 .flatMap( results -> SerDes
                         .getSerDes()
                         .getFlag()

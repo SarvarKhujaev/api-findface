@@ -12,5 +12,5 @@ public class Insurance {
 
     private ErrorResponse errorResponse;
 
-    public Insurance ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public Insurance ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

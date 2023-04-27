@@ -6,11 +6,7 @@ import com.ssd.mvd.entity.PermanentRegistration;
 import com.ssd.mvd.constants.ErrorResponse;
 
 import lombok.extern.jackson.Jacksonized;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
-import lombok.Data;
 
 @lombok.Data
 @Jacksonized
@@ -24,5 +20,5 @@ public class ModelForAddress {
 
     private ErrorResponse errorResponse;
 
-    public ModelForAddress ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ModelForAddress ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

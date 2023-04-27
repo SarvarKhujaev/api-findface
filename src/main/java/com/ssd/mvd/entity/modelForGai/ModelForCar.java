@@ -37,7 +37,7 @@ public class ModelForCar {
 
     private ErrorResponse errorResponse;
 
-    public PsychologyCard save ( Tuple3<
+    public PsychologyCard save ( final Tuple3<
             Insurance,
             Tonirovka,
             DoverennostList > tuple3, PsychologyCard psychologyCard ) {
@@ -46,14 +46,16 @@ public class ModelForCar {
         this.setTonirovka( tuple3.getT2() );
         return psychologyCard; }
 
-    public ModelForCarList save (Tuple3<
-            Insurance,
-            Tonirovka,
-            DoverennostList > tuple3, ModelForCarList modelForCarList ) {
+    public ModelForCarList save (
+            final Tuple3<
+                    Insurance,
+                    Tonirovka,
+                    DoverennostList > tuple3,
+            final ModelForCarList modelForCarList ) {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
         return modelForCarList; }
 
-    public ModelForCar ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ModelForCar ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

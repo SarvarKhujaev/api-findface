@@ -15,5 +15,5 @@ public class ModelForPassport {
 
     private ErrorResponse errorResponse;
 
-    public ModelForPassport ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ModelForPassport ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

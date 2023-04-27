@@ -16,7 +16,7 @@ public class ModelForCarList {
     @JsonDeserialize
     private List< ModelForCar > modelForCarList;
 
-    public ModelForCarList ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public ModelForCarList ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
-    public ModelForCarList ( List< ModelForCar > modelForCarList ) { this.setModelForCarList( modelForCarList ); }
+    public ModelForCarList ( final List< ModelForCar > modelForCarList ) { this.setModelForCarList( modelForCarList ); }
 }

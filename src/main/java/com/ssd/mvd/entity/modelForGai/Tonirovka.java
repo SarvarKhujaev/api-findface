@@ -17,5 +17,5 @@ public class Tonirovka {
 
     private ErrorResponse errorResponse;
 
-    public Tonirovka ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public Tonirovka ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

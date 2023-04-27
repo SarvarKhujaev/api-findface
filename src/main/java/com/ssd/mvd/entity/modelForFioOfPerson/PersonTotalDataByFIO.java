@@ -21,5 +21,5 @@ public class PersonTotalDataByFIO {
 
     private ErrorResponse errorResponse;
 
-    public PersonTotalDataByFIO ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public PersonTotalDataByFIO ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }

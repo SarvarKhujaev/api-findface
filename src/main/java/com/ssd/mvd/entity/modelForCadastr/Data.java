@@ -17,5 +17,5 @@ public class Data {
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
 
-    public Data ( ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public Data ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 }
