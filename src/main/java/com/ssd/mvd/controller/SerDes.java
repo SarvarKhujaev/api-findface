@@ -60,7 +60,7 @@ public class SerDes extends Config implements Runnable {
 
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
 
-    private <T> List<T> stringToArrayList ( String object, Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
+    private <T> List<T> stringToArrayList ( final String object, final Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
 
     private SerDes () {
         Unirest.setObjectMapper( new ObjectMapper() {
@@ -642,9 +642,7 @@ public class SerDes extends Config implements Runnable {
     public void run () {
         while ( this.getThread().isAlive() ) {
             this.updateTokens();
-            try {
-                super.logging( "Waiting for: " + super.getWaitingMins() + " mins" );
-                TimeUnit.MINUTES.sleep( super.getWaitingMins() ); }
+            try { TimeUnit.MINUTES.sleep( super.getWaitingMins() ); }
             catch ( InterruptedException e ) {
                 serDes = null;
                 this.setFlag( false );

@@ -64,13 +64,13 @@ public class ErrorController extends DataValidationInspector {
             .errors( Errors.TOO_MANY_RETRIES_ERROR )
             .build();
 
-    public Notification getNotification() { return this.notification; }
+    private Notification getNotification() { return this.notification; }
 
     // логирует любые ошибки
     public void saveErrorLog (
-            String methodName,
-            String params,
-            String reason ) {
+            final String methodName,
+            final String params,
+            final String reason ) {
         this.getNotification().setPinfl( params );
         this.getNotification().setReason( reason );
         this.getNotification().setMethodName( methodName );
@@ -84,7 +84,7 @@ public class ErrorController extends DataValidationInspector {
                         .toJson( this.getNotification() ) ); }
 
     // отправляет ошибку на сервис Шамсиддина, в случае если какой - либо сервис не отвечает
-    public void saveErrorLog ( String errorMessage ) {
+    public void saveErrorLog ( final String errorMessage ) {
         KafkaDataControl
                 .getInstance()
                 .getWriteToKafkaErrorLog()
@@ -101,30 +101,30 @@ public class ErrorController extends DataValidationInspector {
 
     // saves error from external service
     public final BiFunction< String, Methods, Mono< ? > > saveErrorLog = ( errorMessage, methods ) -> {
-        KafkaDataControl
-                .getInstance()
-                .getWriteToKafkaErrorLog()
-                .accept( SerDes
-                        .getSerDes()
-                        .getGson()
-                        .toJson( ErrorLog
-                                .builder()
-                                .errorMessage( errorMessage )
-                                .createdAt( new Date().getTime() )
-                                .integratedService( IntegratedServiceApis.OVIR.getName() )
-                                .integratedServiceApiDescription( IntegratedServiceApis.OVIR.getDescription() )
-                                .build() ) );
-        return Mono.just( switch ( methods ) {
-            case GET_MODEL_FOR_CAR_LIST -> new ModelForCarList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_MODEL_FOR_ADDRESS -> new ModelForAddress( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_DOVERENNOST_LIST -> new DoverennostList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_VIOLATION_LIST -> new ViolationsList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_VEHILE_DATA -> new ModelForCar( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_INSURANCE -> new Insurance( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_TONIROVKA -> new Tonirovka( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_PINPP -> new Pinpp( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case CADASTER -> new Data( this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            case GET_MODEL_FOR_PASSPORT -> new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
-                    this.getExternalServiceErrorResponse.apply( errorMessage ) );
-            default -> Errors.EXTERNAL_SERVICE_500_ERROR.name(); } ); };
+            KafkaDataControl
+                    .getInstance()
+                    .getWriteToKafkaErrorLog()
+                    .accept( SerDes
+                            .getSerDes()
+                            .getGson()
+                            .toJson( ErrorLog
+                                    .builder()
+                                    .errorMessage( errorMessage )
+                                    .createdAt( new Date().getTime() )
+                                    .integratedService( IntegratedServiceApis.OVIR.getName() )
+                                    .integratedServiceApiDescription( IntegratedServiceApis.OVIR.getDescription() )
+                                    .build() ) );
+            return Mono.just( switch ( methods ) {
+                case GET_MODEL_FOR_CAR_LIST -> new ModelForCarList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_MODEL_FOR_ADDRESS -> new ModelForAddress( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_DOVERENNOST_LIST -> new DoverennostList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_VIOLATION_LIST -> new ViolationsList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_VEHILE_DATA -> new ModelForCar( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_INSURANCE -> new Insurance( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_TONIROVKA -> new Tonirovka( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_PINPP -> new Pinpp( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case CADASTER -> new Data( this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                case GET_MODEL_FOR_PASSPORT -> new com.ssd.mvd.entity.modelForPassport.ModelForPassport(
+                        this.getExternalServiceErrorResponse.apply( errorMessage ) );
+                default -> Errors.EXTERNAL_SERVICE_500_ERROR.name(); } ); };
 }

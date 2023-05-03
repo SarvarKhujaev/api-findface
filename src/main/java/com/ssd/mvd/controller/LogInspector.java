@@ -12,9 +12,9 @@ public class LogInspector extends ErrorController {
 
     // log on error
     public void logging (
-            Throwable throwable,
-            Methods method,
-            String params ) {
+            final Throwable throwable,
+            final Methods method,
+            final String params ) {
         this.getLOGGER().error( "Error in {}: {}", method, throwable );
         super.saveErrorLog(
                 method.name(),
@@ -22,15 +22,15 @@ public class LogInspector extends ErrorController {
                 "Error: " + throwable.getMessage() );
         super.saveErrorLog( throwable.getMessage() ); }
 
-    public void logging ( Retry.RetrySignal retrySignal, Methods methods ) {
+    public void logging ( final Retry.RetrySignal retrySignal, final Methods methods ) {
         this.getLOGGER().info( "Retrying in {} has started {}: ", methods, retrySignal ); }
 
-    public void logging ( Methods methods, Retry.RetrySignal retrySignal ) {
+    public void logging ( final Methods methods, final Retry.RetrySignal retrySignal ) {
         this.getLOGGER().info( "Retrying in {} has finished {}: ", methods, retrySignal ); }
 
     // log on error
-    public void logging ( Methods method, Object o ) { this.getLOGGER().info( "Method {} has completed successfully {}", method, o ); }
+    public void logging ( final Methods method, final Object o ) { this.getLOGGER().info( "Method {} has completed successfully {}", method, o ); }
 
     // log on subscribe
-    public void logging ( String method ) { this.getLOGGER().info( method + " has subscribed" ); }
+    public void logging ( final String method ) { this.getLOGGER().info( method + " has subscribed" ); }
 }
