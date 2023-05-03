@@ -495,9 +495,9 @@ public class SerDes extends Config implements Runnable {
                             : Mono.just( psychologyCard ) )
                     : Mono.just( psychologyCard );
 
-    public Mono< PsychologyCard > getPsychologyCard ( PsychologyCard psychologyCard,
-                                                      String token,
-                                                      ApiResponseModel apiResponseModel ) {
+    public Mono< PsychologyCard > getPsychologyCard ( final PsychologyCard psychologyCard,
+                                                      final String token,
+                                                      final ApiResponseModel apiResponseModel ) {
         try { this.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList( Unirest.get(

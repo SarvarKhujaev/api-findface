@@ -51,10 +51,10 @@ public class DataValidationInspector {
                     .getPermanentRegistration().size() > 0;
 
             case 3 -> this.getCheckObject().test( ( o ) )
-                    && ( (ModelForPassport) o ).getData() != null
-                    && ( (ModelForPassport) o ).getData().getPerson() != null
-                    && ( (ModelForPassport) o ).getData().getPerson().getPinpp() != null
-                    && ( (ModelForPassport) o ).getData().getPerson().getPCitizen() != null;
+                    && this.getCheckObject().test( ( (ModelForPassport) o ).getData() )
+                    && this.getCheckObject().test( ( (ModelForPassport) o ).getData().getPerson() )
+                    && this.getCheckObject().test( ( (ModelForPassport) o ).getData().getPerson().getPinpp() )
+                    && this.getCheckObject().test( ( (ModelForPassport) o ).getData().getPerson().getPCitizen() );
 
             case 4 -> this.getCheckObject().test( ( (CarTotalData) o ).getModelForCar() )
                     && this.getCheckObject().test( ( (CarTotalData) o ).getModelForCar().getPinpp() )
