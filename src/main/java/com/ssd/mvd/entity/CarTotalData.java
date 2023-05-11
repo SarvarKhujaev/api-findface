@@ -1,8 +1,8 @@
 package com.ssd.mvd.entity;
 
-import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.entity.modelForGai.*;
 import reactor.util.function.Tuple5;
+import com.ssd.mvd.entity.modelForGai.*;
+import com.ssd.mvd.constants.ErrorResponse;
 
 @lombok.Data
 public class CarTotalData {
@@ -19,11 +19,13 @@ public class CarTotalData {
 
     private ErrorResponse errorResponse;
 
+    public CarTotalData( final ModelForCar modelForCar ) { this.setModelForCar( modelForCar ); }
+
+    public CarTotalData ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+
     public CarTotalData save ( final PsychologyCard psychologyCard ) {
         this.setPsychologyCard( psychologyCard );
         return this; }
-
-    public CarTotalData ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
 
     public CarTotalData ( final Tuple5<
             Tonirovka,

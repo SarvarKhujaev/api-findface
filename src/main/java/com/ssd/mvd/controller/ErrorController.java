@@ -1,13 +1,14 @@
 package com.ssd.mvd.controller;
 
-import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entityForLogging.IntegratedServiceApis;
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entityForLogging.ErrorLog;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.kafka.KafkaDataControl;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.modelForGai.*;
+import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.entity.Pinpp;
@@ -16,7 +17,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.ssd.mvd.kafka.Notification;
 import reactor.core.publisher.Mono;
 import java.util.Date;
 
@@ -24,7 +24,7 @@ public class ErrorController extends DataValidationInspector {
     private final Notification notification = new Notification();
 
     public final Supplier< ErrorResponse > getErrorResponse = () -> {
-            SerDes.getSerDes().updateTokens();
+            SerDes.getSerDes().getUpdateTokens().get();
             return ErrorResponse
                     .builder()
                     .message( "GAI token is unavailable" )
@@ -32,7 +32,7 @@ public class ErrorController extends DataValidationInspector {
                     .build(); };
 
     // используется когда внешние сервисы возвращают 500 ошибку
-    public final Function< String, ErrorResponse> getExternalServiceErrorResponse = error -> ErrorResponse
+    public final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Error in external service: " + error )
             .errors( Errors.EXTERNAL_SERVICE_500_ERROR )
@@ -52,7 +52,7 @@ public class ErrorController extends DataValidationInspector {
             .errors( Errors.DATA_NOT_FOUND )
             .build();
 
-    public final Function< String, ErrorResponse > getConnectionError = error -> ErrorResponse
+    public final Function< Throwable, ErrorResponse > getConnectionError = error -> ErrorResponse
             .builder()
             .message( "Connection Error: " + error )
             .errors( Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )

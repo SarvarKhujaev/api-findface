@@ -21,18 +21,20 @@ public class PsychologyCard {
     private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
     private ModelForAddress modelForAddress;
 
+    private ErrorResponse errorResponse;
     private ModelForPassport modelForPassport;
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
 
-    private ErrorResponse errorResponse;
+    public PsychologyCard save ( final Results results ) {
+        this.setViolationList( results.getViolationList() );
+        this.setPapilonData( results.getResults() );
+        return this; }
 
     public PsychologyCard save ( final com.ssd.mvd.entity.modelForCadastr.Data data ) {
         this.setModelForCadastr( data );
         return this; }
 
-    public PsychologyCard save ( final Tuple2<
-            ModelForAddress,
-            ModelForPassport > tuple2 ) {
+    public PsychologyCard save ( final Tuple2< ModelForAddress, ModelForPassport > tuple2 ) {
         this.setModelForPassport( tuple2.getT2() );
         this.setModelForAddress( tuple2.getT1() );
         return this; }
@@ -49,23 +51,10 @@ public class PsychologyCard {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() ); }
 
-    public PsychologyCard ( final Results results,
-                            final Tuple3<
-                                    Pinpp,
-                                    String,
-                                    ModelForCarList > tuple ) {
-        this.setViolationList( results.getViolationList() );
-        this.setPapilonData( results.getResults() );
-        this.setModelForCarList( tuple.getT3() );
-        this.setPersonImage( tuple.getT2() );
-        this.setPinpp( tuple.getT1() ); }
-
     // for Passport request
-    public PsychologyCard( final ModelForPassport data,
-                           final Tuple2< Pinpp, String > tuple ) {
-        this.setPersonImage( tuple.getT2() );
+    public PsychologyCard save ( final ModelForPassport data ) {
         this.setModelForPassport( data );
-        this.setPinpp( tuple.getT1() ); }
+        return this; }
 
     // for Passport request
     public PsychologyCard ( final ModelForPassport data,
