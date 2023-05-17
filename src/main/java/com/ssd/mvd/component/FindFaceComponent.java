@@ -7,12 +7,13 @@ import java.util.function.Function;
 import com.ssd.mvd.entity.Results;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.FindFaceServiceApplication;
+import com.ssd.mvd.controller.DataValidationInspector;
 
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 @lombok.Data
-public class FindFaceComponent {
+public class FindFaceComponent extends DataValidationInspector {
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 
@@ -26,13 +27,12 @@ public class FindFaceComponent {
             .retrieveMono( Results.class )
             .onErrorReturn( new Results() );
 
-    private final Function< String, Mono< List > > getViolationListByPinfl = pinfl -> pinfl != null
-            && pinfl.length() > 1
+    private final Function< String, Mono< List > > getViolationListByPinfl = pinfl -> super.checkParam.test( pinfl )
             ? this.getRequester()
             .route( Methods.GET_VIOLATION_LIST_BY_PINFL.name() )
             .data( pinfl )
             .retrieveMono( List.class )
             .defaultIfEmpty( new ArrayList() )
             .onErrorReturn( new ArrayList() )
-            : Mono.just( new ArrayList() );
+            : super.convert( new ArrayList() );
 }

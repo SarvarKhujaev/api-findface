@@ -1,5 +1,6 @@
 package com.ssd.mvd.entityForLogging;
 
+import com.ssd.mvd.controller.DataValidationInspector;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.controller.SerDes;
 import com.ssd.mvd.constants.Errors;
@@ -18,67 +19,48 @@ public class PersonInfo {
 
     public PersonInfo ( final PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            this.setFullname( psychologyCard.getPinpp() != null ?
-                    ( psychologyCard
-                            .getPinpp()
-                            .getName()
-                            + " "
-                            + psychologyCard
-                            .getPinpp()
-                            .getSurname()
-                            + " "
-                            + psychologyCard
-                            .getPinpp()
-                            .getPatronym() ) :
-                    Errors.DATA_NOT_FOUND.name());
-            this.setPinfl( psychologyCard
-                    .getPinpp() != null
-                    ? psychologyCard
-                    .getPinpp()
-                    .getPinpp()
-                    : Errors.DATA_NOT_FOUND.name() );
-            this.setBirthDate( psychologyCard
-                    .getPinpp() != null
-                    ? psychologyCard
-                    .getPinpp()
-                    .getBirthDate()
-                    : Errors.DATA_NOT_FOUND.name() );
-            this.setPassportNumber( psychologyCard
-                    .getModelForPassport() != null
-                    && psychologyCard
-                    .getModelForPassport()
-                    .getData()
-                    .getDocument() != null
+            if ( DataValidationInspector
+                    .getInstance()
+                    .checkObject
+                    .test( psychologyCard.getPinpp() ) ) {
+                this.setPinfl( psychologyCard.getPinpp().getPinpp() );
+                this.setCadastre( psychologyCard.getPinpp().getCadastre() );
+                this.setBirthDate( psychologyCard.getPinpp().getBirthDate() );
+                this.setFullname( DataValidationInspector.getInstance().joinString.apply( psychologyCard.getPinpp() ) ); }
+
+            this.setPassportNumber( DataValidationInspector
+                    .getInstance()
+                    .checkData
+                    .test( 7, psychologyCard.getModelForPassport() )
                     ? psychologyCard
                     .getModelForPassport()
                     .getData()
                     .getDocument()
                     .getSerialNumber()
                     : Errors.DATA_NOT_FOUND.name() );
-            this.setAddress( psychologyCard
-                    .getModelForAddress() != null
-                    && psychologyCard
-                    .getModelForAddress()
-                    .getPermanentRegistration() != null
+
+            this.setAddress( DataValidationInspector
+                    .getInstance()
+                    .checkData
+                    .test( 8, psychologyCard.getModelForAddress() )
                     ? psychologyCard
                     .getModelForAddress()
                     .getPermanentRegistration()
                     .getPAddress()
                     : Errors.DATA_NOT_FOUND.name() );
-            this.setCadastre( psychologyCard
-                    .getPinpp() != null
-                    ? psychologyCard
-                    .getPinpp()
-                    .getCadastre()
-                    : Errors.DATA_NOT_FOUND.name() );
-            if ( psychologyCard.getPapilonData() != null
-                    && psychologyCard.getPapilonData().size() > 0 ) this.setPhoto( SerDes
+
+            this.setPhoto( DataValidationInspector
+                    .getInstance()
+                    .checkData
+                    .test( 5, psychologyCard.getPapilonData() )
+                    ? SerDes
                     .getSerDes()
                     .getBase64ToLink()
                     .apply( psychologyCard
                             .getPapilonData()
                             .get( 0 )
-                            .getPhoto() ) ); }
+                            .getPhoto() )
+                    : Errors.DATA_NOT_FOUND.name() ); }
 
         else {
             this.setPassportNumber ( psychologyCard

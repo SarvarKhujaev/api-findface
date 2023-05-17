@@ -8,10 +8,10 @@ import reactor.util.retry.Retry;
 public class LogInspector extends ErrorController {
     private final Logger LOGGER = LogManager.getLogger( "LOGGER_WITH_JSON_LAYOUT" );
 
-    public Logger getLOGGER() { return LOGGER; }
+    private Logger getLOGGER() { return this.LOGGER; }
 
     // log on error
-    public void logging (
+    protected void logging (
             final Throwable throwable,
             final Methods method,
             final String params ) {
@@ -22,15 +22,17 @@ public class LogInspector extends ErrorController {
                 "Error: " + throwable.getMessage() );
         super.saveErrorLog( throwable.getMessage() ); }
 
-    public void logging ( final Retry.RetrySignal retrySignal, final Methods methods ) {
+    protected void logging ( final Retry.RetrySignal retrySignal, final Methods methods ) {
         this.getLOGGER().info( "Retrying in {} has started {}: ", methods, retrySignal ); }
 
-    public void logging ( final Methods methods, final Retry.RetrySignal retrySignal ) {
+    protected void logging ( final Methods methods, final Retry.RetrySignal retrySignal ) {
         this.getLOGGER().info( "Retrying in {} has finished {}: ", methods, retrySignal ); }
 
     // log on error
-    public void logging ( final Methods method, final Object o ) { this.getLOGGER().info( "Method {} has completed successfully {}", method, o ); }
+    protected void logging ( final Methods method, final Object o ) { this.getLOGGER().info( "Method {} has completed successfully {}", method, o ); }
 
     // log on subscribe
-    public void logging ( final String method ) { this.getLOGGER().info( method + " has subscribed" ); }
+    protected void logging ( final Throwable error ) { this.getLOGGER().error( "Error: " + error.getMessage() ); }
+
+    protected void logging ( final String method ) { this.getLOGGER().info( method + " has subscribed" ); }
 }
