@@ -23,7 +23,7 @@ public class DataValidationInspector {
 
     public static DataValidationInspector getInstance () { return INSTANCE; }
 
-    public  <T> Mono< T > convert ( final T o ) { return Mono.just( o ); }
+    protected <T> Mono< T > convert ( final T o ) { return Mono.just( o ); }
 
     public final Predicate< Object > checkObject = Objects::nonNull;
 

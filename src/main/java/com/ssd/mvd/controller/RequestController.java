@@ -3,6 +3,7 @@ package com.ssd.mvd.controller;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -272,14 +273,14 @@ public class RequestController extends LogInspector {
     // ---------------------------------------------------------------- дааные для человека
 
     @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
-    public Mono< Data > GET_TEMPORARY_REGISTRATION ( final ApiResponseModel apiResponseModel ) {
-        super.logging( "Cadaster value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
+    public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION (final ApiResponseModel apiResponseModel ) {
+        super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()
-                .getGetCadaster()
+                .getGetModelForAddress()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                : super.convert( new Data(super.getErrorResponse.get() ) ); }
+                : super.convert( new ModelForAddress( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" ) // возвращает список правонарушений гражданина
     public Mono< List > GET_VIOLATION_LIST_BY_PINFL ( final ApiResponseModel apiResponseModel ) {
