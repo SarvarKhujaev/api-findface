@@ -71,9 +71,8 @@ public final class SerDes extends Config implements Runnable {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
         super.getHeaders().put( "accept", "application/json" );
-//        this.setThread( new Thread( this, this.getClass().getName() ) );
-//        this.getThread().start();
-    }
+        this.setThread( new Thread( this, this.getClass().getName() ) );
+        this.getThread().start(); }
 
     private final Supplier< SerDes > updateTokens = () -> {
             super.logging( "Updating tokens..." );

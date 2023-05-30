@@ -10,6 +10,6 @@ public final class RequestForBoardCrossing {
     private final Character is_consent = 'Y';
 
     public RequestForBoardCrossing ( final String value ) {
-        this.birth_date = value.split( " " )[1];
-        this.document = value.split( " " )[0]; }
+        this.birth_date = value.split( "_" )[1];
+        this.document = value.split( "_" )[0]; }
 }

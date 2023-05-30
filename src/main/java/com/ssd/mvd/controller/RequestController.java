@@ -396,7 +396,7 @@ public final class RequestController extends LogInspector {
                 .onErrorReturn( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
-    @MessageMapping ( value = "GET_PERSON_BOARD_CROSSING" )
+    @MessageMapping ( value = "GET_CROSS_BOARDING" )
     public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING ( final ApiResponseModel apiResponseModel ) {
         super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
