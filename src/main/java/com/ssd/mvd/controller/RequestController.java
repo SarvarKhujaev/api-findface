@@ -344,17 +344,8 @@ public final class RequestController extends LogInspector {
                         .get( 0 )
                         .getCountry()
                         .equals( "УЗБЕКИСТАН" )
-                        ? SerDes
-                        .getSerDes()
-                        .getGetPsychologyCardByPinflInitial()
-                        .apply( apiResponseModel.changeMessage(
-                                results
-                                        .getResults()
-                                        .get( 0 )
-                                        .getPersonal_code() ) )
+                        ? super.convert( new PsychologyCard() )
                         .map( psychologyCard -> psychologyCard.save( results ) )
-                        .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
                         : SerDes
                         .getSerDes()
                         .getPsychologyCard( token, new PsychologyCard( results ), apiResponseModel )
@@ -413,4 +404,14 @@ public final class RequestController extends LogInspector {
                         .apply( crossBoardInfo )
                         : super.convert( crossBoardInfo ) )
                 : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
+
+    @MessageMapping ( value = "GET_PINPP" )
+    public Mono< Pinpp > getPINPP ( final ApiResponseModel apiResponseModel ) {
+        super.logging( "Request for: " + Methods.GET_PINPP + " : " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetPinpp()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                : super.convert( new Pinpp( super.getErrorResponse.get() ) ); }
 }
