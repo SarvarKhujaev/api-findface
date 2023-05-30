@@ -1,14 +1,12 @@
 package com.ssd.mvd.publisher;
 
-import com.ssd.mvd.request.RequestForModelOfAddress;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
-import com.ssd.mvd.request.RequestForCadaster;
-import com.ssd.mvd.request.RequestForPassport;
 import com.ssd.mvd.controller.LogInspector;
-import com.ssd.mvd.request.RequestForFio;
+import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.request.*;
+
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
-import com.ssd.mvd.controller.SerDes;
 import org.reactivestreams.Publisher;
 
 public class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
@@ -22,6 +20,7 @@ public class CustomPublisherForRequest extends LogInspector implements Publisher
                 case 1 -> new RequestForCadaster( String.valueOf( object ) );
                 case 2 -> new RequestForFio( (FIO) object );
                 case 3 -> new RequestForModelOfAddress( String.valueOf( object ) );
+                case 4 -> new RequestForBoardCrossing( String.valueOf( object ) );
                 default -> new RequestForPassport( String.valueOf( object ) ); } ); }
 
     @Override

@@ -3,7 +3,6 @@ package com.ssd.mvd.controller;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -11,20 +10,21 @@ import io.netty.handler.timeout.ReadTimeoutException;
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForGai.ViolationsList;
+import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
+import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 
 @RestController
-public class RequestController extends LogInspector {
+public final class RequestController extends LogInspector {
     private static String token;
 
-    @MessageMapping ( value = "ping" )
+    @MessageMapping ( value = "PING" )
     public Mono< Boolean > ping () { return super.convert( true ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
@@ -395,4 +395,22 @@ public class RequestController extends LogInspector {
                         throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply(throwable))) )
                 .onErrorReturn( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
+
+    @MessageMapping ( value = "GET_PERSON_BOARD_CROSSING" )
+    public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING ( final ApiResponseModel apiResponseModel ) {
+        super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetCrossBoardInfo()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                .flatMap( crossBoardInfo -> super.checkObject.test( crossBoardInfo.getData() )
+                        && super.checkData.test( 5, crossBoardInfo.getData() )
+                        && super.checkData.test( 5, crossBoardInfo.getData().get( 0 ).getCrossBoardList() )
+                        ? SerDes
+                        .getSerDes()
+                        .getAnalyzeCrossData()
+                        .apply( crossBoardInfo )
+                        : super.convert( crossBoardInfo ) )
+                : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
 }

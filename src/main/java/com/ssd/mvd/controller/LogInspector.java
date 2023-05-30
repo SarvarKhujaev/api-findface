@@ -1,8 +1,14 @@
 package com.ssd.mvd.controller;
 
+import com.ssd.mvd.entityForLogging.UserRequest;
+import com.ssd.mvd.entity.ApiResponseModel;
+import com.ssd.mvd.kafka.KafkaDataControl;
+import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.constants.Methods;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.ssd.mvd.constants.Methods;
+import java.util.function.BiFunction;
 import reactor.util.retry.Retry;
 
 public class LogInspector extends ErrorController {
@@ -35,4 +41,16 @@ public class LogInspector extends ErrorController {
     protected void logging ( final Throwable error ) { this.getLOGGER().error( "Error: " + error.getMessage() ); }
 
     protected void logging ( final String method ) { this.getLOGGER().info( method + " has subscribed" ); }
+
+    // сохраняем логи о пользователе который отправил запрос на сервис
+    protected final BiFunction< PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
+            ( psychologyCard, apiResponseModel ) -> {
+                KafkaDataControl
+                        .getInstance()
+                        .getWriteToKafkaServiceUsage()
+                        .accept( SerDes
+                                .getSerDes()
+                                .getGson()
+                                .toJson( new UserRequest( psychologyCard, apiResponseModel ) ) );
+                return psychologyCard; };
 }

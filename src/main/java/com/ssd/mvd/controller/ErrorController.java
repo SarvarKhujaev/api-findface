@@ -114,7 +114,7 @@ public class ErrorController extends DataValidationInspector {
                                     .integratedService( IntegratedServiceApis.OVIR.getName() )
                                     .integratedServiceApiDescription( IntegratedServiceApis.OVIR.getDescription() )
                                     .build() ) );
-            return Mono.just( switch ( methods ) {
+            return super.convert( switch ( methods ) {
                 case GET_MODEL_FOR_CAR_LIST -> new ModelForCarList( this.getExternalServiceErrorResponse.apply( errorMessage ) );
                 case GET_MODEL_FOR_ADDRESS -> new ModelForAddress( this.getExternalServiceErrorResponse.apply( errorMessage ) );
                 case GET_DOVERENNOST_LIST -> new DoverennostList( this.getExternalServiceErrorResponse.apply( errorMessage ) );

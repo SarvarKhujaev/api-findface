@@ -1,9 +1,88 @@
 package com.ssd.mvd.controller;
 
 import com.ssd.mvd.FindFaceServiceApplication;
+import java.util.HashMap;
+import java.util.Map;
 
-@lombok.Data
 public class Config extends LogInspector {
+    protected Boolean getFlag() { return this.flag; }
+
+    protected void setFlag( final Boolean flag ) { this.flag = flag; }
+
+    protected String getTokenForGai() { return this.tokenForGai; }
+
+    protected void setTokenForGai( final String tokenForGai ) { this.tokenForGai = tokenForGai; }
+
+    protected String getTokenForFio() { return this.tokenForFio; }
+
+    protected String getTokenForPassport() { return this.tokenForPassport; }
+
+    protected void setTokenForPassport( final String tokenForPassport ) { this.tokenForPassport = tokenForPassport; }
+
+    protected Map< String, Object > getFields() { return this.fields; }
+
+    protected Map< String, String > getHeaders() { return this.headers; }
+
+    protected Integer getWaitingMins() { return this.waitingMins; }
+
+    protected void setWaitingMins( final Integer waitingMins ) { this.waitingMins = waitingMins; }
+
+    protected String getAPI_FOR_GAI_TOKEN() { return this.API_FOR_GAI_TOKEN; }
+
+    protected String getLOGIN_FOR_GAI_TOKEN() { return this.LOGIN_FOR_GAI_TOKEN; }
+
+    protected String getCURRENT_SYSTEM_FOR_GAI() { return this.CURRENT_SYSTEM_FOR_GAI; }
+
+    protected String getPASSWORD_FOR_GAI_TOKEN() { return this.PASSWORD_FOR_GAI_TOKEN; }
+
+    protected String getAPI_FOR_TONIROVKA() { return this.API_FOR_TONIROVKA; }
+
+    protected String getAPI_FOR_VEHICLE_DATA() { return this.API_FOR_VEHICLE_DATA; }
+
+    protected String getAPI_FOR_FOR_INSURANCE() { return this.API_FOR_FOR_INSURANCE; }
+
+    protected String getAPI_FOR_VIOLATION_LIST() { return this.API_FOR_VIOLATION_LIST; }
+
+    protected String getAPI_FOR_DOVERENNOST_LIST() { return this.API_FOR_DOVERENNOST_LIST; }
+
+    protected String getAPI_FOR_MODEL_FOR_CAR_LIST() { return this.API_FOR_MODEL_FOR_CAR_LIST; }
+
+    protected String getAPI_FOR_PINPP() { return this.API_FOR_PINPP; }
+
+    protected String getAPI_FOR_BOARD_CROSSING() { return this.API_FOR_BOARD_CROSSING; }
+
+    protected String getAPI_FOR_CADASTR() { return this.API_FOR_CADASTR; }
+
+    protected String getAPI_FOR_PERSON_IMAGE() { return this.API_FOR_PERSON_IMAGE; }
+
+    protected String getAPI_FOR_PASSPORT_MODEL() { return this.API_FOR_PASSPORT_MODEL; }
+
+    protected String getAPI_FOR_MODEL_FOR_ADDRESS() { return this.API_FOR_MODEL_FOR_ADDRESS; }
+
+    protected String getAPI_FOR_PERSON_DATA_FROM_ZAKS() { return this.API_FOR_PERSON_DATA_FROM_ZAKS; }
+
+    protected String getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() { return this.API_FOR_TRAIN_TICKET_CONSUMER_SERVICE; }
+
+    protected String getBASE64_IMAGE_TO_LINK_CONVERTER_API() { return this.BASE64_IMAGE_TO_LINK_CONVERTER_API; }
+
+    protected String getKAFKA_BROKER() { return this.KAFKA_BROKER; }
+
+    protected String getGROUP_ID_FOR_KAFKA() { return this.GROUP_ID_FOR_KAFKA; }
+
+    protected String getERROR_LOGS() { return this.ERROR_LOGS; }
+
+    protected String getADMIN_PANEL() { return this.ADMIN_PANEL; }
+
+    protected String getADMIN_PANEL_ERROR_LOG() { return this.ADMIN_PANEL_ERROR_LOG; }
+
+    private Boolean flag = false;
+    private String tokenForGai;
+    private String tokenForFio;
+    private String tokenForPassport;
+
+    private final Map< String, Object > fields = new HashMap<>();
+    private final Map< String, String > headers = new HashMap<>();
+
     // how many minutes to wait for Thread in SerDes class
     // 180 mins by default
     private Integer waitingMins = 180;
@@ -27,21 +106,6 @@ public class Config extends LogInspector {
             .context
             .getEnvironment()
             .getProperty( "variables.GAI_VARIABLES.PASSWORD_FOR_GAI_TOKEN" );
-
-    private final String LOGIN_FOR_FIO_TOKEN = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.OVIR_VARIABLES.LOGIN_FOR_FIO_TOKEN" );
-
-    private final String CURRENT_SYSTEM_FOR_FIO = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.OVIR_VARIABLES.CURRENT_SYSTEM_FOR_FIO" );
-
-    private final String PASSWORD_FOR_FIO_TOKEN = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.OVIR_VARIABLES.PASSWORD_FOR_FIO_TOKEN" );
 
     private final String API_FOR_TONIROVKA = FindFaceServiceApplication
             .context
@@ -78,15 +142,15 @@ public class Config extends LogInspector {
             .getEnvironment()
             .getProperty( "variables.OVIR_VARIABLES.API_FOR_PINPP" );
 
+    private final String API_FOR_BOARD_CROSSING = FindFaceServiceApplication
+            .context
+            .getEnvironment()
+            .getProperty( "variables.OVIR_VARIABLES.API_FOR_BOARD_CROSSING" );
+
     private final String API_FOR_CADASTR = FindFaceServiceApplication
             .context
             .getEnvironment()
             .getProperty( "variables.OVIR_VARIABLES.API_FOR_CADASTR" );
-
-    private final String API_FOR_FIO_TOKEN = FindFaceServiceApplication
-            .context
-            .getEnvironment()
-            .getProperty( "variables.OVIR_VARIABLES.API_FOR_FIO_TOKEN" );
 
     private final String API_FOR_PERSON_IMAGE = FindFaceServiceApplication
             .context

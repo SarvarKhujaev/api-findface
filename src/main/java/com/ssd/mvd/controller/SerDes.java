@@ -10,8 +10,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import reactor.netty.ByteBufFlux;
 import io.netty.handler.logging.LogLevel;
+import io.netty.channel.ConnectTimeoutException;
+
+import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
@@ -28,24 +30,20 @@ import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.kafka.KafkaDataControl;
 import com.ssd.mvd.entity.foreigner.Foreigner;
+import com.ssd.mvd.entity.boardCrossing.Person;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
-import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.entity.boardCrossing.CrossBoard;
+import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.publisher.CustomPublisherForRequest;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
-public class SerDes extends Config implements Runnable {
-    private Boolean flag = false;
-    private String tokenForGai;
-    private String tokenForFio;
-    private String tokenForPassport;
-
+public final class SerDes extends Config implements Runnable {
     private Thread thread;
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
@@ -55,12 +53,9 @@ public class SerDes extends Config implements Runnable {
             .headers( h -> h.add( "Content-Type", "application/json" ) )
             .wiretap( "reactor.netty.http.client.HttpClient", LogLevel.TRACE, AdvancedByteBufFormat.TEXTUAL );
 
-    private final Map< String, Object > fields = new HashMap<>();
-    private final Map< String, String > headers = new HashMap<>();
-
     public static SerDes getSerDes () { return serDes != null ? serDes : ( serDes = new SerDes() ); }
 
-    private <T> List<T> stringToArrayList ( final String object, final Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
+    public  <T> List<T> stringToArrayList ( final String object, final Class< T[] > clazz ) { return Arrays.asList( this.getGson().fromJson( object, clazz ) ); }
 
     private SerDes () {
         Unirest.setObjectMapper( new ObjectMapper() {
@@ -75,46 +70,65 @@ public class SerDes extends Config implements Runnable {
             public <T> T readValue( String s, Class<T> aClass ) {
                 try { return this.objectMapper.readValue( s, aClass ); }
                 catch ( JsonProcessingException e ) { throw new RuntimeException(e); } } } );
-        this.getHeaders().put( "accept", "application/json" );
-        this.setThread( new Thread( this, this.getClass().getName() ) );
-        this.getThread().start(); }
+        super.getHeaders().put( "accept", "application/json" );
+//        this.setThread( new Thread( this, this.getClass().getName() ) );
+//        this.getThread().start();
+    }
 
     private final Supplier< SerDes > updateTokens = () -> {
             super.logging( "Updating tokens..." );
-            this.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
-            this.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
-            this.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
-            try { this.setTokenForGai( String.valueOf( Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
-                    .fields( this.getFields() )
+            super.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
+            super.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
+            super.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
+            try { super.setTokenForGai( String.valueOf( Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
+                    .fields( super.getFields() )
                     .asJson()
                     .getBody()
                     .getObject()
                     .get( "access_token" ) ) );
-                this.setTokenForPassport( this.getTokenForGai() );
+                super.setTokenForPassport( super.getTokenForGai() );
                 super.setWaitingMins( 180 );
-                this.setFlag( true );
+                super.setFlag( true );
                 return this; }
             catch ( final Exception e ) {
-                this.setFlag( false );
+                super.setFlag( false );
                 super.setWaitingMins( 3 );
                 super.saveErrorLog( e.getMessage() );
                 super.saveErrorLog( Methods.UPDATE_TOKENS.name(), "access_token", "Error: " + e.getMessage() ); }
             return this; };
 
-    // сохраняем логи о пользователе который отправил запрос на сервис
-    private final BiFunction< PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
-            ( psychologyCard, apiResponseModel ) -> {
-                KafkaDataControl
-                        .getInstance()
-                        .getWriteToKafkaServiceUsage()
-                        .accept( this.getGson().toJson( new UserRequest( psychologyCard, apiResponseModel ) ) );
-                return psychologyCard; };
+    private final Function< String, Mono< CrossBoardInfo > > getCrossBoardInfo =
+            SerialNumber -> this.getHttpClient()
+                    .post()
+                    .uri( super.getAPI_FOR_BOARD_CROSSING() )
+                    .send( ByteBufFlux.fromString( new CustomPublisherForRequest( 4, SerialNumber ) ) )
+                    .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
+                        case 401 -> this.getUpdateTokens().get().getGetCrossBoardInfo().apply( SerialNumber );
+                        case 501 | 502 | 503 -> ( Mono< CrossBoardInfo > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_CROSS_BOARDING );
+                        default -> super.checkResponse.test( res, content )
+                                ? content
+                                .asString()
+                                .map( s -> new CrossBoardInfo( s.contains( "[{\"card_id" )
+                                        ? this.stringToArrayList( s.substring( s.indexOf( "[{\"card_id" ), s.length() - 3 ), CrossBoard[].class )
+                                        : Collections.emptyList(),
+                                        this.getGson().fromJson( s.substring( s.indexOf( "transaction_id" ) - 2, s.indexOf( "sex" ) + 9 ), Person.class ) ) )
+                                : super.convert( new CrossBoardInfo( super.getDataNotFoundErrorResponse.apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                    .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                            .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_CROSS_BOARDING ) )
+                            .doAfterRetry( retrySignal -> super.logging( Methods.GET_CROSS_BOARDING, retrySignal ) )
+                            .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
+                    .onErrorResume( ConnectTimeoutException.class,
+                            throwable -> super.convert( new CrossBoardInfo( super.getConnectionError.apply( throwable ) ) ) )
+                    .onErrorResume( IllegalArgumentException.class,
+                            throwable -> super.convert( new CrossBoardInfo( super.getTooManyRetriesError.apply( Methods.GET_CROSS_BOARDING ) ) ) )
+                    .doOnError( e -> super.logging( e, Methods.GET_CROSS_BOARDING, SerialNumber ) )
+                    .onErrorReturn( new CrossBoardInfo( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, String > base64ToLink = base64 -> {
-            this.getFields().clear();
+            super.getFields().clear();
             final HttpResponse< JsonNode > response;
-            this.getFields().put( "photo", base64 );
-            this.getFields().put( "serviceName", "psychologyCard" );
+            super.getFields().put( "photo", base64 );
+            super.getFields().put( "serviceName", "psychologyCard" );
             try { super.logging( "Converting image to Link in: " + Methods.CONVERT_BASE64_TO_LINK );
                 response = Unirest.post( super.getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
                         .header("Content-Type", "application/json")
@@ -135,7 +149,7 @@ public class SerDes extends Config implements Runnable {
                 return Errors.SERVICE_WORK_ERROR.name(); } };
 
     private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForPassport() ) )
             .get()
             .uri( super.getAPI_FOR_PINPP() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -159,7 +173,7 @@ public class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PINPP() ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForPassport() ) )
             .post()
             .send( ByteBufFlux.fromString( new CustomPublisherForRequest( 1, cadaster ) ) )
             .uri( super.getAPI_FOR_CADASTR() )
@@ -185,7 +199,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new Data( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -209,7 +223,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .post()
             .uri( super.getAPI_FOR_MODEL_FOR_ADDRESS() )
             .send( ByteBufFlux.fromString( new CustomPublisherForRequest( 3, pinfl ) ) )
@@ -236,7 +250,7 @@ public class SerDes extends Config implements Runnable {
 
     private final BiFunction< String, String, Mono< ModelForPassport > > getModelForPassport =
             ( SerialNumber, BirthDate ) -> this.getHttpClient()
-                    .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForPassport() ) )
+                    .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForPassport() ) )
                     .post()
                     .uri( super.getAPI_FOR_PASSPORT_MODEL() )
                     .send( ByteBufFlux.fromString( new CustomPublisherForRequest( 0, SerialNumber + " " + BirthDate ) ) )
@@ -263,7 +277,7 @@ public class SerDes extends Config implements Runnable {
                     .onErrorReturn( new ModelForPassport( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_FOR_INSURANCE() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -291,7 +305,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new Insurance( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_VEHICLE_DATA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -316,7 +330,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new ModelForCar( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_TONIROVKA() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -341,7 +355,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new Tonirovka( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_VIOLATION_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -366,7 +380,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new ViolationsList( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_DOVERENNOST_LIST() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -391,7 +405,7 @@ public class SerDes extends Config implements Runnable {
             .onErrorReturn( new DoverennostList( super.getServiceErrorResponse.apply( gosno ) ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForGai() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .get()
             .uri( super.getAPI_FOR_MODEL_FOR_CAR_LIST() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
@@ -484,21 +498,21 @@ public class SerDes extends Config implements Runnable {
     public Mono< PsychologyCard > getPsychologyCard ( final String token,
                                                       final PsychologyCard psychologyCard,
                                                       final ApiResponseModel apiResponseModel ) {
-        try { this.getHeaders().put( "Authorization", "Bearer " + token );
+        try { super.getHeaders().put( "Authorization", "Bearer " + token );
             psychologyCard.setForeignerList(
                     this.stringToArrayList( Unirest.get(
-                                    super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE() +
-                                            psychologyCard
-                                                    .getPapilonData()
-                                                    .get( 0 )
-                                                    .getPassport() )
-                            .headers( this.getHeaders() )
+                            super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE()
+                                    + psychologyCard
+                                    .getPapilonData()
+                                    .get( 0 )
+                                    .getPassport() )
+                            .headers( super.getHeaders() )
                             .asJson()
                             .getBody()
                             .getObject()
                             .get( "data" )
                             .toString(), Foreigner[].class ) );
-            this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel );
+            super.saveUserUsageLog.apply( psychologyCard, apiResponseModel );
         } catch ( final Exception e ) {
             super.saveErrorLog( "getPsychologyCard",
                     psychologyCard
@@ -510,7 +524,7 @@ public class SerDes extends Config implements Runnable {
         return super.convert( psychologyCard ); }
 
     private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + this.getTokenForFio() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForFio() ) )
             .post()
             .uri( super.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
             .send( ByteBufFlux.fromString( new CustomPublisherForRequest( 2, fio ) ) )
@@ -547,7 +561,7 @@ public class SerDes extends Config implements Runnable {
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
+                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) )
                     : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinflInitial =
@@ -555,7 +569,7 @@ public class SerDes extends Config implements Runnable {
                     ? Mono.zip(
                             this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
                             this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) )
-                    .map( tuple -> this.getSaveUserUsageLog().apply( new PsychologyCard( tuple ), apiResponseModel ) )
+                    .map( tuple -> super.saveUserUsageLog.apply( new PsychologyCard( tuple ), apiResponseModel ) )
                     : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
@@ -579,7 +593,7 @@ public class SerDes extends Config implements Runnable {
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( tuple1 -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) );
+                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) );
 
     private final BiFunction< com.ssd.mvd.entity.modelForPassport.ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> this.checkData.test( 3, data )
@@ -594,8 +608,18 @@ public class SerDes extends Config implements Runnable {
                             .apply( data.getData().getPerson().getPinpp() )
                             .onErrorReturn( new ArrayList() ) )
             .flatMap( tuple -> this.getFindAllDataAboutCar().apply( new PsychologyCard( data, tuple ) )
-                    .map( psychologyCard -> this.getSaveUserUsageLog().apply( psychologyCard, apiResponseModel ) ) )
+                    .map( psychologyCard -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) )
             : super.convert( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( data.getData().getPerson().getPinpp() ) ) );
+
+    private final Function< CrossBoardInfo, Mono< CrossBoardInfo > > analyzeCrossData = crossBoardInfo ->
+            Flux.fromStream( crossBoardInfo.getData().get( 0 ).getCrossBoardList().stream() )
+                    .parallel( super.checkDifference.apply( crossBoardInfo.getData().get( 0 ).getCrossBoardList().size() ) )
+                    .runOn( Schedulers.parallel() )
+                    .map( crossBoard -> crossBoard.save( crossBoardInfo.getData().get( 0 ).getPerson().getNationalityid() ) )
+                    .sequential()
+                    .publishOn( Schedulers.single() )
+                    .collectList()
+                    .map( crossBoards -> crossBoardInfo );
 
     @Override
     public void run () {

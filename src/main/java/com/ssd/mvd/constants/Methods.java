@@ -4,6 +4,7 @@ public enum Methods {
     CADASTER,
     GET_PINPP,
     GET_IMAGE_BY_PINFL,
+    GET_CROSS_BOARDING,
     GET_MODEL_FOR_ADDRESS,
     GET_MODEL_FOR_PASSPORT,
 
