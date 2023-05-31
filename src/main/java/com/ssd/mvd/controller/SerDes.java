@@ -110,8 +110,10 @@ public final class SerDes extends Config implements Runnable {
                                 .map( s -> new CrossBoardInfo( s.contains( "[{\"card_id" )
                                         ? this.stringToArrayList( s.substring( s.indexOf( "[{\"card_id" ), s.length() - 3 ), CrossBoard[].class )
                                         : Collections.emptyList(),
-                                        this.getGson().fromJson( s.substring( s.indexOf( "transaction_id" ) - 2, s.indexOf( "sex" ) + 9 ), Person.class ) ) )
-                                : super.convert( new CrossBoardInfo( super.getDataNotFoundErrorResponse.apply( SerialNumber + " : " + SerialNumber ) ) ); } )
+                                        s.contains( "transaction_id" )
+                                        ? this.getGson().fromJson( s.substring( s.indexOf( "transaction_id" ) - 2, s.indexOf( "sex" ) + 9 ), Person.class )
+                                        : new Person() ) )
+                                : super.convert( new CrossBoardInfo( super.getDataNotFoundErrorResponse.apply( SerialNumber ) ) ); } )
                     .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                             .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_CROSS_BOARDING ) )
                             .doAfterRetry( retrySignal -> super.logging( Methods.GET_CROSS_BOARDING, retrySignal ) )
