@@ -1,10 +1,14 @@
 package com.ssd.mvd.entity.boardCrossing;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class CrossBoard {
     private Long card_id;
+    private Date registrationDate;
 
     private Integer period_code;
     private Integer citizenship;
@@ -29,6 +33,8 @@ public final class CrossBoard {
     private Purpose purpose;
 
     public CrossBoard save ( final Integer nationalityId ) {
+        try { this.setRegistrationDate( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( this.getReg_date() ) );
+        } catch ( final Exception e ) { System.out.println( e.getMessage() ); }
         this.setDirection_type_code( this.getDirection_type_code().equals( "P" ) ? "въезд" : "выезд" );
         this.setPurpose( new Purpose( this, nationalityId ) );
         return this; }
