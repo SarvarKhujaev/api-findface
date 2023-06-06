@@ -272,15 +272,15 @@ public final class RequestController extends LogInspector {
 
     // ---------------------------------------------------------------- дааные для человека
 
-    @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
-    public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION (final ApiResponseModel apiResponseModel ) {
-        super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
+    @MessageMapping ( value = "GET_PINPP" )
+    public Mono< Pinpp > getPINPP ( final ApiResponseModel apiResponseModel ) {
+        super.logging( "Request for: " + Methods.GET_PINPP + " : " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
                 .getSerDes()
-                .getGetModelForAddress()
+                .getGetPinpp()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                : super.convert( new ModelForAddress( super.getErrorResponse.get() ) ); }
+                : super.convert( new Pinpp( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" ) // возвращает список правонарушений гражданина
     public Mono< List > GET_VIOLATION_LIST_BY_PINFL ( final ApiResponseModel apiResponseModel ) {
@@ -292,6 +292,34 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 : super.convert( new ArrayList() )
                 : super.convert( new ArrayList() ); }
+
+    @MessageMapping ( value = "GET_CROSS_BOARDING" )
+    public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING ( final ApiResponseModel apiResponseModel ) {
+        super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetCrossBoardInfo()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                .flatMap( crossBoardInfo -> super.checkObject.test( crossBoardInfo.getData() )
+                        && super.checkData.test( 5, crossBoardInfo.getData() )
+                        && super.checkData.test( 5, crossBoardInfo.getData().get( 0 ).getCrossBoardList() )
+                        ? SerDes
+                        .getSerDes()
+                        .getAnalyzeCrossData()
+                        .apply( crossBoardInfo )
+                        : super.convert( crossBoardInfo ) )
+                : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
+
+    @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
+    public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION (final ApiResponseModel apiResponseModel ) {
+        super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetModelForAddress()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                : super.convert( new ModelForAddress( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > GET_PERSONAL_CADASTOR_INITIAL ( final ApiResponseModel apiResponseModel ) {
@@ -386,32 +414,4 @@ public final class RequestController extends LogInspector {
                         throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply(throwable))) )
                 .onErrorReturn( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
-
-    @MessageMapping ( value = "GET_CROSS_BOARDING" )
-    public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING ( final ApiResponseModel apiResponseModel ) {
-        super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
-        return SerDes.getSerDes().getFlag()
-                ? SerDes
-                .getSerDes()
-                .getGetCrossBoardInfo()
-                .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMap( crossBoardInfo -> super.checkObject.test( crossBoardInfo.getData() )
-                        && super.checkData.test( 5, crossBoardInfo.getData() )
-                        && super.checkData.test( 5, crossBoardInfo.getData().get( 0 ).getCrossBoardList() )
-                        ? SerDes
-                        .getSerDes()
-                        .getAnalyzeCrossData()
-                        .apply( crossBoardInfo )
-                        : super.convert( crossBoardInfo ) )
-                : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
-
-    @MessageMapping ( value = "GET_PINPP" )
-    public Mono< Pinpp > getPINPP ( final ApiResponseModel apiResponseModel ) {
-        super.logging( "Request for: " + Methods.GET_PINPP + " : " + apiResponseModel.getStatus().getMessage() );
-        return SerDes.getSerDes().getFlag()
-                ? SerDes
-                .getSerDes()
-                .getGetPinpp()
-                .apply( apiResponseModel.getStatus().getMessage() )
-                : super.convert( new Pinpp( super.getErrorResponse.get() ) ); }
 }
