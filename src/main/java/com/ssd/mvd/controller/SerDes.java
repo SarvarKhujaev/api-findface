@@ -621,7 +621,7 @@ public final class SerDes extends Config implements Runnable {
                     .publishOn( Schedulers.single() )
                     .collectList()
                     .map( crossBoards -> {
-                        crossBoardInfo.getData().get( 0 ).getCrossBoardList().sort( Comparator.comparing( CrossBoard::getRegistrationDate ) );
+                        crossBoardInfo.getData().get( 0 ).getCrossBoardList().sort( Comparator.comparing( CrossBoard::getRegistrationDate ).reversed() );
                         return crossBoardInfo; } );
 
     @Override
