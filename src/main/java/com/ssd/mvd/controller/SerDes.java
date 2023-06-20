@@ -557,7 +557,7 @@ public final class SerDes extends Config implements Runnable {
                                     .getInstance()
                                     .getGetViolationListByPinfl()
                                     .apply( apiResponseModel.getStatus().getMessage() )
-                                    .onErrorReturn( new ArrayList() ) )
+                                    .onErrorReturn( Collections.emptyList() ) )
                     .map( PsychologyCard::new )
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
@@ -607,7 +607,7 @@ public final class SerDes extends Config implements Runnable {
                             .getInstance()
                             .getGetViolationListByPinfl()
                             .apply( data.getData().getPerson().getPinpp() )
-                            .onErrorReturn( new ArrayList() ) )
+                            .onErrorReturn( Collections.emptyList() ) )
             .flatMap( tuple -> this.getFindAllDataAboutCar().apply( new PsychologyCard( data, tuple ) )
                     .map( psychologyCard -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) )
             : super.convert( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( data.getData().getPerson().getPinpp() ) ) );

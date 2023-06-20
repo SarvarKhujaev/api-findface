@@ -1,7 +1,7 @@
 package com.ssd.mvd.controller;
 
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Collections;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -203,7 +203,7 @@ public final class RequestController extends LogInspector {
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( final ApiResponseModel apiResponseModel ) {
         if ( !super.checkParam.test( apiResponseModel.getStatus().getMessage() ) )
-            return super.convert( new PsychologyCard(super.getServiceErrorResponse.apply(Errors.WRONG_PARAMS.name())));
+            return super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
@@ -290,8 +290,8 @@ public final class RequestController extends LogInspector {
                 .getInstance()
                 .getGetViolationListByPinfl()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                : super.convert( new ArrayList() )
-                : super.convert( new ArrayList() ); }
+                : super.convert( Collections.emptyList() )
+                : super.convert( Collections.emptyList() ); }
 
     @MessageMapping ( value = "GET_CROSS_BOARDING" )
     public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING ( final ApiResponseModel apiResponseModel ) {

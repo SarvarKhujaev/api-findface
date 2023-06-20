@@ -1,7 +1,7 @@
 package com.ssd.mvd.component;
 
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.function.Function;
 
 import com.ssd.mvd.entity.Results;
@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 @lombok.Data
-public class FindFaceComponent extends DataValidationInspector {
+public final class FindFaceComponent extends DataValidationInspector {
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 
@@ -32,7 +32,7 @@ public class FindFaceComponent extends DataValidationInspector {
             .route( Methods.GET_VIOLATION_LIST_BY_PINFL.name() )
             .data( pinfl )
             .retrieveMono( List.class )
-            .defaultIfEmpty( new ArrayList() )
-            .onErrorReturn( new ArrayList() )
-            : super.convert( new ArrayList() );
+            .defaultIfEmpty( Collections.emptyList() )
+            .onErrorReturn( Collections.emptyList() )
+            : super.convert( Collections.emptyList() );
 }
