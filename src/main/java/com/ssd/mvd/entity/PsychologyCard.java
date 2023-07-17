@@ -10,7 +10,7 @@ import java.util.List;
 
 @lombok.Data
 @lombok.NoArgsConstructor
-public class PsychologyCard {
+public final class PsychologyCard {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 

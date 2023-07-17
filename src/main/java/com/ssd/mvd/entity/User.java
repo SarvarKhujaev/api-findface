@@ -6,7 +6,7 @@ import java.util.UUID;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class User {
+public final class User {
     private UUID id;
 
     private String role;

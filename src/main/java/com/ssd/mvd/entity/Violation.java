@@ -3,7 +3,7 @@ package com.ssd.mvd.entity;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Violation {
+public final class Violation {
     private Long protocol_id;
 
     private String pinpp;

@@ -6,7 +6,7 @@ import java.util.List;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Results {
+public final class Results {
     private Integer result_code;
 
     @JsonDeserialize

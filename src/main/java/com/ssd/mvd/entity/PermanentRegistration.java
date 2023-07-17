@@ -3,7 +3,7 @@ package com.ssd.mvd.entity;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class PermanentRegistration {
+public final class PermanentRegistration {
     private String pAddress;
     private String pCadastre;
     private String pRegistrationDate;

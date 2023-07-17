@@ -3,7 +3,7 @@ package com.ssd.mvd.entity;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class PapilonData {
+public final class PapilonData {
     private Integer rank;
     private Double score;
 

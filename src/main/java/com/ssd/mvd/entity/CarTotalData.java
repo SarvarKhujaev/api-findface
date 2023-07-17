@@ -5,7 +5,7 @@ import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.constants.ErrorResponse;
 
 @lombok.Data
-public class CarTotalData {
+public final class CarTotalData {
     private String gosNumber;
     private String cameraImage; // image which was made by camera
 
