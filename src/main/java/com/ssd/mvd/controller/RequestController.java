@@ -3,7 +3,6 @@ package com.ssd.mvd.controller;
 import java.util.List;
 import java.util.Collections;
 
-import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -12,6 +11,7 @@ import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.component.FindFaceComponent;
+import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.modelForGai.ViolationsList;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
