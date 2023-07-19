@@ -3,6 +3,7 @@ package com.ssd.mvd.controller;
 import java.util.List;
 import java.util.Collections;
 
+import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -26,6 +27,19 @@ public final class RequestController extends LogInspector {
 
     @MessageMapping ( value = "PING" )
     public Mono< Boolean > ping () { return super.convert( true ); }
+
+    @MessageMapping ( value = "GET_CAR_TONIROVKA" )
+    public Mono< Tonirovka > getCarTonirovka ( final ApiResponseModel apiResponseModel ) {
+        super.logging( "Request for: " + Methods.GET_TONIROVKA + " : " + apiResponseModel.getStatus().getMessage() );
+        return SerDes.getSerDes().getFlag()
+                ? SerDes
+                .getSerDes()
+                .getGetVehicleTonirovka()
+                .apply( apiResponseModel.getStatus().getMessage() )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new Tonirovka( super.getConnectionError.apply( throwable ) ) ) )
+                .onErrorReturn( new Tonirovka( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                : super.convert( new Tonirovka( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( final FIO fio ) {
@@ -85,8 +99,7 @@ public final class RequestController extends LogInspector {
                         : super.convert( carTotalData) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert( new CarTotalData( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new CarTotalData(
-                        super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                .onErrorReturn( new CarTotalData( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
                 : super.convert( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
