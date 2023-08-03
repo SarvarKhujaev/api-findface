@@ -5,23 +5,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Config extends LogInspector {
+    private Boolean flag = false;
     protected Boolean getFlag() { return this.flag; }
 
     protected void setFlag( final Boolean flag ) { this.flag = flag; }
+
+    private String tokenForGai;
 
     protected String getTokenForGai() { return this.tokenForGai; }
 
     protected void setTokenForGai( final String tokenForGai ) { this.tokenForGai = tokenForGai; }
 
+    private String tokenForFio;
+
     protected String getTokenForFio() { return this.tokenForFio; }
+
+    private String tokenForPassport;
 
     protected String getTokenForPassport() { return this.tokenForPassport; }
 
     protected void setTokenForPassport( final String tokenForPassport ) { this.tokenForPassport = tokenForPassport; }
 
-    protected Map< String, Object > getFields() { return this.fields; }
-
-    protected Map< String, String > getHeaders() { return this.headers; }
+    // how many minutes to wait for Thread in SerDes class
+    // 180 mins by default
+    private Integer waitingMins = 180;
 
     protected Integer getWaitingMins() { return this.waitingMins; }
 
@@ -75,17 +82,12 @@ public class Config extends LogInspector {
 
     protected String getADMIN_PANEL_ERROR_LOG() { return this.ADMIN_PANEL_ERROR_LOG; }
 
-    private Boolean flag = false;
-    private String tokenForGai;
-    private String tokenForFio;
-    private String tokenForPassport;
-
     private final Map< String, Object > fields = new HashMap<>();
     private final Map< String, String > headers = new HashMap<>();
 
-    // how many minutes to wait for Thread in SerDes class
-    // 180 mins by default
-    private Integer waitingMins = 180;
+    protected Map< String, Object > getFields() { return this.fields; }
+
+    protected Map< String, String > getHeaders() { return this.headers; }
 
     private final String API_FOR_GAI_TOKEN = FindFaceServiceApplication
             .context

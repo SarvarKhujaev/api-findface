@@ -4,7 +4,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 import java.util.List;
 
 @lombok.Data
-public class DoverennostList {
+public final class DoverennostList {
     private ErrorResponse errorResponse;
     private List< Doverennost > doverennostsList;
 

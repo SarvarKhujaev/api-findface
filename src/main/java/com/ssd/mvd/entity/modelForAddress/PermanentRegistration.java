@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.modelForAddress;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class PermanentRegistration {
+public final class PermanentRegistration {
     private pRegion pRegion;
 
     private String pAddress;

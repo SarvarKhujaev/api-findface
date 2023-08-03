@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.modelForCadastr;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Person {
+public final class Person {
     private String pPsp;
     private String pPerson;
     private pStatus pStatus;

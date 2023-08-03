@@ -1,14 +1,12 @@
 package com.ssd.mvd.entity.modelForFioOfPerson;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.extern.jackson.Jacksonized;
 
 @lombok.Data
-@Jacksonized
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
-public class DateValid {
+public final class DateValid {
     private String Date;
     private String DateFrom;
     private String DateTill;

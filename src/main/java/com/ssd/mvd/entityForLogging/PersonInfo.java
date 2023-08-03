@@ -8,7 +8,7 @@ import com.ssd.mvd.constants.Errors;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class PersonInfo {
+public final class PersonInfo {
     private String pinfl;
     private String photo;
     private String address;
@@ -17,10 +17,10 @@ public class PersonInfo {
     private String birthDate;
     private String passportNumber;
 
-    public PersonInfo ( final PsychologyCard psychologyCard ) {
+    public PersonInfo ( final PsychologyCard psychologyCard,
+                        final DataValidationInspector dataValidationInspector ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            if ( DataValidationInspector
-                    .getInstance()
+            if ( dataValidationInspector
                     .checkObject
                     .test( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
@@ -28,8 +28,7 @@ public class PersonInfo {
                 this.setBirthDate( psychologyCard.getPinpp().getBirthDate() );
                 this.setFullname( DataValidationInspector.getInstance().joinString.apply( psychologyCard.getPinpp() ) ); }
 
-            this.setPassportNumber( DataValidationInspector
-                    .getInstance()
+            this.setPassportNumber( dataValidationInspector
                     .checkData
                     .test( 7, psychologyCard.getModelForPassport() )
                     ? psychologyCard
@@ -39,8 +38,7 @@ public class PersonInfo {
                     .getSerialNumber()
                     : Errors.DATA_NOT_FOUND.name() );
 
-            this.setAddress( DataValidationInspector
-                    .getInstance()
+            this.setAddress( dataValidationInspector
                     .checkData
                     .test( 8, psychologyCard.getModelForAddress() )
                     ? psychologyCard
@@ -49,8 +47,7 @@ public class PersonInfo {
                     .getPAddress()
                     : Errors.DATA_NOT_FOUND.name() );
 
-            this.setPhoto( DataValidationInspector
-                    .getInstance()
+            this.setPhoto( dataValidationInspector
                     .checkData
                     .test( 5, psychologyCard.getPapilonData() )
                     ? SerDes

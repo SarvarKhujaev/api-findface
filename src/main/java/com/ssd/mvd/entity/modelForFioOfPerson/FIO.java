@@ -5,7 +5,7 @@ import com.ssd.mvd.entity.User;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class FIO {
+public final class FIO {
     private User user;
     private String name;
     private String surname;

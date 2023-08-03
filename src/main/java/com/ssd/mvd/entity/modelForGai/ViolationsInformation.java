@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.modelForGai;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class ViolationsInformation {
+public final class ViolationsInformation {
     private Integer DecreeStatus;
     private Integer Amount;
 

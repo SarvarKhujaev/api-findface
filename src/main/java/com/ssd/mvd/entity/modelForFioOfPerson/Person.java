@@ -2,14 +2,12 @@ package com.ssd.mvd.entity.modelForFioOfPerson;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.extern.jackson.Jacksonized;
 
 @lombok.Data
-@Jacksonized
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
-public class Person {
+public final class Person {
     private String Pinpp;
     private String Cadastre;
     private String NameLatin;

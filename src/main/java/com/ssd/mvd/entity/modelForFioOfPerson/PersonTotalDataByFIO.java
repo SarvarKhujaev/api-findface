@@ -9,7 +9,7 @@ import java.util.List;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
-public class PersonTotalDataByFIO {
+public final class PersonTotalDataByFIO {
     private Integer AnswereId;
     private String AnswereMessage;
     private String AnswereComment;

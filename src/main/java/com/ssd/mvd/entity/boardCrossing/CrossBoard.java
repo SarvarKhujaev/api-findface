@@ -1,5 +1,7 @@
 package com.ssd.mvd.entity.boardCrossing;
 
+import com.ssd.mvd.controller.DataValidationInspector;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -36,6 +38,6 @@ public final class CrossBoard {
         try { this.setRegistrationDate( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( this.getReg_date() ) );
         } catch ( final Exception e ) { System.out.println( e.getMessage() ); }
         this.setDirection_type_code( this.getDirection_type_code().equals( "P" ) ? "въезд" : "выезд" );
-        this.setPurpose( new Purpose( this, nationalityId ) );
+        this.setPurpose( new Purpose( this, nationalityId, DataValidationInspector.getInstance() ) );
         return this; }
 }

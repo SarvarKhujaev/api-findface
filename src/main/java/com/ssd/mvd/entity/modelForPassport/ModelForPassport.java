@@ -6,7 +6,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class ModelForPassport {
+public final class ModelForPassport {
     private Integer AnswereId;
     private String AnswereMessage;
     private String AnswereComment;

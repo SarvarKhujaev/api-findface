@@ -8,7 +8,7 @@ import reactor.util.function.Tuple3;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class ModelForCar {
+public final class ModelForCar {
     private String Stir;
     private String Year;
     private String Pinpp;

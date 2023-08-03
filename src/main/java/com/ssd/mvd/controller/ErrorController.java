@@ -23,7 +23,7 @@ import java.util.Date;
 public class ErrorController extends DataValidationInspector {
     private final Notification notification = new Notification();
 
-    public final Supplier< ErrorResponse > getErrorResponse = () -> {
+    protected final Supplier< ErrorResponse > getErrorResponse = () -> {
             SerDes.getSerDes().getUpdateTokens().get();
             return ErrorResponse
                     .builder()
@@ -32,33 +32,33 @@ public class ErrorController extends DataValidationInspector {
                     .build(); };
 
     // используется когда внешние сервисы возвращают 500 ошибку
-    public final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
+    protected final Function< String, ErrorResponse > getExternalServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Error in external service: " + error )
             .errors( Errors.EXTERNAL_SERVICE_500_ERROR )
             .build();
 
     // используется когда сам сервис ловит ошибку при выполнении
-    public final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
+    protected final Function< String, ErrorResponse > getServiceErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Service error: " + error )
             .errors( Errors.SERVICE_WORK_ERROR )
             .build();
 
     // используется когда сервис возвращает пустое тело при запросе
-    public final Function< String, ErrorResponse > getDataNotFoundErrorResponse = error -> ErrorResponse
+    protected final Function< String, ErrorResponse > getDataNotFoundErrorResponse = error -> ErrorResponse
             .builder()
             .message( "Data for: " + error + " was not found" )
             .errors( Errors.DATA_NOT_FOUND )
             .build();
 
-    public final Function< Throwable, ErrorResponse > getConnectionError = error -> ErrorResponse
+    protected final Function< Throwable, ErrorResponse > getConnectionError = error -> ErrorResponse
             .builder()
             .message( "Connection Error: " + error )
             .errors( Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
             .build();
 
-    public final Function<Methods, ErrorResponse > getTooManyRetriesError = methods -> ErrorResponse
+    protected final Function<Methods, ErrorResponse > getTooManyRetriesError = methods -> ErrorResponse
             .builder()
             .message( "Service: " + methods + " does not return response!!!" )
             .errors( Errors.TOO_MANY_RETRIES_ERROR )
@@ -67,7 +67,7 @@ public class ErrorController extends DataValidationInspector {
     private Notification getNotification() { return this.notification; }
 
     // логирует любые ошибки
-    public void saveErrorLog (
+    protected void saveErrorLog (
             final String methodName,
             final String params,
             final String reason ) {
@@ -84,7 +84,7 @@ public class ErrorController extends DataValidationInspector {
                         .toJson( this.getNotification() ) ); }
 
     // отправляет ошибку на сервис Шамсиддина, в случае если какой - либо сервис не отвечает
-    public void saveErrorLog ( final String errorMessage ) {
+    protected void saveErrorLog ( final String errorMessage ) {
         KafkaDataControl
                 .getInstance()
                 .getWriteToKafkaErrorLog()
@@ -100,7 +100,7 @@ public class ErrorController extends DataValidationInspector {
                                 .build() ) ); }
 
     // saves error from external service
-    public final BiFunction< String, Methods, Mono< ? > > saveErrorLog = ( errorMessage, methods ) -> {
+    protected final BiFunction< String, Methods, Mono< ? > > saveErrorLog = ( errorMessage, methods ) -> {
             KafkaDataControl
                     .getInstance()
                     .getWriteToKafkaErrorLog()

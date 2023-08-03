@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.boardCrossing;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Person {
+public final class Person {
     private byte sex;
     private byte livestatus;
     private byte transaction_id;

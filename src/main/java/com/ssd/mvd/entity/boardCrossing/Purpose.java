@@ -13,9 +13,10 @@ public final class Purpose {
     private String nationalities;
     private String transportCategory;
 
-    public Purpose ( final CrossBoard crossBoard, final Integer nationalityId ) {
-        if ( DataValidationInspector
-                .getInstance()
+    public Purpose ( final CrossBoard crossBoard,
+                     final Integer nationalityId,
+                     final DataValidationInspector dataValidationInspector ) {
+        if ( dataValidationInspector
                 .checkObject
                 .test( crossBoard.getTrip_purpose_code() ) )
             this.setTripPurpose( Archieve
@@ -23,8 +24,7 @@ public final class Purpose {
                     .tripPurposes
                     .getOrDefault( crossBoard.getTrip_purpose_code(), Errors.DATA_NOT_FOUND.name() ) );
 
-        if ( DataValidationInspector
-                .getInstance()
+        if ( dataValidationInspector
                 .checkObject
                 .test( crossBoard.getTrans_category_code() ) )
             this.setTransportCategory( Archieve
@@ -32,8 +32,7 @@ public final class Purpose {
                     .transportCategory
                     .getOrDefault( crossBoard.getTrans_category_code(), Errors.DATA_NOT_FOUND.name() ) );
 
-        if ( DataValidationInspector
-                .getInstance()
+        if ( dataValidationInspector
                 .checkObject
                 .test( crossBoard.getPeriod_code() ) )
             this.setPeriods( Archieve
@@ -41,8 +40,7 @@ public final class Purpose {
                     .periods
                     .getOrDefault( crossBoard.getPeriod_code(), Errors.DATA_NOT_FOUND.name() ) );
 
-        if ( DataValidationInspector
-                .getInstance()
+        if ( dataValidationInspector
                 .checkObject
                 .test( crossBoard.getDocument_type_code() ) )
             this.setDocumentType( Archieve
@@ -50,8 +48,7 @@ public final class Purpose {
                     .documentTypes
                     .getOrDefault( crossBoard.getDocument_type_code(), Errors.DATA_NOT_FOUND.name() ) );
 
-        if ( DataValidationInspector
-                .getInstance()
+        if ( dataValidationInspector
                 .checkObject
                 .test( crossBoard.getDirection_country() ) )
             this.setCountries( Archieve

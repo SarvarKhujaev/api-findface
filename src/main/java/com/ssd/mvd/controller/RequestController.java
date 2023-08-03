@@ -110,7 +110,7 @@ public final class RequestController extends LogInspector {
         return super.checkParam.test( base64url )
                 ? FindFaceComponent
                 .getInstance()
-                .getGetPapilonList()
+                .getPapilonList
                 .apply( base64url )
                 .filter( results -> super.checkData.test( 5, results.getResults() ) )
                 .flatMap( results -> SerDes
@@ -301,7 +301,7 @@ public final class RequestController extends LogInspector {
                 ? super.checkParam.test( apiResponseModel.getStatus().getMessage() )
                 ? FindFaceComponent
                 .getInstance()
-                .getGetViolationListByPinfl()
+                .getViolationListByPinfl
                 .apply( apiResponseModel.getStatus().getMessage() )
                 : super.convert( Collections.emptyList() )
                 : super.convert( Collections.emptyList() ); }
@@ -374,7 +374,7 @@ public final class RequestController extends LogInspector {
         return super.checkParam.test( base64url )
                 ? FindFaceComponent
                 .getInstance()
-                .getGetPapilonList()
+                .getPapilonList
                 .apply( base64url )
                 .filter( results -> super.checkData.test( 5, results.getResults() ) )
                 .flatMap( results -> SerDes

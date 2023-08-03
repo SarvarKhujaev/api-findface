@@ -15,6 +15,7 @@ import reactor.netty.ByteBufMono;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Function;
+import java.util.Optional;
 import java.util.Objects;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class DataValidationInspector {
 
     public static DataValidationInspector getInstance () { return INSTANCE; }
 
-    protected <T> Mono< T > convert ( final T o ) { return Mono.just( o ); }
+    protected <T> Mono< T > convert ( final T o ) { return Optional.ofNullable( o ).isPresent() ? Mono.just( o ) : Mono.empty(); }
 
     public final Predicate< Object > checkObject = Objects::nonNull;
 
@@ -46,18 +47,18 @@ public class DataValidationInspector {
                     && this.checkObject.test( ( (PsychologyCard) o )
                     .getModelForCarList()
                     .getModelForCarList() )
-                    && ( (PsychologyCard) o )
+                    && !( (PsychologyCard) o )
                     .getModelForCarList()
                     .getModelForCarList()
-                    .size() > 0;
+                    .isEmpty();
 
             case 2 -> this.checkObject.test( ( (PsychologyCard) o).getModelForCadastr() )
                     && this.checkObject.test( ( (PsychologyCard) o )
                     .getModelForCadastr()
                     .getPermanentRegistration() )
-                    && ( (PsychologyCard) o )
+                    && !( (PsychologyCard) o )
                     .getModelForCadastr()
-                    .getPermanentRegistration().size() > 0;
+                    .getPermanentRegistration().isEmpty();
 
             case 3 -> this.checkObject.test( ( o ) )
                     && this.checkObject.test( ( (ModelForPassport) o ).getData() )
@@ -69,7 +70,7 @@ public class DataValidationInspector {
                     && this.checkObject.test( ( (CarTotalData) o ).getModelForCar().getPinpp() )
                     && !( (CarTotalData) o ).getModelForCar().getPinpp().isEmpty();
 
-            case 5 -> this.checkObject.test( o ) && ( (List< ? >) o ).size() > 0;
+            case 5 -> this.checkObject.test( o ) && !( (List< ? >) o ).isEmpty();
 
             case 6 -> this.checkObject.test( ( o ) ) && this.checkData.test( 5, ( (ModelForCarList) o ).getModelForCarList() );
 

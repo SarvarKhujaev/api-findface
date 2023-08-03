@@ -6,7 +6,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Data {
+public final class Data {
     @JsonDeserialize
     private Person Person;
     @JsonDeserialize

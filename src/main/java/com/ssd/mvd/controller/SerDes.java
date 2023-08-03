@@ -284,8 +284,7 @@ public final class SerDes extends Config implements Runnable {
             .uri( super.getAPI_FOR_FOR_INSURANCE() + gosno )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.getUpdateTokens().get().getInsurance().apply( gosno );
-                case 501 | 502 | 503 -> ( Mono< Insurance > ) super.saveErrorLog
-                        .apply( res.status().toString(), Methods.GET_INSURANCE );
+                case 501 | 502 | 503 -> ( Mono< Insurance > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_INSURANCE );
                 default -> super.checkResponse.test( res, content )
                         ? content
                         .asString()
@@ -556,7 +555,7 @@ public final class SerDes extends Config implements Runnable {
                             this.getGetModelForCarList().apply( apiResponseModel.getStatus().getMessage() ),
                             FindFaceComponent
                                     .getInstance()
-                                    .getGetViolationListByPinfl()
+                                    .getViolationListByPinfl
                                     .apply( apiResponseModel.getStatus().getMessage() )
                                     .onErrorReturn( Collections.emptyList() ) )
                     .map( PsychologyCard::new )
@@ -606,7 +605,7 @@ public final class SerDes extends Config implements Runnable {
                     this.getGetModelForAddress().apply( data.getData().getPerson().getPCitizen() ),
                     FindFaceComponent
                             .getInstance()
-                            .getGetViolationListByPinfl()
+                            .getViolationListByPinfl
                             .apply( data.getData().getPerson().getPinpp() )
                             .onErrorReturn( Collections.emptyList() ) )
             .flatMap( tuple -> this.getFindAllDataAboutCar().apply( new PsychologyCard( data, tuple ) )
@@ -633,7 +632,6 @@ public final class SerDes extends Config implements Runnable {
             catch ( final InterruptedException e ) {
                 serDes = null;
                 this.setFlag( false );
-                this.getThread().stop();
                 super.logging( e, Methods.UPDATE_TOKENS, "" );
                 SerDes.getSerDes(); } }
         SerDes.getSerDes(); }

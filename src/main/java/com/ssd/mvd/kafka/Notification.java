@@ -4,7 +4,7 @@ import com.mashape.unirest.http.JsonNode;
 import java.util.Date;
 
 @lombok.Data
-public class Notification {
+public final class Notification {
     private Date callingTime;
     private JsonNode jsonNode;
 

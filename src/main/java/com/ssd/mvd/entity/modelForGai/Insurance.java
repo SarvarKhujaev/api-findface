@@ -5,7 +5,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Insurance {
+public final class Insurance {
     private String DateBegin;
     private String DateValid;
     private String TintinType;

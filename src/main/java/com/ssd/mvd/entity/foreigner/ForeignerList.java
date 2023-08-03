@@ -6,7 +6,7 @@ import java.util.List;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class ForeignerList {
+public final class ForeignerList {
     @JsonDeserialize
     private List< Foreigner > data;
 }

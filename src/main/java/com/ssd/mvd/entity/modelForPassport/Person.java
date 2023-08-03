@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.modelForPassport;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class Person {
+public final class Person {
     private Sex Sex;
     private String Pinpp;
     private String pCitizen;

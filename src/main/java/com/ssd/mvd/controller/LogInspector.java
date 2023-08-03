@@ -51,6 +51,6 @@ public class LogInspector extends ErrorController {
                         .accept( SerDes
                                 .getSerDes()
                                 .getGson()
-                                .toJson( new UserRequest( psychologyCard, apiResponseModel ) ) );
+                                .toJson( new UserRequest( psychologyCard, apiResponseModel, DataValidationInspector.getInstance() ) ) );
                 return psychologyCard; };
 }

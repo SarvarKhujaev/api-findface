@@ -9,10 +9,9 @@ import lombok.extern.jackson.Jacksonized;
 import java.util.List;
 
 @lombok.Data
-@Jacksonized
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class ModelForAddress {
+public final class ModelForAddress {
     private RequestGuid RequestGuid;
     private PermanentRegistration PermanentRegistration;
     @JsonDeserialize

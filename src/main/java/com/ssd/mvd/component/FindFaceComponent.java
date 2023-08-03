@@ -12,8 +12,8 @@ import com.ssd.mvd.controller.DataValidationInspector;
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
-@lombok.Data
 public final class FindFaceComponent extends DataValidationInspector {
+
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 
@@ -21,13 +21,15 @@ public final class FindFaceComponent extends DataValidationInspector {
 
     private FindFaceComponent () { this.requester = FindFaceServiceApplication.context.getBean( RSocketRequester.class ); }
 
-    private final Function< String, Mono< Results > > getPapilonList = base64url -> this.getRequester()
+    public final Function< String, Mono< Results > > getPapilonList = base64url -> this.getRequester()
             .route( Methods.GET_FACE_CARD.name() )
             .data( base64url )
             .retrieveMono( Results.class )
             .onErrorReturn( new Results() );
 
-    private final Function< String, Mono< List > > getViolationListByPinfl = pinfl -> super.checkParam.test( pinfl )
+    private RSocketRequester getRequester() { return this.requester; }
+
+    public final Function< String, Mono< List > > getViolationListByPinfl = pinfl -> super.checkParam.test( pinfl )
             ? this.getRequester()
             .route( Methods.GET_VIOLATION_LIST_BY_PINFL.name() )
             .data( pinfl )

@@ -9,7 +9,7 @@ import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Publisher;
 
-public class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
+public final class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
     private final String value;
 
     public CustomPublisherForRequest ( final Integer integer, final Object object ) {

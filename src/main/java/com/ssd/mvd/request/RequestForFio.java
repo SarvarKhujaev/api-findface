@@ -3,7 +3,7 @@ package com.ssd.mvd.request;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import java.util.Locale;
 
-public class RequestForFio {
+public final class RequestForFio {
     private final String Name;
     private final String Surname;
     private final String Patronym;

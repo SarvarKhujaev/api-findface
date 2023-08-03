@@ -1,6 +1,6 @@
 package com.ssd.mvd.request;
 
-public class RequestForPassport {
+public final class RequestForPassport {
     private final String SerialNumber;
     private final String BirthDate;
 

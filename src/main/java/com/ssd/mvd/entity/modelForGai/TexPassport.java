@@ -6,7 +6,7 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class TexPassport {
+public final class TexPassport {
     private Double weight; // вес без груза
     private Double totalWeight; // общий вес
 

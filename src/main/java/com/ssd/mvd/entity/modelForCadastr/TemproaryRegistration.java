@@ -3,7 +3,7 @@ package com.ssd.mvd.entity.modelForCadastr;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
-public class TemproaryRegistration {
+public final class TemproaryRegistration {
     private String pPsp;
     private String pPerson;
     private pStatus pStatus;

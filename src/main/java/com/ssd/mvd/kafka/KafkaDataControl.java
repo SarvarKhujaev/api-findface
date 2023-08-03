@@ -12,10 +12,10 @@ import reactor.kafka.sender.SenderOptions;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
 @lombok.Data
-public class KafkaDataControl extends Config {
-    private static KafkaDataControl instance = new KafkaDataControl();
+public final class KafkaDataControl extends Config {
+    private final static KafkaDataControl instance = new KafkaDataControl();
 
-    public static KafkaDataControl getInstance () { return instance != null ? instance : ( instance = new KafkaDataControl() ); }
+    public static KafkaDataControl getInstance () { return instance; }
 
     private final Supplier< Map< String, Object > > getKafkaSenderOptions = () -> Map.of(
             ProducerConfig.ACKS_CONFIG, "-1",
