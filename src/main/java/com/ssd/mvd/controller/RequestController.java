@@ -26,7 +26,7 @@ public final class RequestController extends LogInspector {
     private static String token;
 
     @MessageMapping ( value = "PING" )
-    public Mono< Boolean > ping () { return super.convert( true ); }
+    public Mono< Boolean > ping () { return super.convert( Boolean.TRUE ); }
 
     @MessageMapping ( value = "GET_CAR_TONIROVKA" )
     public Mono< Tonirovka > getCarTonirovka ( final ApiResponseModel apiResponseModel ) {
@@ -37,8 +37,8 @@ public final class RequestController extends LogInspector {
                 .getGetVehicleTonirovka()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new Tonirovka( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new Tonirovka( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new Tonirovka( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new Tonirovka( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new Tonirovka( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
@@ -52,7 +52,7 @@ public final class RequestController extends LogInspector {
                         error,
                         Methods.GET_PERSON_TOTAL_DATA_BY_FIO,
                         fio.toString() ) )
-                .onErrorReturn( new PersonTotalDataByFIO( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                .onErrorReturn( new PersonTotalDataByFIO( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) )
                 : super.convert( new PersonTotalDataByFIO( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA" ) // возвращает данные по номеру машины
@@ -95,11 +95,11 @@ public final class RequestController extends LogInspector {
                                 .build() )
                         .map( carTotalData::save )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                throwable -> super.convert( new CarTotalData( super.getConnectionError.apply( throwable ) ) ) )
+                                throwable -> super.convert( new CarTotalData( super.error.apply( throwable.getMessage(), 4 ) ) ) )
                         : super.convert( carTotalData) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new CarTotalData( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new CarTotalData( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new CarTotalData( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new CarTotalData( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
@@ -126,7 +126,7 @@ public final class RequestController extends LogInspector {
                         .getGetPsychologyCardByImage()
                         .apply( results, apiResponseModel )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply(throwable))) )
+                                throwable -> super.convert( new PsychologyCard( super.error.apply(throwable.getMessage(), 4))) )
                         : SerDes
                         .getSerDes()
                         .getPsychologyCard(
@@ -134,7 +134,7 @@ public final class RequestController extends LogInspector {
                                 new PsychologyCard( results ),
                                 apiResponseModel )
                         : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ) )
-                : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) ); }
+                : super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR" ) // возвращает данные по номеру кадастра
     public Flux< PsychologyCard > getPersonalCadastor ( final ApiResponseModel apiResponseModel ) {
@@ -157,11 +157,11 @@ public final class RequestController extends LogInspector {
                                         .getGetPsychologyCardByData()
                                         .apply( data1, apiResponseModel )
                                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                                throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) ) ) )
+                                                throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) ) ) )
                         .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                                throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                        .onErrorReturn( new PsychologyCard( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                        : Flux.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( apiResponseModel.getStatus().getMessage() ) ) ) )
+                                throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                        .onErrorReturn( new PsychologyCard( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
+                        : Flux.just( new PsychologyCard( super.error.apply( apiResponseModel.getStatus().getMessage(), 3 ) ) ) )
                 : Flux.just( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     // возвращает данные по номеру машины в слуцчае если у человека роль IMITATION
@@ -195,8 +195,8 @@ public final class RequestController extends LogInspector {
                                                 .build() )
                                         .build() ) )
                 .onErrorResume( ReadTimeoutException.class,
-                        throwable -> super.convert( new CarTotalData(super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new CarTotalData( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new CarTotalData(super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new CarTotalData( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" ) // возвращает данные по Пинфл
@@ -209,14 +209,14 @@ public final class RequestController extends LogInspector {
                 .getGetPsychologyCardByPinfl()
                 .apply( apiResponseModel )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) )
+                        throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                : super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate ( final ApiResponseModel apiResponseModel ) {
         if ( !super.checkParam.test( apiResponseModel.getStatus().getMessage() ) )
-            return super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
+            return super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) );
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         return SerDes.getSerDes().getFlag()
                 ? SerDes
@@ -228,8 +228,8 @@ public final class RequestController extends LogInspector {
                         .getGetPsychologyCardByData()
                         .apply( data, apiResponseModel ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new PsychologyCard( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,8 +251,8 @@ public final class RequestController extends LogInspector {
                         .apply( apiResponseModel.changeMessage( carTotalData.getModelForCar().getPinpp() ) )
                         .map( carTotalData::save ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new CarTotalData( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new CarTotalData( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new CarTotalData( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new CarTotalData( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new CarTotalData( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_MODEL_FOR_CAR_LIST_INITIAL" ) // используется при запросе по пинфл человека
@@ -270,8 +270,8 @@ public final class RequestController extends LogInspector {
                         .apply( modelForCarList )
                         : super.convert( modelForCarList) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new ModelForCarList( super.getConnectionError.apply( throwable ) ) ) )
-                .onErrorReturn( new ModelForCarList( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new ModelForCarList( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new ModelForCarList( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new ModelForCarList( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_FINES_FOR_DRIVING" ) // возвращает все штрафы от гаи по номеру машины
@@ -357,13 +357,12 @@ public final class RequestController extends LogInspector {
                                             .apply( apiResponseModel.changeMessage( data1.getData().getPerson().getPinpp() ) )
                                             .map( psychologyCard -> psychologyCard.save( data1 ) )
                                             .onErrorResume( ReadTimeoutException.class,
-                                                    throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                                            : super.convert( new PsychologyCard( super.getDataNotFoundErrorResponse.apply(
-                                            person.getPPsp() + " : " + person.getPDateBirth() ) ) ) ) )
+                                                    throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                                            : super.convert( new PsychologyCard( super.error.apply( person.getPPsp() + " : " + person.getPDateBirth(), 3 ) ) ) ) )
                         .onErrorResume( ReadTimeoutException.class,
-                                throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                        .onErrorReturn( new PsychologyCard( super.getExternalServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
-                        : Flux.just( new PsychologyCard( super.getDataNotFoundErrorResponse.apply( apiResponseModel.getStatus().getMessage() ) ) ) )
+                                throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                        .onErrorReturn( new PsychologyCard( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
+                        : Flux.just( new PsychologyCard( super.error.apply( apiResponseModel.getStatus().getMessage(), 3 ) ) ) )
                 : Flux.just( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_INITIAL" ) // возвращает данные по фотографии
@@ -391,7 +390,7 @@ public final class RequestController extends LogInspector {
                         .getSerDes()
                         .getPsychologyCard( token, new PsychologyCard( results ), apiResponseModel )
                         : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ) )
-                : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) ); }
+                : super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL" ) // возвращает данные по Пинфл
     public Mono< PsychologyCard > GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL ( final ApiResponseModel apiResponseModel ) {
@@ -403,14 +402,14 @@ public final class RequestController extends LogInspector {
                 .getGetPsychologyCardByPinflInitial()
                 .apply( apiResponseModel )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply( throwable ) ) ) )
-                : super.convert( new PsychologyCard( super.getServiceErrorResponse.apply(Errors.WRONG_PARAMS.name() ) ) )
+                        throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                : super.convert( new PsychologyCard( super.error.apply(Errors.WRONG_PARAMS.name(), 2 ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSON_DATA_BY_PASSPORT_AND_BIRTHDATE_INITIAL" ) // возвращает данные по номеру паспорта
     public Mono< PsychologyCard > GET_PERSON_INITIAL_DATA_BY_PASSPORT_AND_BIRTHDATE ( final ApiResponseModel apiResponseModel ) {
         if ( !super.checkParam.test( apiResponseModel.getStatus().getMessage() ) )
-            return super.convert( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.WRONG_PARAMS.name() ) ) );
+            return super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) );
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
         super.logging( "Passport: " + strings[0] + " : " + strings[1] );
         return SerDes.getSerDes().getFlag()
@@ -424,7 +423,7 @@ public final class RequestController extends LogInspector {
                         .apply( apiResponseModel.changeMessage( data.getData().getPerson().getPinpp() ) )
                         .map( psychologyCard -> psychologyCard.save( data ) ) )
                 .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.convert( new PsychologyCard( super.getConnectionError.apply(throwable))) )
-                .onErrorReturn( new PsychologyCard( super.getServiceErrorResponse.apply( Errors.SERVICE_WORK_ERROR.name() ) ) )
+                        throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new PsychologyCard( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) )
                 : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ); }
 }
