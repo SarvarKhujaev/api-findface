@@ -1,7 +1,6 @@
 package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.constants.ErrorResponse;
-
 import java.util.ArrayList;
 import java.util.List;
 

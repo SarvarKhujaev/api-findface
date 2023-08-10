@@ -15,7 +15,7 @@ public final class UserRequest {
     private String integratedServiceName;
     private final String microserviceName = "api-findface";
 
-    public UserRequest (final PsychologyCard psychologyCard,
+    public UserRequest ( final PsychologyCard psychologyCard,
                         final ApiResponseModel apiResponseModel,
                         final DataValidationInspector dataValidationInspector ) {
         this.setCreatedAt( new Date().getTime() );

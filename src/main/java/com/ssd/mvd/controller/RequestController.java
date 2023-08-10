@@ -145,9 +145,7 @@ public final class RequestController extends LogInspector {
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .flatMapMany( data -> super.checkData.test( 5, data.getPermanentRegistration() )
-                        ? Flux.fromStream( data
-                                .getPermanentRegistration()
-                                .stream() )
+                        ? Flux.fromStream( data.getPermanentRegistration().stream() )
                         .flatMap( person -> SerDes
                                 .getSerDes()
                                 .getGetModelForPassport()
@@ -175,27 +173,25 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .flatMap( modelForCarList -> super.checkObject.test( modelForCarList )
                         && super.checkData.test( 5, modelForCarList.getModelForCarList() )
-                        ? this.getCarTotalData(
-                                ApiResponseModel
-                                        .builder()
-                                        .status( Status
-                                                .builder()
-                                                .message( modelForCarList
-                                                        .getModelForCarList()
-                                                        .get( 0 )
-                                                        .getPlateNumber() )
-                                                .build() )
-                                        .build() )
-                        : this.getCarTotalData(
-                                ApiResponseModel
-                                        .builder()
-                                        .status( Status
-                                                .builder()
-                                                .message( "01Y456MA" )
-                                                .build() )
-                                        .build() ) )
+                        ? this.getCarTotalData( ApiResponseModel
+                        .builder()
+                        .status( Status
+                                .builder()
+                                .message( modelForCarList
+                                        .getModelForCarList()
+                                        .get( 0 )
+                                        .getPlateNumber() )
+                                .build() )
+                        .build() )
+                        : this.getCarTotalData( ApiResponseModel
+                        .builder()
+                        .status( Status
+                                .builder()
+                                .message( "01Y456MA" )
+                                .build() )
+                        .build() ) )
                 .onErrorResume( ReadTimeoutException.class,
-                        throwable -> super.convert( new CarTotalData(super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                        throwable -> super.convert( new CarTotalData( super.error.apply( throwable.getMessage(), 4 ) ) ) )
                 .onErrorReturn( new CarTotalData( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new CarTotalData( super.getErrorResponse.get() ) ); }
 
@@ -281,6 +277,9 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetViolationList()
                 .apply( apiResponseModel.getStatus().getMessage() )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new ViolationsList( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new ViolationsList( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new ViolationsList( super.getErrorResponse.get() ) ); }
 
     // ---------------------------------------------------------------- дааные для человека
@@ -293,6 +292,9 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetPinpp()
                 .apply( apiResponseModel.getStatus().getMessage() )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new Pinpp( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new Pinpp( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new Pinpp( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" ) // возвращает список правонарушений гражданина
@@ -303,6 +305,8 @@ public final class RequestController extends LogInspector {
                 .getInstance()
                 .getViolationListByPinfl
                 .apply( apiResponseModel.getStatus().getMessage() )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class, throwable -> super.convert( Collections.emptyList() ) )
+                .onErrorReturn( Collections.emptyList() )
                 : super.convert( Collections.emptyList() )
                 : super.convert( Collections.emptyList() ); }
 
@@ -322,6 +326,9 @@ public final class RequestController extends LogInspector {
                         .getAnalyzeCrossData()
                         .apply( crossBoardInfo )
                         : super.convert( crossBoardInfo ) )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new CrossBoardInfo( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new CrossBoardInfo( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
@@ -332,6 +339,9 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetModelForAddress()
                 .apply( apiResponseModel.getStatus().getMessage() )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new ModelForAddress( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new ModelForAddress( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new ModelForAddress( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" ) // возвращает данные по номеру кадастра
@@ -390,6 +400,9 @@ public final class RequestController extends LogInspector {
                         .getSerDes()
                         .getPsychologyCard( token, new PsychologyCard( results ), apiResponseModel )
                         : super.convert( new PsychologyCard( super.getErrorResponse.get() ) ) )
+                .onErrorResume( io.netty.handler.timeout.ReadTimeoutException.class,
+                        throwable -> super.convert( new PsychologyCard( super.error.apply( throwable.getMessage(), 4 ) ) ) )
+                .onErrorReturn( new PsychologyCard( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 1 ) ) )
                 : super.convert( new PsychologyCard( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) ); }
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL" ) // возвращает данные по Пинфл
