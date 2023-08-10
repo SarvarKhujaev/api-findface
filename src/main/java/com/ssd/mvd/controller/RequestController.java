@@ -332,7 +332,7 @@ public final class RequestController extends LogInspector {
                 : super.convert( new CrossBoardInfo( super.getErrorResponse.get() ) ); }
 
     @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
-    public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION (final ApiResponseModel apiResponseModel ) {
+    public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION ( final ApiResponseModel apiResponseModel ) {
         super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
         return SerDes.getSerDes().getFlag()
                 ? SerDes

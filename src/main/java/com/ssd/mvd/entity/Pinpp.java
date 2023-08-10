@@ -6,7 +6,6 @@ import com.ssd.mvd.constants.ErrorResponse;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class Pinpp {
-    private String Data;
     private String Name;
     private String Pinpp;
     private String Region;
@@ -19,6 +18,7 @@ public final class Pinpp {
     private String Patronym;
     private String Cadastre;
     private String BirthDate;
+    private String BirthPlace;
     private String BirthPlaceRegion;
     private String BirthPlaceCountry;
     private String BirthPlaceDistrict;
