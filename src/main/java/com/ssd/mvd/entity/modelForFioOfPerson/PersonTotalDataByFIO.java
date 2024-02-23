@@ -5,11 +5,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ssd.mvd.constants.ErrorResponse;
 import java.util.List;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
 public final class PersonTotalDataByFIO {
+    public List<Person> getData() {
+        return this.Data;
+    }
+
+    public void setData( final List< Person > data ) {
+        this.Data = data;
+    }
+
+    public ErrorResponse getErrorResponse() {
+        return this.errorResponse;
+    }
+
+    public void setErrorResponse( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
+
     private Integer AnswereId;
     private String AnswereMessage;
     private String AnswereComment;
@@ -18,5 +31,17 @@ public final class PersonTotalDataByFIO {
 
     private ErrorResponse errorResponse;
 
-    public PersonTotalDataByFIO ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public static PersonTotalDataByFIO generate ( final ErrorResponse errorResponse ) {
+        return new PersonTotalDataByFIO( errorResponse );
+    }
+
+    public static PersonTotalDataByFIO generate () {
+        return new PersonTotalDataByFIO();
+    }
+
+    private PersonTotalDataByFIO () {}
+
+    private PersonTotalDataByFIO ( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
 }

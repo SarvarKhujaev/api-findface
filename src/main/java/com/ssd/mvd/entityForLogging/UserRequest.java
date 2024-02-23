@@ -4,26 +4,41 @@ import com.ssd.mvd.controller.DataValidationInspector;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.constants.Errors;
-import java.util.Date;
 
-@lombok.Data
-public final class UserRequest {
-    private Long createdAt;
+public final class UserRequest extends DataValidationInspector {
+    public void setCreatedAt( final long createdAt ) {
+        this.createdAt = createdAt;
+    }
+
+    public void setPersonInfo( final PersonInfo personInfo ) {
+        this.personInfo = personInfo;
+    }
+
+    public void setUserPassportNumber( final String userPassportNumber ) {
+        this.userPassportNumber = userPassportNumber;
+    }
+
+    public void setIntegratedServiceName( final String integratedServiceName ) {
+        this.integratedServiceName = integratedServiceName;
+    }
+
+    private long createdAt;
     private PersonInfo personInfo;
 
     private String userPassportNumber;
     private String integratedServiceName;
     private final String microserviceName = "api-findface";
 
-    public UserRequest ( final PsychologyCard psychologyCard,
-                        final ApiResponseModel apiResponseModel,
-                        final DataValidationInspector dataValidationInspector ) {
-        this.setCreatedAt( new Date().getTime() );
-        this.setPersonInfo( new PersonInfo( psychologyCard, dataValidationInspector ) );
+    public UserRequest (
+            final PsychologyCard psychologyCard,
+            final ApiResponseModel apiResponseModel ) {
+        this.setCreatedAt( super.newDate().getTime() );
+        this.setPersonInfo( new PersonInfo( psychologyCard ) );
 
         this.setIntegratedServiceName( "OVIR" );
         this.setUserPassportNumber(
-                dataValidationInspector.checkObject.test( apiResponseModel.getUser() )
+                super.checkObject( apiResponseModel.getUser() )
                 ? apiResponseModel.getUser().getPassportNumber()
-                : Errors.DATA_NOT_FOUND.name() ); }
+                : Errors.DATA_NOT_FOUND.name() );
+    }
 }

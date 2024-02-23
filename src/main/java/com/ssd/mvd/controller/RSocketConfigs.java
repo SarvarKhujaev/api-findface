@@ -13,5 +13,7 @@ public class RSocketConfigs {
     private Integer port;
 
     @Bean
-    RSocketRequester findFace ( RSocketRequester.Builder builder ) { return builder.tcp( this.host, this.port ); }
+    RSocketRequester findFace ( final RSocketRequester.Builder builder ) {
+        return builder.tcp( this.host, this.port );
+    }
 }

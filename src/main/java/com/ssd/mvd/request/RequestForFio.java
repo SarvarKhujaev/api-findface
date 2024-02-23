@@ -8,8 +8,13 @@ public final class RequestForFio {
     private final String Surname;
     private final String Patronym;
 
-    public RequestForFio ( final FIO fio ) {
+    public static RequestForFio generate ( final FIO fio ) {
+        return new RequestForFio( fio );
+    }
+
+    private RequestForFio ( final FIO fio ) {
         this.Patronym = fio.getPatronym().toUpperCase( Locale.ROOT );
         this.Surname = fio.getSurname().toUpperCase( Locale.ROOT );
-        this.Name = fio.getName().toUpperCase( Locale.ROOT ); }
+        this.Name = fio.getName().toUpperCase( Locale.ROOT );
+    }
 }

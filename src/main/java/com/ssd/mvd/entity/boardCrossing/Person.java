@@ -1,16 +1,13 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
 public final class Person {
     private byte sex;
     private byte livestatus;
     private byte transaction_id;
 
-    private Integer citizenshipid;
-    private Integer nationalityid;
-    private Integer birthcountryid;
+    private int citizenshipid;
+    private int nationalityid;
+    private int birthcountryid;
 
     private String namelat;
     private String engname;
@@ -23,4 +20,10 @@ public final class Person {
     private String birthcountry;
     private String current_pinpp;
     private String current_document;
+
+    public int getNationalityid() {
+        return this.nationalityid;
+    }
+
+    public Person () {}
 }

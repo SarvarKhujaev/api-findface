@@ -3,10 +3,19 @@ package com.ssd.mvd.entity;
 import java.util.List;
 import java.util.UUID;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
 public final class User {
+    public UUID getId() {
+        return this.id;
+    }
+
+    public void setId( final UUID id ) {
+        this.id = id;
+    }
+
+    public String getPassportNumber() {
+        return this.passportNumber;
+    }
+
     private UUID id;
 
     private String role;

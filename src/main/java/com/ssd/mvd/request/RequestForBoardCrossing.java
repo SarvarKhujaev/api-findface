@@ -9,7 +9,12 @@ public final class RequestForBoardCrossing {
     private final Character langId = '1';
     private final Character is_consent = 'Y';
 
-    public RequestForBoardCrossing ( final String value ) {
+    public static RequestForBoardCrossing generate ( final String value ) {
+        return new RequestForBoardCrossing( value );
+    }
+
+    private RequestForBoardCrossing ( final String value ) {
         this.birth_date = value.split( "_" )[1];
-        this.document = value.split( "_" )[0]; }
+        this.document = value.split( "_" )[0];
+    }
 }

@@ -8,10 +8,20 @@ import com.ssd.mvd.constants.ErrorResponse;
 import lombok.extern.jackson.Jacksonized;
 import java.util.List;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
+@Jacksonized
 public final class ModelForAddress {
+    public com.ssd.mvd.entity.PermanentRegistration getPermanentRegistration() {
+        return this.PermanentRegistration;
+    }
+
+    public void setErrorResponse( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
+
+    public ErrorResponse getErrorResponse() {
+        return this.errorResponse;
+    }
+
     private RequestGuid RequestGuid;
     private PermanentRegistration PermanentRegistration;
     @JsonDeserialize
@@ -19,5 +29,13 @@ public final class ModelForAddress {
 
     private ErrorResponse errorResponse;
 
-    public ModelForAddress ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public static ModelForAddress generate (
+            final ErrorResponse errorResponse
+    ) {
+        return new ModelForAddress( errorResponse );
+    }
+
+    private ModelForAddress ( final ErrorResponse errorResponse ) {
+        this.setErrorResponse( errorResponse );
+    }
 }

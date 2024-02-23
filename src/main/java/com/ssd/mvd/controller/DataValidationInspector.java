@@ -12,73 +12,102 @@ import reactor.netty.http.client.HttpClientResponse;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import java.util.function.Function;
 import java.util.Optional;
-import java.util.Objects;
 import java.util.List;
 
-public class DataValidationInspector {
-    protected static final DataValidationInspector INSTANCE = new DataValidationInspector();
+public class DataValidationInspector extends CollectionsInspector {
+    protected <T> Mono< T > convert ( final T o ) {
+        return Optional.ofNullable( o ).isPresent() ? Mono.just( o ) : Mono.empty();
+    }
 
-    public static DataValidationInspector getInstance () { return INSTANCE; }
+    public boolean checkObject ( final Object o ) {
+        return o != null;
+    }
 
-    protected <T> Mono< T > convert ( final T o ) { return Optional.ofNullable( o ).isPresent() ? Mono.just( o ) : Mono.empty(); }
+    protected boolean checkParam ( final String param ) {
+        return this.checkObject( param ) && !param.isEmpty();
+    }
 
-    public final Predicate< Object > checkObject = Objects::nonNull;
+    public String joinString ( final Pinpp pinpp ) {
+        return String.join( " ", pinpp.getName(), pinpp.getSurname(), pinpp.getPatronym() );
+    }
 
-    protected final Predicate< String > checkParam = param -> param != null && !param.isEmpty();
+    protected int checkDifference ( final int value ) {
+        return value > 0 && value < 100 ? value : 10;
+    }
 
-    public final Function< Pinpp, String > joinString = pinpp -> String.join( " ", pinpp.getName(), pinpp.getSurname(), pinpp.getPatronym() );
+    protected boolean checkResponse (
+            final HttpClientResponse httpClientResponse,
+            final ByteBufMono byteBufMono
+    ) {
+        return this.checkObject( byteBufMono )
+                && httpClientResponse.status().code() == 200;
+    }
 
-    protected final Function< Integer, Integer > checkDifference = integer -> integer > 0 && integer < 100 ? integer : 10;
+    protected boolean checkPerson (
+            final Person person,
+            final Pinpp pinpp
+    ) {
+        return person.getPDateBirth().equals( pinpp.getBirthDate() )
+                && person.getPPerson().contains( pinpp.getName() );
+    }
 
-    protected final BiPredicate< HttpClientResponse, ByteBufMono > checkResponse =
-            ( httpClientResponse, byteBufMono ) -> this.checkObject.test( byteBufMono )
-            && httpClientResponse.status().code() == 200;
+    public boolean check ( final List< ? > list ) {
+        return this.checkObject( list ) && !list.isEmpty();
+    }
 
-    protected final BiPredicate< Person, Pinpp > checkPerson = ( person, pinpp ) ->
-            person.getPDateBirth().equals( pinpp.getBirthDate() )
-            && person.getPPerson().contains( pinpp.getName() );
+    public boolean check ( final CarTotalData carTotalData ) {
+        return this.checkObject( carTotalData.getModelForCar() )
+                && this.checkObject( carTotalData.getModelForCar().getPinpp() )
+                && !carTotalData.getModelForCar().getPinpp().isEmpty();
+    }
 
-    public final BiPredicate< Integer, Object > checkData = ( integer, o ) -> switch ( integer ) {
-            case 1 -> this.checkObject.test( ( (PsychologyCard) o ).getModelForCarList() )
-                    && this.checkObject.test( ( (PsychologyCard) o )
-                    .getModelForCarList()
-                    .getModelForCarList() )
-                    && !( (PsychologyCard) o )
-                    .getModelForCarList()
-                    .getModelForCarList()
-                    .isEmpty();
+    public boolean check ( final PsychologyCard psychologyCard ) {
+        return this.checkObject( psychologyCard.getModelForCarList() )
+                && this.checkObject( psychologyCard
+                .getModelForCarList()
+                .getModelForCarList() )
+                && !psychologyCard
+                .getModelForCarList()
+                .getModelForCarList()
+                .isEmpty();
+    }
 
-            case 2 -> this.checkObject.test( ( (PsychologyCard) o).getModelForCadastr() )
-                    && this.checkObject.test( ( (PsychologyCard) o )
-                    .getModelForCadastr()
-                    .getPermanentRegistration() )
-                    && !( (PsychologyCard) o )
-                    .getModelForCadastr()
-                    .getPermanentRegistration().isEmpty();
+    public boolean check ( final ModelForCarList modelForCarList ) {
+        return this.checkObject( modelForCarList ) && this.check( modelForCarList.getModelForCarList() );
+    }
 
-            case 3 -> this.checkObject.test( ( o ) )
-                    && this.checkObject.test( ( (ModelForPassport) o ).getData() )
-                    && this.checkObject.test( ( (ModelForPassport) o ).getData().getPerson() )
-                    && this.checkObject.test( ( (ModelForPassport) o ).getData().getPerson().getPinpp() )
-                    && this.checkObject.test( ( (ModelForPassport) o ).getData().getPerson().getPCitizen() );
+    public boolean check ( final ModelForAddress modelForAddress ) {
+        return this.checkObject( modelForAddress ) && this.checkObject( modelForAddress.getPermanentRegistration() );
+    }
 
-            case 4 -> this.checkObject.test( ( (CarTotalData) o ).getModelForCar() )
-                    && this.checkObject.test( ( (CarTotalData) o ).getModelForCar().getPinpp() )
-                    && !( (CarTotalData) o ).getModelForCar().getPinpp().isEmpty();
+    public boolean check ( final ModelForPassport modelForPassport ) {
+        return this.checkObject( modelForPassport )
+                && this.checkObject( modelForPassport.getData() )
+                && this.checkObject( modelForPassport.getData().getPerson() )
+                && this.checkObject( modelForPassport.getData().getPerson().getPinpp() )
+                && this.checkObject( modelForPassport.getData().getPerson().getPCitizen() );
+    }
 
-            case 5 -> this.checkObject.test( o ) && !( (List< ? >) o ).isEmpty();
+    public boolean checkPinpp ( final PsychologyCard psychologyCard ) {
+        return this.checkObject( psychologyCard.getPinpp() )
+                && this.checkObject( psychologyCard.getPinpp().getCadastre() )
+                && psychologyCard.getPinpp().getCadastre().length() > 1;
+    }
 
-            case 6 -> this.checkObject.test( ( o ) ) && this.checkData.test( 5, ( (ModelForCarList) o ).getModelForCarList() );
+    public boolean checkCadastor ( final PsychologyCard psychologyCard ) {
+        return this.checkObject( psychologyCard.getModelForCadastr() )
+                && this.checkObject(
+                        psychologyCard
+                            .getModelForCadastr()
+                            .getPermanentRegistration() )
+                && !psychologyCard
+                .getModelForCadastr()
+                .getPermanentRegistration().isEmpty();
+    }
 
-            case 7 -> this.checkObject.test( o ) && this.checkObject.test( ( (ModelForPassport) o ).getData().getDocument() );
-
-            case 8 -> this.checkObject.test( o ) && this.checkObject.test( ( (ModelForAddress) o ).getPermanentRegistration() );
-
-            default -> this.checkObject.test( ( (PsychologyCard) o ).getPinpp() )
-                    && this.checkObject.test( ( (PsychologyCard) o ).getPinpp().getCadastre() )
-                    && ( (PsychologyCard) o).getPinpp().getCadastre().length() > 1; };
+    public boolean checkPassport ( final ModelForPassport modelForPassport ) {
+        return this.checkObject( modelForPassport )
+                && this.checkObject( modelForPassport.getData().getDocument() );
+    }
 }

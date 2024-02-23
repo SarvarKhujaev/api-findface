@@ -1,14 +1,62 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.controller.DataValidationInspector;
-
+import com.ssd.mvd.controller.LogInspector;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
-public final class CrossBoard {
+public final class CrossBoard extends LogInspector {
+    public Date getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate( final Date registrationDate ) {
+        this.registrationDate = registrationDate;
+    }
+
+    public Integer getPeriod_code() {
+        return period_code;
+    }
+
+    public Integer getTrip_purpose_code() {
+        return trip_purpose_code;
+    }
+
+    public Integer getDirection_country() {
+        return direction_country;
+    }
+
+    public String getPinpp() {
+        return pinpp;
+    }
+
+    public void setPinpp( final String pinpp ) {
+        this.pinpp = pinpp;
+    }
+
+    public String getReg_date() {
+        return reg_date;
+    }
+
+    public String getDocument_type_code() {
+        return document_type_code;
+    }
+
+    public String getDirection_type_code() {
+        return direction_type_code;
+    }
+
+    public void setDirection_type_code( final String direction_type_code ) {
+        this.direction_type_code = direction_type_code;
+    }
+
+    public String getTrans_category_code() {
+        return trans_category_code;
+    }
+
+    public void setPurpose( final Purpose purpose ) {
+        this.purpose = purpose;
+    }
+
     private Long card_id;
     private Date registrationDate;
 
@@ -35,9 +83,14 @@ public final class CrossBoard {
     private Purpose purpose;
 
     public CrossBoard save ( final Integer nationalityId ) {
-        try { this.setRegistrationDate( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( this.getReg_date() ) );
-        } catch ( final Exception e ) { System.out.println( e.getMessage() ); }
+        try {
+            this.setRegistrationDate( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( this.getReg_date() ) );
+        } catch ( final Exception e ) {
+            super.logging( e );
+        }
+
         this.setDirection_type_code( this.getDirection_type_code().equals( "P" ) ? "въезд" : "выезд" );
-        this.setPurpose( new Purpose( this, nationalityId, DataValidationInspector.getInstance() ) );
-        return this; }
+        this.setPurpose( new Purpose( this, nationalityId ) );
+        return this;
+    }
 }

@@ -2,10 +2,47 @@ package com.ssd.mvd.entity;
 
 import com.ssd.mvd.constants.ErrorResponse;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
 public final class Pinpp {
+    public String getName() {
+        return this.Name;
+    }
+
+    public void setName ( final String name ) {
+        Name = name;
+    }
+
+    public String getPinpp() {
+        return this.Pinpp;
+    }
+
+    public void setPinpp ( final String pinpp ) {
+        Pinpp = pinpp;
+    }
+
+    public String getSurname() {
+        return this.Surname;
+    }
+
+    public String getPatronym() {
+        return this.Patronym;
+    }
+
+    public String getCadastre() {
+        return this.Cadastre;
+    }
+
+    public String getBirthDate() {
+        return this.BirthDate;
+    }
+
+    public ErrorResponse getErrorResponse() {
+        return this.errorResponse;
+    }
+
+    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
+
     private String Name;
     private String Pinpp;
     private String Region;
@@ -25,5 +62,13 @@ public final class Pinpp {
 
     private ErrorResponse errorResponse;
 
-    public Pinpp ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public static Pinpp generate (
+            final ErrorResponse errorResponse
+    ) {
+        return new Pinpp( errorResponse );
+    }
+
+    private Pinpp ( final ErrorResponse errorResponse ) {
+        this.setErrorResponse( errorResponse );
+    }
 }

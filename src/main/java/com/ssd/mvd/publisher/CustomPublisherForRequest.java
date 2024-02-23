@@ -12,24 +12,38 @@ import org.reactivestreams.Publisher;
 public final class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
     private final String value;
 
-    public CustomPublisherForRequest ( final Integer integer, final Object object ) {
+    public static CustomPublisherForRequest generate (
+            final int integer, final Object object
+    ) {
+        return new CustomPublisherForRequest( integer, object );
+    }
+
+    private CustomPublisherForRequest ( final int integer, final Object object ) {
         this.value = SerDes
             .getSerDes()
             .getGson()
             .toJson( switch ( integer ) {
-                case 1 -> new RequestForCadaster( String.valueOf( object ) );
-                case 2 -> new RequestForFio( (FIO) object );
-                case 3 -> new RequestForModelOfAddress( String.valueOf( object ) );
-                case 4 -> new RequestForBoardCrossing( String.valueOf( object ) );
-                default -> new RequestForPassport( String.valueOf( object ) ); } ); }
+                case 1 -> RequestForCadaster.generate( String.valueOf( object ) );
+                case 2 -> RequestForFio.generate( (FIO) object );
+                case 3 -> RequestForModelOfAddress.generate( String.valueOf( object ) );
+                case 4 -> RequestForBoardCrossing.generate( String.valueOf( object ) );
+                default -> RequestForPassport.generate( String.valueOf( object ) );
+            } );
+    }
 
     @Override
-    public void subscribe( final Subscriber subscriber ) { subscriber.onSubscribe( new Subscription() {
-        @Override
-        public void request( final long l ) {
-            subscriber.onNext( value );
-            subscriber.onComplete(); }
+    public void subscribe( final Subscriber subscriber ) {
+        subscriber.onSubscribe( new Subscription() {
+                @Override
+                public void request( final long l ) {
+                    subscriber.onNext( value );
+                    subscriber.onComplete();
+                }
 
-        @Override
-        public void cancel() { subscriber.onError( new Exception( "Message was not sent!!!" ) ); } } ); }
+                @Override
+                public void cancel() {
+                    subscriber.onError( new Exception( "Message was not sent!!!" ) );
+                }
+        } );
+    }
 }

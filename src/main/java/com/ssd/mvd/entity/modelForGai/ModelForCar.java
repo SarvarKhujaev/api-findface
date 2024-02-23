@@ -5,10 +5,47 @@ import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import reactor.util.function.Tuple3;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
 public final class ModelForCar {
+    public String getPinpp() {
+        return this.Pinpp;
+    }
+
+    public void setPinpp ( final String pinpp ) {
+        this.Pinpp = pinpp;
+    }
+
+    public String getPerson() {
+        return this.Person;
+    }
+
+    public void setPerson ( final String person ) {
+        this.Person = person;
+    }
+
+    public String getPlateNumber() {
+        return this.PlateNumber;
+    }
+
+    public void setTonirovka ( final Tonirovka tonirovka ) {
+        this.tonirovka = tonirovka;
+    }
+
+    public void setInsurance ( final Insurance insurance ) {
+        this.insurance = insurance;
+    }
+
+    public void setDoverennostList ( final DoverennostList doverennostList  ) {
+        this.doverennostList = doverennostList;
+    }
+
+    public ErrorResponse getErrorResponse() {
+        return this.errorResponse;
+    }
+
+    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
+
     private String Stir;
     private String Year;
     private String Pinpp;
@@ -37,14 +74,18 @@ public final class ModelForCar {
 
     private ErrorResponse errorResponse;
 
-    public PsychologyCard save ( final Tuple3<
-            Insurance,
-            Tonirovka,
-            DoverennostList > tuple3, PsychologyCard psychologyCard ) {
+    public PsychologyCard save (
+            final Tuple3<
+                Insurance,
+                Tonirovka,
+                DoverennostList > tuple3,
+            PsychologyCard psychologyCard
+    ) {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
-        return psychologyCard; }
+        return psychologyCard;
+    }
 
     public ModelForCarList save (
             final Tuple3<
@@ -55,7 +96,16 @@ public final class ModelForCar {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
-        return modelForCarList; }
+        return modelForCarList;
+    }
 
-    public ModelForCar ( final ErrorResponse errorResponse ) { this.setErrorResponse( errorResponse ); }
+    public static ModelForCar generate (
+            final ErrorResponse errorResponse
+    ) {
+        return new ModelForCar( errorResponse );
+    }
+
+    private ModelForCar ( final ErrorResponse errorResponse ) {
+        this.setErrorResponse( errorResponse );
+    }
 }

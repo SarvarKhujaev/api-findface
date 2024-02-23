@@ -5,10 +5,35 @@ import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.controller.SerDes;
 import com.ssd.mvd.constants.Errors;
 
-@lombok.Data
-@lombok.NoArgsConstructor
-@lombok.AllArgsConstructor
-public final class PersonInfo {
+public final class PersonInfo extends DataValidationInspector {
+    public void setPinfl ( final String pinfl ) {
+        this.pinfl = pinfl;
+    }
+
+    public void setPhoto ( final String photo ) {
+        this.photo = photo;
+    }
+
+    public void setAddress ( final String address ) {
+        this.address = address;
+    }
+
+    public void setCadastre ( final String cadastre ) {
+        this.cadastre = cadastre;
+    }
+
+    public void setFullname ( final String fullname ) {
+        this.fullname = fullname;
+    }
+
+    public void setBirthDate ( final String birthDate ) {
+        this.birthDate = birthDate;
+    }
+
+    public void setPassportNumber ( final String passportNumber ) {
+        this.passportNumber = passportNumber;
+    }
+
     private String pinfl;
     private String photo;
     private String address;
@@ -17,20 +42,16 @@ public final class PersonInfo {
     private String birthDate;
     private String passportNumber;
 
-    public PersonInfo ( final PsychologyCard psychologyCard,
-                        final DataValidationInspector dataValidationInspector ) {
+    public PersonInfo ( final PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            if ( dataValidationInspector
-                    .checkObject
-                    .test( psychologyCard.getPinpp() ) ) {
+            if ( super.checkObject( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
                 this.setCadastre( psychologyCard.getPinpp().getCadastre() );
                 this.setBirthDate( psychologyCard.getPinpp().getBirthDate() );
-                this.setFullname( DataValidationInspector.getInstance().joinString.apply( psychologyCard.getPinpp() ) ); }
+                this.setFullname( super.joinString( psychologyCard.getPinpp() ) );
+            }
 
-            this.setPassportNumber( dataValidationInspector
-                    .checkData
-                    .test( 7, psychologyCard.getModelForPassport() )
+            this.setPassportNumber( super.checkPassport( psychologyCard.getModelForPassport() )
                     ? psychologyCard
                     .getModelForPassport()
                     .getData()
@@ -38,18 +59,14 @@ public final class PersonInfo {
                     .getSerialNumber()
                     : Errors.DATA_NOT_FOUND.name() );
 
-            this.setAddress( dataValidationInspector
-                    .checkData
-                    .test( 8, psychologyCard.getModelForAddress() )
+            this.setAddress( super.check( psychologyCard.getModelForAddress() )
                     ? psychologyCard
                     .getModelForAddress()
                     .getPermanentRegistration()
                     .getPAddress()
                     : Errors.DATA_NOT_FOUND.name() );
 
-            this.setPhoto( dataValidationInspector
-                    .checkData
-                    .test( 5, psychologyCard.getPapilonData() )
+            this.setPhoto( super.check( psychologyCard.getPapilonData() )
                     ? SerDes
                     .getSerDes()
                     .getBase64ToLink()
@@ -57,7 +74,8 @@ public final class PersonInfo {
                             .getPapilonData()
                             .get( 0 )
                             .getPhoto() )
-                    : Errors.DATA_NOT_FOUND.name() ); }
+                    : Errors.DATA_NOT_FOUND.name() );
+        }
 
         else {
             this.setPassportNumber ( psychologyCard
@@ -76,5 +94,6 @@ public final class PersonInfo {
                     .apply( psychologyCard
                             .getPapilonData()
                             .get( 0 )
-                            .getPhoto() ) ); } }
+                            .getPhoto() ) );
+        } }
 }
