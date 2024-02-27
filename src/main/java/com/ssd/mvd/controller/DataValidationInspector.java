@@ -20,16 +20,12 @@ public class DataValidationInspector extends CollectionsInspector {
         return Optional.ofNullable( o ).isPresent() ? Mono.just( o ) : Mono.empty();
     }
 
-    public boolean checkObject ( final Object o ) {
+    protected boolean checkObject ( final Object o ) {
         return o != null;
     }
 
     protected boolean checkParam ( final String param ) {
         return this.checkObject( param ) && !param.isEmpty();
-    }
-
-    public String joinString ( final Pinpp pinpp ) {
-        return String.join( " ", pinpp.getName(), pinpp.getSurname(), pinpp.getPatronym() );
     }
 
     protected int checkDifference ( final int value ) {

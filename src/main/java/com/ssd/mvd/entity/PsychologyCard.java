@@ -10,16 +10,26 @@ import reactor.util.function.*;
 import java.util.List;
 
 public final class PsychologyCard {
+    private Pinpp pinpp;
+    private String personImage; // the image of the person
+
+    private List< PapilonData > papilonData;
+    private List< Violation > violationList;
+    private List< Foreigner > foreignerList;
+
+    private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
+    private ModelForAddress modelForAddress;
+
+    private ErrorResponse errorResponse;
+    private ModelForPassport modelForPassport;
+    private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
+
     public Pinpp getPinpp() {
         return this.pinpp;
     }
 
     public void setPinpp ( final Pinpp pinpp ) {
         this.pinpp = pinpp;
-    }
-
-    public String getPersonImage() {
-        return this.personImage;
     }
 
     public void setPersonImage ( final String personImage ) {
@@ -32,10 +42,6 @@ public final class PsychologyCard {
 
     public void setPapilonData ( final List< PapilonData > papilonData ) {
         this.papilonData = papilonData;
-    }
-
-    public List<Violation> getViolationList() {
-        return this.violationList;
     }
 
     public void setViolationList ( final List< Violation > violationList ) {
@@ -89,20 +95,6 @@ public final class PsychologyCard {
     public void setModelForCadastr ( final Data modelForCadastr ) {
         this.modelForCadastr = modelForCadastr;
     }
-
-    private Pinpp pinpp;
-    private String personImage; // the image of the person
-
-    private List< PapilonData > papilonData;
-    private List< Violation > violationList;
-    private List< Foreigner > foreignerList;
-
-    private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
-    private ModelForAddress modelForAddress;
-
-    private ErrorResponse errorResponse;
-    private ModelForPassport modelForPassport;
-    private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
 
     public PsychologyCard save ( final Results results ) {
         this.setViolationList( results.getViolationList() );
