@@ -1,9 +1,17 @@
 package com.ssd.mvd.controller;
 
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.*;
 
 public class TimeInspector extends StringOperations {
-    public Date newDate () {
+    protected final synchronized Date newDate () {
         return new Date();
+    }
+
+    protected final synchronized Date parseStringIntoDate (
+            final String value
+    ) throws ParseException {
+        return new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( value );
     }
 }

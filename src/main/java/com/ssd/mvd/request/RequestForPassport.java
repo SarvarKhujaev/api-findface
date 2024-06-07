@@ -1,10 +1,13 @@
 package com.ssd.mvd.request;
 
-public final class RequestForPassport {
-    private final String SerialNumber;
-    private final String BirthDate;
+import com.ssd.mvd.interfaces.RequestCommonMethods;
 
-    public static RequestForPassport generate ( final String value ) {
+public final class RequestForPassport implements RequestCommonMethods< RequestForPassport, String > {
+    private String SerialNumber;
+    private String BirthDate;
+
+    @Override
+    public RequestForPassport generate ( final String value ) {
         return new RequestForPassport( value );
     }
 
@@ -12,4 +15,6 @@ public final class RequestForPassport {
         this.SerialNumber = value.split( " " )[0];
         this.BirthDate = value.split( " " )[1];
     }
+
+    public RequestForPassport () {}
 }

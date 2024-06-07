@@ -1,11 +1,12 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import reactor.util.function.Tuple3;
 
-public final class ModelForCar {
+public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
     public String getPinpp() {
         return this.Pinpp;
     }
@@ -99,7 +100,8 @@ public final class ModelForCar {
         return modelForCarList;
     }
 
-    public static ModelForCar generate (
+    @Override
+    public ModelForCar generate (
             final ErrorResponse errorResponse
     ) {
         return new ModelForCar( errorResponse );
@@ -108,4 +110,6 @@ public final class ModelForCar {
     private ModelForCar ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public ModelForCar () {}
 }

@@ -4,8 +4,8 @@ package com.ssd.mvd.entity.modelForGai;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class ViolationsInformation {
-    private Integer DecreeStatus;
-    private Integer Amount;
+    private int DecreeStatus;
+    private int Amount;
 
     private String DecreeSerialNumber;
     private String Violation;

@@ -7,7 +7,7 @@ import java.util.List;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class Results {
-    private Integer result_code;
+    private int result_code;
 
     @JsonDeserialize
     private List< PapilonData > results;

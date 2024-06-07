@@ -1,8 +1,9 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 
-public final class Tonirovka {
+public final class Tonirovka implements EntityCommonMethods< Tonirovka > {
     private String DateBegin;
     private String DateValid;
     private String TintinType;
@@ -23,11 +24,14 @@ public final class Tonirovka {
         this.errorResponse = errorResponse;
     }
 
-    public static Tonirovka generate ( final ErrorResponse errorResponse ) {
+    @Override
+    public Tonirovka generate ( final ErrorResponse errorResponse ) {
         return new Tonirovka( errorResponse );
     }
 
     private Tonirovka ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public Tonirovka () {}
 }

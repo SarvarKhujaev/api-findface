@@ -5,5 +5,5 @@ package com.ssd.mvd.entity.modelForPassport;
 @lombok.AllArgsConstructor
 public final class Model{
 	private String name;
-	private Double confidence;
+	private double confidence;
 }

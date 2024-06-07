@@ -1,9 +1,12 @@
 package com.ssd.mvd.request;
 
-public final class RequestForModelOfAddress {
-    private final String Pcitizen;
+import com.ssd.mvd.interfaces.RequestCommonMethods;
 
-    public static RequestForModelOfAddress generate (
+public final class RequestForModelOfAddress implements RequestCommonMethods< RequestForModelOfAddress, String > {
+    private String Pcitizen;
+
+    @Override
+    public RequestForModelOfAddress generate (
             final String pcitizen
     ) {
         return new RequestForModelOfAddress( pcitizen );
@@ -12,4 +15,6 @@ public final class RequestForModelOfAddress {
     private RequestForModelOfAddress ( final String pcitizen ) {
         this.Pcitizen = pcitizen;
     }
+
+    public RequestForModelOfAddress () {}
 }

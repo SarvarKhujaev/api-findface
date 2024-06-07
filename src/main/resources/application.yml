@@ -14,12 +14,15 @@ variables:
         LOAD_BALANCER : ${LOAD_BALANCER:localhost}
 
     KAFKA_VARIABLES:
-        ERROR_LOGS: ${ERROR_LOGS:ERROR_LOGS}
-        ADMIN_PANEL: adminpanel_integratedServicesUserLog_0.0.1
-        ADMIN_PANEL_ERROR_LOG: ${ADMIN_PANEL_ERROR_LOG:adminpanel_integratedServicesLog_0.0.1}
+        KAFKA_TOPICS:
+            ERROR_LOGS: ${ERROR_LOGS:ERROR_LOGS}
+            ADMIN_PANEL: adminpanel_integratedServicesUserLog_0.0.1
+            ADMIN_PANEL_ERROR_LOG: ${ADMIN_PANEL_ERROR_LOG:adminpanel_integratedServicesLog_0.0.1}
 
         KAFKA_BROKER: ${KAFKA_BROKER:localhost:9092}
+        KAFKA_ACKS_CONFIG : ${KAFKA_ACKS_CONFIG:1}
         GROUP_ID_FOR_KAFKA: ${GROUP_ID_FOR_KAFKA:PSYCHOLOGY-CARD-SERVICE}
+        KAFKA_SENDER_MAX_IN_FLIGHT: ${KAFKA_SENDER_MAX_IN_FLIGHT:1024}
 
     GAI_VARIABLES:
         API_FOR_GAI_TOKEN: ${API_FOR_GAI_TOKEN:http://172.250.1.65:7101/Agency/token}

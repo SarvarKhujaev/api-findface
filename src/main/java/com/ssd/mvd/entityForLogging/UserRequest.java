@@ -31,14 +31,16 @@ public final class UserRequest extends DataValidationInspector {
 
     public UserRequest (
             final PsychologyCard psychologyCard,
-            final ApiResponseModel apiResponseModel ) {
+            final ApiResponseModel apiResponseModel
+    ) {
         this.setCreatedAt( super.newDate().getTime() );
         this.setPersonInfo( new PersonInfo( psychologyCard ) );
 
         this.setIntegratedServiceName( "OVIR" );
         this.setUserPassportNumber(
-                super.checkObject( apiResponseModel.getUser() )
-                ? apiResponseModel.getUser().getPassportNumber()
-                : Errors.DATA_NOT_FOUND.name() );
+                super.objectIsNotNull( apiResponseModel.getUser() )
+                    ? apiResponseModel.getUser().getPassportNumber()
+                    : Errors.DATA_NOT_FOUND.name()
+        );
     }
 }

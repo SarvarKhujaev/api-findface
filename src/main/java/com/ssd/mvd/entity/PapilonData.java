@@ -4,8 +4,8 @@ package com.ssd.mvd.entity;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class PapilonData {
-    private Integer rank;
-    private Double score;
+    private int rank;
+    private double score;
 
     private String name;
     private String photo;

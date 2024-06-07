@@ -1,10 +1,13 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
+
 import java.util.List;
 
-public final class ViolationsList {
+public final class ViolationsList implements EntityCommonMethods< ViolationsList > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -30,19 +33,24 @@ public final class ViolationsList {
         return new ViolationsList( violationsInformationsList );
     }
 
-    public static ViolationsList generate (
-            final ErrorResponse errorResponse
-    ) {
-        return new ViolationsList( errorResponse );
-    }
-
-    private ViolationsList ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
     private ViolationsList (
             final List< ViolationsInformation > violationsInformationsList
     ) {
         this.setViolationsInformationsList( violationsInformationsList );
     }
+
+    @Override
+    public ViolationsList generate (
+            final ErrorResponse errorResponse
+    ) {
+        return new ViolationsList( errorResponse );
+    }
+
+    private ViolationsList (
+            final ErrorResponse errorResponse
+    ) {
+        this.setErrorResponse( errorResponse );
+    }
+
+    public ViolationsList () {}
 }

@@ -2,7 +2,7 @@ package com.ssd.mvd.entity;
 
 @lombok.Data
 public final class pRegion {
-    private Integer Id;
+    private int Id;
     private String Value;
     private String IdValue;
 }

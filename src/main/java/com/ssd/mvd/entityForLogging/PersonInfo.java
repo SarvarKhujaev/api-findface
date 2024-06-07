@@ -44,7 +44,7 @@ public final class PersonInfo extends DataValidationInspector {
 
     public PersonInfo ( final PsychologyCard psychologyCard ) {
         if ( psychologyCard.getForeignerList() == null ) {
-            if ( super.checkObject( psychologyCard.getPinpp() ) ) {
+            if ( super.objectIsNotNull( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
                 this.setCadastre( psychologyCard.getPinpp().getCadastre() );
                 this.setBirthDate( psychologyCard.getPinpp().getBirthDate() );
@@ -66,7 +66,7 @@ public final class PersonInfo extends DataValidationInspector {
                     .getPAddress()
                     : Errors.DATA_NOT_FOUND.name() );
 
-            this.setPhoto( super.check( psychologyCard.getPapilonData() )
+            this.setPhoto( super.isCollectionNotEmpty( psychologyCard.getPapilonData() )
                     ? SerDes
                     .getSerDes()
                     .getBase64ToLink()

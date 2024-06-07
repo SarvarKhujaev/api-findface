@@ -1,14 +1,15 @@
 package com.ssd.mvd.request;
 
+import com.ssd.mvd.interfaces.RequestCommonMethods;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import java.util.Locale;
 
-public final class RequestForFio {
-    private final String Name;
-    private final String Surname;
-    private final String Patronym;
+public final class RequestForFio implements RequestCommonMethods< RequestForFio, FIO > {
+    private String Name;
+    private String Surname;
+    private String Patronym;
 
-    public static RequestForFio generate ( final FIO fio ) {
+    public RequestForFio generate ( final FIO fio ) {
         return new RequestForFio( fio );
     }
 
@@ -17,4 +18,6 @@ public final class RequestForFio {
         this.Surname = fio.getSurname().toUpperCase( Locale.ROOT );
         this.Name = fio.getName().toUpperCase( Locale.ROOT );
     }
+
+    public RequestForFio () {}
 }

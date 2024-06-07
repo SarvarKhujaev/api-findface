@@ -1,9 +1,8 @@
 package com.ssd.mvd.publisher;
 
-import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.interfaces.RequestCommonMethods;
 import com.ssd.mvd.controller.LogInspector;
 import com.ssd.mvd.controller.SerDes;
-import com.ssd.mvd.request.*;
 
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
@@ -12,23 +11,21 @@ import org.reactivestreams.Publisher;
 public final class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
     private final String value;
 
-    public static CustomPublisherForRequest generate (
-            final int integer, final Object object
+    public static < T, U > CustomPublisherForRequest generate (
+            final U object,
+            final RequestCommonMethods< T, U > request
     ) {
-        return new CustomPublisherForRequest( integer, object );
+        return new CustomPublisherForRequest( object, request );
     }
 
-    private CustomPublisherForRequest ( final int integer, final Object object ) {
+    private <T, U> CustomPublisherForRequest (
+            final U object,
+            final RequestCommonMethods< T, U > request
+    ) {
         this.value = SerDes
-            .getSerDes()
-            .getGson()
-            .toJson( switch ( integer ) {
-                case 1 -> RequestForCadaster.generate( String.valueOf( object ) );
-                case 2 -> RequestForFio.generate( (FIO) object );
-                case 3 -> RequestForModelOfAddress.generate( String.valueOf( object ) );
-                case 4 -> RequestForBoardCrossing.generate( String.valueOf( object ) );
-                default -> RequestForPassport.generate( String.valueOf( object ) );
-            } );
+                .getSerDes()
+                .getGson()
+                .toJson( request.generate( object ) );
     }
 
     @Override

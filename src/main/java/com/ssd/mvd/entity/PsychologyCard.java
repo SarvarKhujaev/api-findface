@@ -2,6 +2,7 @@ package com.ssd.mvd.entity;
 
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
@@ -9,7 +10,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 import reactor.util.function.*;
 import java.util.List;
 
-public final class PsychologyCard {
+public final class PsychologyCard implements EntityCommonMethods< PsychologyCard > {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
@@ -124,7 +125,12 @@ public final class PsychologyCard {
         return new PsychologyCard( results );
     }
 
-    public static PsychologyCard generate ( final ErrorResponse errorResponse ) {
+    public PsychologyCard () {}
+
+    @Override
+    public PsychologyCard generate (
+            final ErrorResponse errorResponse
+    ) {
         return new PsychologyCard( errorResponse );
     }
 
@@ -142,7 +148,8 @@ public final class PsychologyCard {
                     String,
                     ModelForCarList,
                     ModelForAddress,
-                    List > tuple
+                    List
+                    > tuple
     ) {
         return new PsychologyCard( data, tuple );
     }
@@ -152,7 +159,8 @@ public final class PsychologyCard {
                     Pinpp,
                     String,
                     ModelForCarList,
-                    List > tuple
+                    List
+                    > tuple
     ) {
         return new PsychologyCard( tuple );
     }
@@ -172,7 +180,10 @@ public final class PsychologyCard {
         this.setErrorResponse( errorResponse );
     }
 
-    private PsychologyCard( final Results results, final Tuple2< Pinpp, String > tuple ) {
+    private PsychologyCard(
+            final Results results,
+            final Tuple2< Pinpp, String > tuple
+    ) {
         this.setViolationList( results.getViolationList() );
         this.setPapilonData( results.getResults() );
         this.setPersonImage( tuple.getT2() );
@@ -187,7 +198,9 @@ public final class PsychologyCard {
                     String,
                     ModelForCarList,
                     ModelForAddress,
-                    List > tuple ) {
+                    List
+                    > tuple
+    ) {
         this.setModelForAddress( tuple.getT4() );
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT5() );
@@ -198,11 +211,14 @@ public final class PsychologyCard {
     }
 
     // for PINFL request
-    private PsychologyCard ( final Tuple4<
-                Pinpp,
-                String,
-                ModelForCarList,
-                List > tuple ) {
+    private PsychologyCard (
+            final Tuple4<
+                    Pinpp,
+                    String,
+                    ModelForCarList,
+                    List
+                    > tuple
+    ) {
         this.setModelForCarList( tuple.getT3() );
         this.setViolationList( tuple.getT4() );
         this.setPersonImage( tuple.getT2() );

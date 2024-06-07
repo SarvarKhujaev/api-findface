@@ -1,15 +1,17 @@
 package com.ssd.mvd.request;
 
-public final class RequestForCadaster {
-    private final String Pcadastre;
+import com.ssd.mvd.interfaces.RequestCommonMethods;
 
-    public static RequestForCadaster generate (
+public final class RequestForCadaster implements RequestCommonMethods< RequestForCadaster, String > {
+    private String Pcadastre;
+
+    @Override
+    public RequestForCadaster generate (
             final String pcadastre
     ) {
-        return new RequestForCadaster( pcadastre );
+        this.Pcadastre = pcadastre;
+        return this;
     }
 
-    private RequestForCadaster ( final String pcadastre ) {
-        this.Pcadastre = pcadastre;
-    }
+    public RequestForCadaster () {}
 }

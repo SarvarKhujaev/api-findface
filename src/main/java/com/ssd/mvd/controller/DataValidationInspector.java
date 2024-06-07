@@ -3,7 +3,7 @@ package com.ssd.mvd.controller;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForCadastr.Person;
-import com.ssd.mvd.entity.ModelForCarList;
+import com.ssd.mvd.FindFaceServiceApplication;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.entity.CarTotalData;
 import com.ssd.mvd.entity.Pinpp;
@@ -12,35 +12,32 @@ import reactor.netty.http.client.HttpClientResponse;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 
-import java.util.Optional;
-import java.util.List;
-
 public class DataValidationInspector extends CollectionsInspector {
-    protected <T> Mono< T > convert ( final T o ) {
-        return Optional.ofNullable( o ).isPresent() ? Mono.just( o ) : Mono.empty();
+    protected final synchronized <T> Mono< T > convert ( final T o ) {
+        return this.objectIsNotNull( o ) ? Mono.just( o ) : Mono.empty();
     }
 
-    protected boolean checkObject ( final Object o ) {
+    protected final synchronized boolean objectIsNotNull ( final Object o ) {
         return o != null;
     }
 
-    protected boolean checkParam ( final String param ) {
-        return this.checkObject( param ) && !param.isEmpty();
+    protected final synchronized boolean checkParam ( final String param ) {
+        return this.objectIsNotNull( param ) && !param.isEmpty();
     }
 
-    protected int checkDifference ( final int value ) {
+    protected final synchronized int checkDifference ( final int value ) {
         return value > 0 && value < 100 ? value : 10;
     }
 
-    protected boolean checkResponse (
+    protected final synchronized boolean checkResponse (
             final HttpClientResponse httpClientResponse,
             final ByteBufMono byteBufMono
     ) {
-        return this.checkObject( byteBufMono )
+        return this.objectIsNotNull( byteBufMono )
                 && httpClientResponse.status().code() == 200;
     }
 
-    protected boolean checkPerson (
+    protected final synchronized boolean checkPerson (
             final Person person,
             final Pinpp pinpp
     ) {
@@ -48,19 +45,15 @@ public class DataValidationInspector extends CollectionsInspector {
                 && person.getPPerson().contains( pinpp.getName() );
     }
 
-    public boolean check ( final List< ? > list ) {
-        return this.checkObject( list ) && !list.isEmpty();
-    }
-
-    public boolean check ( final CarTotalData carTotalData ) {
-        return this.checkObject( carTotalData.getModelForCar() )
-                && this.checkObject( carTotalData.getModelForCar().getPinpp() )
+    protected final synchronized boolean check ( final CarTotalData carTotalData ) {
+        return this.objectIsNotNull( carTotalData.getModelForCar() )
+                && this.objectIsNotNull( carTotalData.getModelForCar().getPinpp() )
                 && !carTotalData.getModelForCar().getPinpp().isEmpty();
     }
 
-    public boolean check ( final PsychologyCard psychologyCard ) {
-        return this.checkObject( psychologyCard.getModelForCarList() )
-                && this.checkObject( psychologyCard
+    protected final synchronized boolean check ( final PsychologyCard psychologyCard ) {
+        return this.objectIsNotNull( psychologyCard.getModelForCarList() )
+                && this.objectIsNotNull( psychologyCard
                 .getModelForCarList()
                 .getModelForCarList() )
                 && !psychologyCard
@@ -69,31 +62,27 @@ public class DataValidationInspector extends CollectionsInspector {
                 .isEmpty();
     }
 
-    public boolean check ( final ModelForCarList modelForCarList ) {
-        return this.checkObject( modelForCarList ) && this.check( modelForCarList.getModelForCarList() );
+    protected final synchronized boolean check ( final ModelForAddress modelForAddress ) {
+        return this.objectIsNotNull( modelForAddress ) && this.objectIsNotNull( modelForAddress.getPermanentRegistration() );
     }
 
-    public boolean check ( final ModelForAddress modelForAddress ) {
-        return this.checkObject( modelForAddress ) && this.checkObject( modelForAddress.getPermanentRegistration() );
+    protected final synchronized boolean check ( final ModelForPassport modelForPassport ) {
+        return this.objectIsNotNull( modelForPassport )
+                && this.objectIsNotNull( modelForPassport.getData() )
+                && this.objectIsNotNull( modelForPassport.getData().getPerson() )
+                && this.objectIsNotNull( modelForPassport.getData().getPerson().getPinpp() )
+                && this.objectIsNotNull( modelForPassport.getData().getPerson().getPCitizen() );
     }
 
-    public boolean check ( final ModelForPassport modelForPassport ) {
-        return this.checkObject( modelForPassport )
-                && this.checkObject( modelForPassport.getData() )
-                && this.checkObject( modelForPassport.getData().getPerson() )
-                && this.checkObject( modelForPassport.getData().getPerson().getPinpp() )
-                && this.checkObject( modelForPassport.getData().getPerson().getPCitizen() );
-    }
-
-    public boolean checkPinpp ( final PsychologyCard psychologyCard ) {
-        return this.checkObject( psychologyCard.getPinpp() )
-                && this.checkObject( psychologyCard.getPinpp().getCadastre() )
+    protected final synchronized boolean checkPinpp ( final PsychologyCard psychologyCard ) {
+        return this.objectIsNotNull( psychologyCard.getPinpp() )
+                && this.objectIsNotNull( psychologyCard.getPinpp().getCadastre() )
                 && psychologyCard.getPinpp().getCadastre().length() > 1;
     }
 
-    public boolean checkCadastor ( final PsychologyCard psychologyCard ) {
-        return this.checkObject( psychologyCard.getModelForCadastr() )
-                && this.checkObject(
+    protected final synchronized boolean checkCadastor ( final PsychologyCard psychologyCard ) {
+        return this.objectIsNotNull( psychologyCard.getModelForCadastr() )
+                && this.objectIsNotNull(
                         psychologyCard
                             .getModelForCadastr()
                             .getPermanentRegistration() )
@@ -102,8 +91,31 @@ public class DataValidationInspector extends CollectionsInspector {
                 .getPermanentRegistration().isEmpty();
     }
 
-    public boolean checkPassport ( final ModelForPassport modelForPassport ) {
-        return this.checkObject( modelForPassport )
-                && this.checkObject( modelForPassport.getData().getDocument() );
+    protected final synchronized boolean checkPassport ( final ModelForPassport modelForPassport ) {
+        return this.objectIsNotNull( modelForPassport )
+                && this.objectIsNotNull( modelForPassport.getData().getDocument() );
+    }
+
+    /*
+    получает в параметрах название параметра из файла application.yaml
+    проверят что context внутри main класса GpsTabletsServiceApplication  инициализирован
+    и среди параметров сервиса сузествует переданный параметр
+    */
+    protected final synchronized <T> T checkContextOrReturnDefaultValue (
+            final String paramName,
+            final T defaultValue
+    ) {
+        return this.objectIsNotNull( FindFaceServiceApplication.context )
+                && this.objectIsNotNull(
+                        FindFaceServiceApplication
+                                .context
+                                .getEnvironment()
+                                .getProperty( paramName )
+                )
+                ? (T) FindFaceServiceApplication
+                        .context
+                        .getEnvironment()
+                        .getProperty( paramName )
+                : defaultValue;
     }
 }

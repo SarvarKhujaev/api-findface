@@ -2,10 +2,12 @@ package com.ssd.mvd.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.entity.modelForGai.ModelForCar;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
+
 import java.util.List;
 
-public final class ModelForCarList {
+public final class ModelForCarList implements EntityCommonMethods< ModelForCarList > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -26,7 +28,8 @@ public final class ModelForCarList {
     @JsonDeserialize
     private List< ModelForCar > modelForCarList;
 
-    public static ModelForCarList generate (
+    @Override
+    public ModelForCarList generate (
             final ErrorResponse errorResponse
     ) {
         return new ModelForCarList( errorResponse );
@@ -45,4 +48,6 @@ public final class ModelForCarList {
     private ModelForCarList ( final List< ModelForCar > modelForCarList ) {
         this.setModelForCarList( modelForCarList );
     }
+
+    public ModelForCarList () {}
 }

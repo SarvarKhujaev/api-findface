@@ -1,15 +1,18 @@
 package com.ssd.mvd.request;
 
+import com.ssd.mvd.interfaces.RequestCommonMethods;
+
 // используется как запрос для получения данных о пересечении границы
-public final class RequestForBoardCrossing {
-    private final String document;
-    private final String birth_date;
-    private final Byte transaction_id = 1;
+public final class RequestForBoardCrossing implements RequestCommonMethods< RequestForBoardCrossing, String > {
+    private String document;
+    private String birth_date;
+    private final byte transaction_id = 1;
 
-    private final Character langId = '1';
-    private final Character is_consent = 'Y';
+    private final char langId = '1';
+    private final char is_consent = 'Y';
 
-    public static RequestForBoardCrossing generate ( final String value ) {
+    @Override
+    public RequestForBoardCrossing generate ( final String value ) {
         return new RequestForBoardCrossing( value );
     }
 
@@ -17,4 +20,6 @@ public final class RequestForBoardCrossing {
         this.birth_date = value.split( "_" )[1];
         this.document = value.split( "_" )[0];
     }
+
+    public RequestForBoardCrossing () {}
 }

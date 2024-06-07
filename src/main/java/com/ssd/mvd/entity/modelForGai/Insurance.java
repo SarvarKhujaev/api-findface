@@ -1,8 +1,9 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 
-public final class Insurance {
+public final class Insurance implements EntityCommonMethods< Insurance > {
     private String DateBegin;
     private String DateValid;
     private String TintinType;
@@ -17,7 +18,8 @@ public final class Insurance {
 
     private ErrorResponse errorResponse;
 
-    public static Insurance generate (
+    @Override
+    public Insurance generate (
             final ErrorResponse errorResponse
     ) {
         return new Insurance( errorResponse );
@@ -26,4 +28,6 @@ public final class Insurance {
     private Insurance ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public Insurance () {}
 }

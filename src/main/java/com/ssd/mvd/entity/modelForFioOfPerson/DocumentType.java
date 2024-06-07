@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties( ignoreUnknown = true )
 public final class DocumentType {
     private String Value;
-    private Integer Id;
+    private int Id;
 }

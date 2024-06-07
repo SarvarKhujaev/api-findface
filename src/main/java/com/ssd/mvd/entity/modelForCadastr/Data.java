@@ -1,10 +1,13 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
+
 import java.util.List;
 
-public final class Data {
+public final class Data implements EntityCommonMethods< Data > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -13,7 +16,7 @@ public final class Data {
         this.errorResponse = errorResponse;
     }
 
-    public List<Person> getPermanentRegistration() {
+    public List< Person > getPermanentRegistration() {
         return this.PermanentRegistration;
     }
 
@@ -23,7 +26,8 @@ public final class Data {
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
 
-    public static Data generate (
+    @Override
+    public Data generate (
             final ErrorResponse errorResponse
     ) {
         return new Data( errorResponse );
@@ -32,4 +36,6 @@ public final class Data {
     private Data ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public Data () {}
 }

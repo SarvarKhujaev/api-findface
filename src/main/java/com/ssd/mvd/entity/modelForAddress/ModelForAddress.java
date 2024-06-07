@@ -1,15 +1,16 @@
 package com.ssd.mvd.entity.modelForAddress;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.entity.modelForPassport.RequestGuid;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.PermanentRegistration;
 import com.ssd.mvd.constants.ErrorResponse;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.extern.jackson.Jacksonized;
 import java.util.List;
 
 @Jacksonized
-public final class ModelForAddress {
+public final class ModelForAddress implements EntityCommonMethods< ModelForAddress > {
     public com.ssd.mvd.entity.PermanentRegistration getPermanentRegistration() {
         return this.PermanentRegistration;
     }
@@ -29,7 +30,8 @@ public final class ModelForAddress {
 
     private ErrorResponse errorResponse;
 
-    public static ModelForAddress generate (
+    @Override
+    public ModelForAddress generate (
             final ErrorResponse errorResponse
     ) {
         return new ModelForAddress( errorResponse );
@@ -38,4 +40,6 @@ public final class ModelForAddress {
     private ModelForAddress ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public ModelForAddress () {}
 }

@@ -1,8 +1,9 @@
 package com.ssd.mvd.entity;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 
-public final class Pinpp {
+public final class Pinpp implements EntityCommonMethods< Pinpp > {
     public String getName() {
         return this.Name;
     }
@@ -62,7 +63,8 @@ public final class Pinpp {
 
     private ErrorResponse errorResponse;
 
-    public static Pinpp generate (
+    @Override
+    public Pinpp generate (
             final ErrorResponse errorResponse
     ) {
         return new Pinpp( errorResponse );
@@ -71,4 +73,6 @@ public final class Pinpp {
     private Pinpp ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public Pinpp () {}
 }

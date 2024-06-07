@@ -3,8 +3,9 @@ package com.ssd.mvd.entity;
 import reactor.util.function.Tuple5;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 
-public final class CarTotalData {
+public final class CarTotalData implements EntityCommonMethods< CarTotalData > {
     public void setTonirovka ( final Tonirovka tonirovka ) {
         this.tonirovka = tonirovka;
     }
@@ -77,10 +78,21 @@ public final class CarTotalData {
         return new CarTotalData( modelForCar );
     }
 
-    public static CarTotalData generate (
+    private CarTotalData( final ModelForCar modelForCar ) {
+        this.setModelForCar( modelForCar );
+    }
+
+    public CarTotalData () {}
+
+    @Override
+    public CarTotalData generate (
             final ErrorResponse errorResponse
     ) {
         return new CarTotalData( errorResponse );
+    }
+
+    private CarTotalData ( final ErrorResponse errorResponse ) {
+        this.setErrorResponse( errorResponse );
     }
 
     public static CarTotalData generate (
@@ -94,20 +106,14 @@ public final class CarTotalData {
         return new CarTotalData( objects );
     }
 
-    private CarTotalData( final ModelForCar modelForCar ) {
-        this.setModelForCar( modelForCar );
-    }
-
-    private CarTotalData ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
-    private CarTotalData ( final Tuple5<
-            Tonirovka,
-            ModelForCar,
-            DoverennostList,
-            Insurance,
-            ViolationsList > objects ) {
+    private CarTotalData (
+            final Tuple5<
+                Tonirovka,
+                ModelForCar,
+                DoverennostList,
+                Insurance,
+                ViolationsList > objects
+    ) {
         this.setDoverennostList( objects.getT3() );
         this.setViolationsList( objects.getT5() );
         this.setModelForCar( objects.getT2() );

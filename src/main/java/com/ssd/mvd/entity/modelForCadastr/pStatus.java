@@ -4,7 +4,7 @@ package com.ssd.mvd.entity.modelForCadastr;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class pStatus {
-    private Integer Id;
+    private int Id;
     private String Value;
     private String IdValue;
 }

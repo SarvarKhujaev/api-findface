@@ -7,12 +7,12 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class TexPassport {
-    private Double weight; // вес без груза
-    private Double totalWeight; // общий вес
+    private double weight; // вес без груза
+    private double totalWeight; // общий вес
 
-    private Integer enginePower;
-    private Integer numberOfSeats; // количество сидений
-    private Integer numberOfVerticalSeats; // количество стоячих мест
+    private int enginePower;
+    private int numberOfSeats; // количество сидений
+    private int numberOfVerticalSeats; // количество стоячих мест
 
     private String STIR;
     private String address;

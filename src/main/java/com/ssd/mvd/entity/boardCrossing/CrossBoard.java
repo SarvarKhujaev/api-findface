@@ -1,7 +1,6 @@
 package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.controller.LogInspector;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public final class CrossBoard extends LogInspector {
@@ -13,15 +12,15 @@ public final class CrossBoard extends LogInspector {
         this.registrationDate = registrationDate;
     }
 
-    public Integer getPeriod_code() {
+    public int getPeriod_code() {
         return period_code;
     }
 
-    public Integer getTrip_purpose_code() {
+    public int getTrip_purpose_code() {
         return trip_purpose_code;
     }
 
-    public Integer getDirection_country() {
+    public int getDirection_country() {
         return direction_country;
     }
 
@@ -57,13 +56,13 @@ public final class CrossBoard extends LogInspector {
         this.purpose = purpose;
     }
 
-    private Long card_id;
+    private long card_id;
     private Date registrationDate;
 
-    private Integer period_code;
-    private Integer citizenship;
-    private Integer trip_purpose_code;
-    private Integer direction_country;
+    private int period_code;
+    private int citizenship;
+    private int trip_purpose_code;
+    private int direction_country;
 
     private String pinpp;
     private String reg_date;
@@ -82,9 +81,9 @@ public final class CrossBoard extends LogInspector {
 
     private Purpose purpose;
 
-    public CrossBoard save ( final Integer nationalityId ) {
+    public CrossBoard save ( final int nationalityId ) {
         try {
-            this.setRegistrationDate( new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( this.getReg_date() ) );
+            this.setRegistrationDate( super.parseStringIntoDate( this.getReg_date() ) );
         } catch ( final Exception e ) {
             super.logging( e );
         }

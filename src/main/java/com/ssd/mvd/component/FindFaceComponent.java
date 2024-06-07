@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 public final class FindFaceComponent extends DataValidationInspector {
-
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 

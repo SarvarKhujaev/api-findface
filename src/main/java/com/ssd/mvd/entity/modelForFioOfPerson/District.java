@@ -7,6 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @lombok.AllArgsConstructor
 @JsonIgnoreProperties( ignoreUnknown = true )
 public final class District {
-    private Integer Id;
+    private int Id;
     private String Value;
 }

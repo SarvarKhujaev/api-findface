@@ -4,9 +4,10 @@ package com.ssd.mvd.entity;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class Region {
-    private Long regionId;
-    private Long mahallaId;
-    private Long districtId; // tuman
+    private long regionId;
+    private long mahallaId;
+    private long districtId; // tuman
+
     private String regionName;
     private String mahallaName;
     private String districtName;

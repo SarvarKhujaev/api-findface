@@ -27,6 +27,7 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import com.ssd.mvd.entity.*;
+import com.ssd.mvd.request.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.entity.modelForGai.*;
@@ -57,8 +58,11 @@ public final class SerDes extends Config implements Runnable {
         return serDes != null ? serDes : ( serDes = new SerDes() );
     }
 
-    public  <T> List<T> stringToArrayList ( final String object, final Class< T[] > clazz ) {
-        return Arrays.asList( this.getGson().fromJson( object, clazz ) );
+    public  <T> List<T> stringToArrayList (
+            final String object,
+            final Class< T[] > clazz
+    ) {
+        return super.convertArrayToList( this.getGson().fromJson( object, clazz ) );
     }
 
     private SerDes () {
@@ -96,12 +100,16 @@ public final class SerDes extends Config implements Runnable {
             super.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
             super.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
             try {
-                super.setTokenForGai( String.valueOf( Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
-                        .fields( super.getFields() )
-                        .asJson()
-                        .getBody()
-                        .getObject()
-                        .get( "access_token" ) ) );
+                super.setTokenForGai(
+                        String.valueOf(
+                                Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
+                                    .fields( super.getFields() )
+                                    .asJson()
+                                    .getBody()
+                                    .getObject()
+                                    .get( "access_token" )
+                        )
+                );
                 super.setTokenForPassport( super.getTokenForGai() );
                 super.setWaitingMins( 180 );
                 super.setFlag( true );
@@ -111,7 +119,7 @@ public final class SerDes extends Config implements Runnable {
                 super.setFlag( false );
                 super.setWaitingMins( 3 );
                 super.saveErrorLog( e.getMessage() );
-                super.saveErrorLog( Methods.UPDATE_TOKENS.name(), "access_token", "Error: " + e.getMessage() );
+                super.saveErrorLog( Methods.UPDATE_TOKENS, "access_token", "Error: " + e.getMessage() );
             }
             return this;
     };
@@ -120,31 +128,67 @@ public final class SerDes extends Config implements Runnable {
             SerialNumber -> this.getHttpClient()
                     .post()
                     .uri( super.getAPI_FOR_BOARD_CROSSING() )
-                    .send( ByteBufFlux.fromString( CustomPublisherForRequest.generate( 4, SerialNumber ) ) )
-                    .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
+                    .send(
+                            ByteBufFlux.fromString(
+                                    CustomPublisherForRequest.generate(
+                                            SerialNumber,
+                                            new RequestForBoardCrossing()
+                                    )
+                            )
+                    ).responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                         case 401 -> this.getUpdateTokens().get().getGetCrossBoardInfo().apply( SerialNumber );
                         case 501 | 502 | 503 -> ( Mono< CrossBoardInfo > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_CROSS_BOARDING );
                         default -> super.checkResponse( res, content )
                                 ? content
                                 .asString()
-                                .map( s -> CrossBoardInfo.generate( s.contains( "[{\"card_id" )
-                                        ? this.stringToArrayList( s.substring( s.indexOf( "[{\"card_id" ), s.length() - 3 ), CrossBoard[].class )
-                                        : super.emptyList(),
+                                .map( s -> CrossBoardInfo.generate(
+                                        s.contains( "[{\"card_id" )
+                                                ? this.stringToArrayList(
+                                                        s.substring( s.indexOf( "[{\"card_id" ), s.length() - 3 ),
+                                                        CrossBoard[].class
+                                                )
+                                                : super.emptyList(),
                                         s.contains( "transaction_id" )
-                                        ? this.getGson().fromJson( s.substring( s.indexOf( "transaction_id" ) - 2, s.indexOf( "sex" ) + 9 ), Person.class )
-                                        : new Person() ) )
-                                : super.convert( CrossBoardInfo.generate( super.error.apply( SerialNumber, 3 ) ) );
+                                                ? this.getGson().fromJson(
+                                                        s.substring( s.indexOf( "transaction_id" ) - 2, s.indexOf( "sex" ) + 9 ),
+                                                        Person.class
+                                                )
+                                                : new Person()
+                                    )
+                                )
+                                : super.convert( new CrossBoardInfo().generate( super.error.apply( SerialNumber, Errors.DATA_NOT_FOUND ) ) );
                     } )
-                    .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                            .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_CROSS_BOARDING ) )
-                            .doAfterRetry( retrySignal -> super.logging( Methods.GET_CROSS_BOARDING, retrySignal ) )
-                            .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-                    .onErrorResume( ConnectTimeoutException.class,
-                            throwable -> super.convert( CrossBoardInfo.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-                    .onErrorResume( IllegalArgumentException.class,
-                            throwable -> super.convert( CrossBoardInfo.generate( super.error.apply( Methods.GET_CROSS_BOARDING.name(), 5 ) ) ) )
-                    .doOnError( e -> super.logging( e, Methods.GET_CROSS_BOARDING, SerialNumber ) )
-                    .onErrorReturn( CrossBoardInfo.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+                    .retryWhen(
+                            Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                                .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_CROSS_BOARDING ) )
+                                .doAfterRetry( retrySignal -> super.logging( Methods.GET_CROSS_BOARDING, retrySignal ) )
+                                .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+                    ).onErrorResume(
+                            ConnectTimeoutException.class,
+                            throwable -> super.convert(
+                                    new CrossBoardInfo().generate(
+                                            super.error.apply( throwable.getMessage(), Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
+                                    )
+                            )
+                    ).onErrorResume(
+                            IllegalArgumentException.class,
+                            throwable -> super.convert(
+                                    new CrossBoardInfo().generate(
+                                            super.error.apply(
+                                                    Methods.GET_CROSS_BOARDING.name(),
+                                                    Errors.TOO_MANY_RETRIES_ERROR
+                                            )
+                                    )
+                            )
+                    ).doOnError( e -> super.logging( e, Methods.GET_CROSS_BOARDING, SerialNumber ) )
+                    .onErrorReturn(
+                            new CrossBoardInfo().generate(
+                                    super.error.apply(
+                                            Errors.SERVICE_WORK_ERROR.name(),
+                                            Errors.SERVICE_WORK_ERROR
+                                    )
+                            )
+                    );
 
     private final Function< String, String > base64ToLink = base64 -> {
             super.getFields().clear();
@@ -170,9 +214,12 @@ public final class SerDes extends Config implements Runnable {
             }
             catch ( final UnirestException e ) {
                 super.logging( e, Methods.BASE64_TO_LINK, base64 );
-                super.saveErrorLog( super.getBASE64_IMAGE_TO_LINK_CONVERTER_API(),
+                super.saveErrorLog(
+                        Methods.CONVERT_BASE64_TO_LINK,
                         Methods.CONVERT_BASE64_TO_LINK.name(),
-                        "Error: " + e.getMessage() );
+                        "Error: " + e.getMessage()
+                );
+
                 return Errors.SERVICE_WORK_ERROR.name();
             }
     };
@@ -188,25 +235,48 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Pinpp.class ) )
-                        : super.convert( Pinpp.generate( super.error.apply( pinfl, 3 ) ) );
+                        : super.convert( new Pinpp().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_PINPP ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_PINPP, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( Pinpp.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( Pinpp.generate( super.error.apply( Methods.GET_PINPP.name(), 5 ) ) ) )
-            .doOnError( throwable -> super.logging( throwable, Methods.GET_PINPP, pinfl ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_PINPP ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_PINPP, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new Pinpp().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new Pinpp().generate(
+                                    super.error.apply(
+                                            Methods.GET_PINPP.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( throwable -> super.logging( throwable, Methods.GET_PINPP, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_PINPP, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PINPP() ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForPassport() ) )
             .post()
-            .send( ByteBufFlux.fromString( CustomPublisherForRequest.generate( 1, cadaster ) ) )
-            .uri( super.getAPI_FOR_CADASTR() )
+            .send(
+                    ByteBufFlux.fromString(
+                        CustomPublisherForRequest.generate(
+                                cadaster,
+                                new RequestForCadaster()
+                        )
+                    )
+            ).uri( super.getAPI_FOR_CADASTR() )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.getUpdateTokens().get().getGetCadaster().apply( cadaster );
                 case 501 | 502 | 503 -> ( Mono< Data > ) super.saveErrorLog.apply( res.status().toString(), Methods.CADASTER );
@@ -214,20 +284,43 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
-                        : super.convert( Data.generate( super.error.apply( cadaster, 3 ) ) );
+                        : super.convert( new Data().generate( super.error.apply( cadaster, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.CADASTER ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.CADASTER, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( Data.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( Data.generate( super.error.apply( Methods.CADASTER.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.CADASTER, cadaster ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.CADASTER ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.CADASTER, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new Data().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new Data().generate(
+                                    super.error.apply(
+                                            Methods.CADASTER.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.CADASTER, cadaster ) )
             .doOnSuccess( value -> super.logging( Methods.CADASTER, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_CADASTR() ) )
-            .onErrorReturn( Data.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new Data().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR )
+                    )
+            );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -242,15 +335,18 @@ public final class SerDes extends Config implements Runnable {
                         .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.indexOf( ",\"AnswereId" ) - 1 ) )
                         : super.convert( Errors.DATA_NOT_FOUND.name() );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_IMAGE_BY_PINFL ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED + " : " + throwable.getMessage() ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( Errors.TOO_MANY_RETRIES_ERROR + " : " + throwable.getMessage() ) )
-            .doOnError( e -> super.logging( e, Methods.GET_IMAGE_BY_PINFL, pinfl ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_IMAGE_BY_PINFL ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_IMAGE_BY_PINFL, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert( Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED + " : " + throwable.getMessage() )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert( Errors.TOO_MANY_RETRIES_ERROR + " : " + throwable.getMessage() )
+            ).doOnError( e -> super.logging( e, Methods.GET_IMAGE_BY_PINFL, pinfl ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
@@ -258,56 +354,127 @@ public final class SerDes extends Config implements Runnable {
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
             .post()
             .uri( super.getAPI_FOR_MODEL_FOR_ADDRESS() )
-            .send( ByteBufFlux.fromString( CustomPublisherForRequest.generate( 3, pinfl ) ) )
-            .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
+            .send(
+                    ByteBufFlux.fromString(
+                            CustomPublisherForRequest.generate(
+                                    pinfl,
+                                    new RequestForModelOfAddress()
+                            )
+                    )
+            ).responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.getUpdateTokens().get().getGetModelForAddress().apply( pinfl );
-                case 501 | 502 | 503 -> ( Mono< ModelForAddress > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_MODEL_FOR_ADDRESS );
+                case 501 | 502 | 503 -> ( Mono< ModelForAddress > ) super.saveErrorLog.apply(
+                        res.status().toString(),
+                        Methods.GET_MODEL_FOR_ADDRESS
+                );
                 default -> super.checkResponse( res, content )
                         ? content
                         .asString()
-                        .map( s -> this.getGson().fromJson( s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), ModelForAddress.class ) )
-                        : super.convert( ModelForAddress.generate( super.error.apply( pinfl, 3 ) ) );
+                        .map( s -> this.getGson().fromJson(
+                                    s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ),
+                                    ModelForAddress.class
+                            )
+                        )
+                        : super.convert( new ModelForAddress().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_ADDRESS ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( ModelForAddress.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( ModelForAddress.generate( super.error.apply( Methods.GET_MODEL_FOR_ADDRESS.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_ADDRESS, pinfl ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_ADDRESS ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new ModelForAddress().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new ModelForAddress().generate(
+                                    super.error.apply(
+                                            Methods.GET_MODEL_FOR_ADDRESS.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_ADDRESS, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_ADDRESS() ) )
-            .onErrorReturn( ModelForAddress.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new ModelForAddress().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final BiFunction< String, String, Mono< ModelForPassport > > getModelForPassport =
             ( SerialNumber, BirthDate ) -> this.getHttpClient()
                     .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForPassport() ) )
                     .post()
                     .uri( super.getAPI_FOR_PASSPORT_MODEL() )
-                    .send( ByteBufFlux.fromString( CustomPublisherForRequest.generate( 0, SerialNumber + " " + BirthDate ) ) )
-                    .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
+                    .send(
+                            ByteBufFlux.fromString(
+                                    CustomPublisherForRequest.generate(
+                                            String.join(
+                                                    " ",
+                                                    SerialNumber,
+                                                    BirthDate
+                                            ),
+                                            new RequestForPassport()
+                                    )
+                            )
+                    ).responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                         case 401 -> this.getUpdateTokens().get().getGetModelForPassport().apply( SerialNumber, BirthDate );
                         case 501 | 502 | 503 -> ( Mono< ModelForPassport > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_MODEL_FOR_PASSPORT );
                         default -> super.checkResponse( res, content )
                                 ? content
                                 .asString()
                                 .map( s -> this.getGson().fromJson( s, ModelForPassport.class ) )
-                                : super.convert( ModelForPassport.generate( super.error.apply( SerialNumber + " : " + SerialNumber, 3 ) ) );
+                                : super.convert( new ModelForPassport().generate( super.error.apply( SerialNumber + " : " + SerialNumber, Errors.DATA_NOT_FOUND ) ) );
                     } )
-                    .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                            .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_PASSPORT ) )
-                            .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, retrySignal ) )
-                            .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-                    .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                            throwable -> super.convert( ModelForPassport.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-                    .onErrorResume( IllegalArgumentException.class,
-                            throwable -> super.convert( ModelForPassport.generate( super.error.apply( Methods.GET_MODEL_FOR_PASSPORT.name(), 5 ) ) ) )
-                    .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
+                    .retryWhen(
+                            Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                                .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_PASSPORT ) )
+                                .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, retrySignal ) )
+                                .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+                    ).onErrorResume(
+                            io.netty.channel.ConnectTimeoutException.class,
+                            throwable -> super.convert(
+                                    new ModelForPassport().generate(
+                                            super.error.apply(
+                                                    throwable.getMessage(),
+                                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                            )
+                                    )
+                            )
+                    ).onErrorResume(
+                            IllegalArgumentException.class,
+                            throwable -> super.convert(
+                                    new ModelForPassport().generate(
+                                            super.error.apply(
+                                                    Methods.GET_MODEL_FOR_PASSPORT.name(),
+                                                    Errors.TOO_MANY_RETRIES_ERROR
+                                            )
+                                    )
+                            )
+                    ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
                     .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
                     .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PASSPORT_MODEL() ) )
-                    .onErrorReturn( ModelForPassport.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+                    .onErrorReturn(
+                            new ModelForPassport().generate(
+                                    super.error.apply(
+                                            Errors.SERVICE_WORK_ERROR.name(),
+                                            Errors.SERVICE_WORK_ERROR
+                                    )
+                            )
+                    );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -321,21 +488,45 @@ public final class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> !s.contains( "топилмади" )
                                 ? this.getGson().fromJson( s, Insurance.class )
-                                : Insurance.generate( super.error.apply( gosno, 3 ) ) )
-                        : super.convert( Insurance.generate ( super.error.apply( gosno, 3 ) ) );
+                                : new Insurance().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) )
+                        : super.convert( new Insurance().generate ( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_INSURANCE ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_INSURANCE, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( Insurance.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( Insurance.generate( super.error.apply( Methods.GET_INSURANCE.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_INSURANCE, gosno ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_INSURANCE ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_INSURANCE, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new Insurance().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new Insurance().generate(
+                                    super.error.apply(
+                                            Methods.GET_INSURANCE.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_INSURANCE, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_INSURANCE, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_FOR_INSURANCE() ) )
-            .onErrorReturn( Insurance.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new Insurance().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -348,20 +539,44 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
-                        : super.convert( ModelForCar.generate( super.error.apply( gosno, 3 ) ) );
+                        : super.convert( new ModelForCar().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VEHILE_DATA ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_VEHILE_DATA, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( ModelForCar.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( ModelForCar.generate( super.error.apply( Methods.GET_VEHILE_DATA.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_VEHILE_DATA, gosno ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VEHILE_DATA ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_VEHILE_DATA, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new ModelForCar().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new ModelForCar().generate(
+                                    super.error.apply(
+                                            Methods.GET_VEHILE_DATA.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_VEHILE_DATA, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_VEHILE_DATA, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VEHICLE_DATA() ) )
-            .onErrorReturn( ModelForCar.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new ModelForCar().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -374,20 +589,44 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
-                        : super.convert( Tonirovka.generate( super.error.apply( gosno, 3 ) ) );
+                        : super.convert( new Tonirovka().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_TONIROVKA ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_TONIROVKA, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( Tonirovka.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( Tonirovka.generate( super.error.apply( Methods.GET_TONIROVKA.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_TONIROVKA, gosno ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_TONIROVKA ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_TONIROVKA, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new Tonirovka().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new Tonirovka().generate(
+                                    super.error.apply(
+                                            Methods.GET_TONIROVKA.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_TONIROVKA, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_TONIROVKA, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_TONIROVKA() ) )
-            .onErrorReturn( Tonirovka.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new Tonirovka().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -400,20 +639,44 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> ViolationsList.generate( this.stringToArrayList( s, ViolationsInformation[].class ) ) )
-                        : super.convert( ViolationsList.generate( super.error.apply( gosno, 3 ) ) );
+                        : super.convert( new ViolationsList().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VIOLATION_LIST ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_VIOLATION_LIST, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( ViolationsList.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( ViolationsList.generate( super.error.apply( Methods.GET_VIOLATION_LIST.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_VIOLATION_LIST, gosno ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_VIOLATION_LIST ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_VIOLATION_LIST, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new ViolationsList().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new ViolationsList().generate(
+                                    super.error.apply(
+                                            Methods.GET_VIOLATION_LIST.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_VIOLATION_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_VIOLATION_LIST, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VIOLATION_LIST() ) )
-            .onErrorReturn( ViolationsList.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new ViolationsList().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -426,20 +689,44 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> DoverennostList.generate( this.stringToArrayList( s, Doverennost[].class ) ) )
-                        : super.convert( DoverennostList.generate( super.error.apply( gosno, 3 ) ) );
+                        : super.convert( new DoverennostList().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 1 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_DOVERENNOST_LIST ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_DOVERENNOST_LIST, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( DoverennostList.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( DoverennostList.generate( super.error.apply( Methods.GET_DOVERENNOST_LIST.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_DOVERENNOST_LIST, gosno ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 1 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_DOVERENNOST_LIST ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_DOVERENNOST_LIST, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new DoverennostList().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new DoverennostList().generate(
+                                    super.error.apply(
+                                            Methods.GET_DOVERENNOST_LIST.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_DOVERENNOST_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( Methods.GET_DOVERENNOST_LIST, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_DOVERENNOST_LIST() ) )
-            .onErrorReturn( DoverennostList.generate( super.error.apply( gosno, 2 ) ) );
+            .onErrorReturn(
+                    new DoverennostList().generate(
+                            super.error.apply(
+                                    gosno,
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForGai() ) )
@@ -452,52 +739,80 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> ModelForCarList.generate( this.stringToArrayList( s, ModelForCar[].class ) ) )
-                        : super.convert( ModelForCarList.generate( super.error.apply( pinfl, 3 ) ) );
+                        : super.convert( new ModelForCarList().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
             } )
-            .retryWhen( Retry.backoff( 2, Duration.ofSeconds( 2 ) )
-                    .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_CAR_LIST ) )
-                    .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_CAR_LIST, retrySignal ) )
-                    .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() ) )
-            .onErrorResume( io.netty.channel.ConnectTimeoutException.class,
-                    throwable -> super.convert( ModelForCarList.generate( super.error.apply( throwable.getMessage(), 4 ) ) ) )
-            .onErrorResume( IllegalArgumentException.class,
-                    throwable -> super.convert( ModelForCarList.generate( super.error.apply( Methods.GET_MODEL_FOR_CAR_LIST.name(), 5 ) ) ) )
-            .doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_CAR_LIST, pinfl ) )
+            .retryWhen(
+                    Retry.backoff( 2, Duration.ofSeconds( 2 ) )
+                        .doBeforeRetry( retrySignal -> super.logging( retrySignal, Methods.GET_MODEL_FOR_CAR_LIST ) )
+                        .doAfterRetry( retrySignal -> super.logging( Methods.GET_MODEL_FOR_CAR_LIST, retrySignal ) )
+                        .onRetryExhaustedThrow( ( retryBackoffSpec, retrySignal ) -> new IllegalArgumentException() )
+            ).onErrorResume(
+                    io.netty.channel.ConnectTimeoutException.class,
+                    throwable -> super.convert(
+                            new ModelForCarList().generate(
+                                    super.error.apply(
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
+                                    )
+                            )
+                    )
+            ).onErrorResume(
+                    IllegalArgumentException.class,
+                    throwable -> super.convert(
+                            new ModelForCarList().generate(
+                                    super.error.apply(
+                                            Methods.GET_MODEL_FOR_CAR_LIST.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
+                                    )
+                            )
+                    )
+            ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_CAR_LIST, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_CAR_LIST, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
-            .onErrorReturn( ModelForCarList.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    new ModelForCarList().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< ModelForCarList, Mono< ModelForCarList > > findAllAboutCarList = modelForCarList ->
             Flux.fromStream( modelForCarList.getModelForCarList().stream() )
                     .parallel( super.checkDifference( modelForCarList.getModelForCarList().size() ) )
                     .runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
-                            this.getInsurance().apply( modelForCar.getPlateNumber() ),
-                            this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
-                            this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
-                            .map( tuple3 -> modelForCar.save( tuple3, modelForCarList ) ) )
-                    .sequential()
+                                this.getInsurance().apply( modelForCar.getPlateNumber() ),
+                                this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                                this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
+                            ).map( tuple3 -> modelForCar.save( tuple3, modelForCarList ) )
+                    ).sequential()
                     .publishOn( Schedulers.single() )
                     .take( 1 )
                     .single();
 
     private final Function< PsychologyCard, Mono< PsychologyCard > > findAllDataAboutCar = psychologyCard ->
             super.check( psychologyCard )
-                    ? Flux.fromStream( psychologyCard
-                            .getModelForCarList()
-                            .getModelForCarList()
-                            .stream() )
-                    .parallel( super.checkDifference(
+                    ? Flux.fromStream(
                             psychologyCard
-                                    .getModelForCarList()
-                                    .getModelForCarList()
-                                    .size() ) )
-                    .runOn( Schedulers.parallel() )
+                                .getModelForCarList()
+                                .getModelForCarList()
+                                .stream()
+                    ).parallel(
+                            super.checkDifference(
+                                psychologyCard
+                                        .getModelForCarList()
+                                        .getModelForCarList()
+                                        .size()
+                            )
+                    ).runOn( Schedulers.parallel() )
                     .flatMap( modelForCar -> Mono.zip(
-                            this.getInsurance().apply( modelForCar.getPlateNumber() ),
-                            this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
-                            this.getGetDoverennostList().apply( modelForCar.getPlateNumber() ) )
-                            .map( tuple3 -> modelForCar.save( tuple3, psychologyCard ) ) )
+                                this.getInsurance().apply( modelForCar.getPlateNumber() ),
+                                this.getGetVehicleTonirovka().apply( modelForCar.getPlateNumber() ),
+                                this.getGetDoverennostList().apply( modelForCar.getPlateNumber() )
+                            ).map( tuple3 -> modelForCar.save( tuple3, psychologyCard ) )
+                    )
                     .sequential()
                     .publishOn( Schedulers.single() )
                     .take( 1 )
@@ -508,55 +823,75 @@ public final class SerDes extends Config implements Runnable {
             super.checkPinpp( psychologyCard )
                     ? this.getGetCadaster().apply( psychologyCard.getPinpp().getCadastre() )
                     .flatMap( data -> super.checkCadastor( psychologyCard.save( data ) )
-                            ? Flux.fromStream( psychologyCard
+                            ? Flux.fromStream(
+                                    psychologyCard
                                     .getModelForCadastr()
                                     .getPermanentRegistration()
-                                    .stream() )
-                            .parallel( super.checkDifference(
-                                    psychologyCard
-                                            .getModelForCadastr()
-                                            .getPermanentRegistration()
-                                            .size() ) )
-                            .runOn( Schedulers.parallel() )
+                                    .stream()
+                            ).parallel(
+                                    super.checkDifference(
+                                        psychologyCard
+                                                .getModelForCadastr()
+                                                .getPermanentRegistration()
+                                                .size()
+                                    )
+                            ).runOn( Schedulers.parallel() )
                             .filter( person -> super.checkPerson( person, psychologyCard.getPinpp() ) )
                             .sequential()
                             .publishOn( Schedulers.single() )
                             .take( 1 )
                             .single()
                             .flatMap( person -> Mono.zip(
-                                    this.getGetModelForAddress().apply( person.getPCitizen() ),
-                                    this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() ) ) )
-                            .map( psychologyCard::save )
-                            .onErrorResume( throwable -> super.convert( PsychologyCard.generate( super.error.apply( throwable.getMessage(), 2 ) ) ) )
-                            : super.convert( psychologyCard ) )
+                                        this.getGetModelForAddress().apply( person.getPCitizen() ),
+                                        this.getGetModelForPassport().apply( person.getPPsp(), person.getPDateBirth() )
+                                    )
+                            ).map( psychologyCard::save )
+                            .onErrorResume( throwable -> super.convert(
+                                    new PsychologyCard().generate(
+                                            super.error.apply(
+                                                    throwable.getMessage(),
+                                                    Errors.SERVICE_WORK_ERROR
+                                            )
+                                    )
+                                )
+                            )
+                            : super.convert( psychologyCard )
+                    )
                     : super.convert( psychologyCard );
 
     public Mono< PsychologyCard > getPsychologyCard (
             final String token,
             final PsychologyCard psychologyCard,
-            final ApiResponseModel apiResponseModel ) {
+            final ApiResponseModel apiResponseModel
+    ) {
         try {
             super.getHeaders().put( "Authorization", "Bearer " + token );
 
             psychologyCard.setForeignerList(
                     this.stringToArrayList(
                             Unirest.get(
-                                    super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE()
-                                            + psychologyCard.getPapilonData().get( 0 ).getPassport() )
-                    .headers( super.getHeaders() )
-                    .asJson()
-                    .getBody()
-                    .getObject()
-                    .get( "data" )
-                    .toString(), Foreigner[].class ) );
+                                    String.join(
+                                            "",
+                                            super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE(),
+                                            psychologyCard.getPapilonData().get( 0 ).getPassport()
+                                    )
+                            ).headers( super.getHeaders() )
+                            .asJson()
+                            .getBody()
+                            .getObject()
+                            .get( "data" )
+                            .toString(),
+                            Foreigner[].class
+                    )
+            );
 
             super.saveUserUsageLog.apply( psychologyCard, apiResponseModel );
         } catch ( final Exception e ) {
-            super.saveErrorLog( "getPsychologyCard",
+            super.saveErrorLog(
+                    Methods.GET_PSYCHOLOGY_CARD,
                     psychologyCard.getPapilonData().get( 0 ).getPassport(),
-                    Errors.DATA_NOT_FOUND.name() );
-
-            return super.convert( psychologyCard );
+                    Errors.DATA_NOT_FOUND.name()
+            );
         }
         return super.convert( psychologyCard );
     }
@@ -565,8 +900,14 @@ public final class SerDes extends Config implements Runnable {
             .headers( h -> h.add( "Authorization", "Bearer " + super.getTokenForFio() ) )
             .post()
             .uri( super.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
-            .send( ByteBufFlux.fromString( CustomPublisherForRequest.generate( 2, fio ) ) )
-            .responseSingle( ( res, content ) -> res.status().code() == 401
+            .send(
+                    ByteBufFlux.fromString(
+                            CustomPublisherForRequest.generate(
+                                    fio,
+                                    new RequestForFio()
+                            )
+                    )
+            ).responseSingle( ( res, content ) -> res.status().code() == 401
                     ? this.getUpdateTokens().get().getGetPersonTotalDataByFIO().apply( fio )
                     : super.checkResponse( res, content )
                     ? content
@@ -574,7 +915,7 @@ public final class SerDes extends Config implements Runnable {
                     .map( s -> {
                         final PersonTotalDataByFIO person = this.getGson().fromJson( s, PersonTotalDataByFIO.class );
 
-                        if ( super.checkObject( person ) && super.check( person.getData() ) ) {
+                        if ( super.objectIsNotNull( person ) && super.isCollectionNotEmpty( person.getData() ) ) {
                             super.analyze(
                                     person.getData(),
                                     person1 -> this.getGetImageByPinfl()
@@ -583,11 +924,26 @@ public final class SerDes extends Config implements Runnable {
                             );
                         }
 
-                        return super.checkObject( person ) ? person : PersonTotalDataByFIO.generate();
+                        return super.objectIsNotNull( person ) ? person : PersonTotalDataByFIO.generate();
                     } )
-                    : super.convert( PersonTotalDataByFIO.generate( super.error.apply( fio.getName(), 3 ) ) ) )
+                    : super.convert(
+                            PersonTotalDataByFIO.generate().generate(
+                                    super.error.apply(
+                                            fio.getName(),
+                                            Errors.DATA_NOT_FOUND
+                                    )
+                            )
+                    )
+            )
             .doOnError( e -> super.logging( e, Methods.GET_DATA_BY_FIO, fio.getName() ) )
-            .onErrorReturn( PersonTotalDataByFIO.generate( super.error.apply( Errors.SERVICE_WORK_ERROR.name(), 2 ) ) );
+            .onErrorReturn(
+                    PersonTotalDataByFIO.generate().generate(
+                            super.error.apply(
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
+                            )
+                    )
+            );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
             apiResponseModel -> this.checkParam( apiResponseModel.getStatus().getMessage() )
@@ -599,20 +955,36 @@ public final class SerDes extends Config implements Runnable {
                                     .getInstance()
                                     .getViolationListByPinfl
                                     .apply( apiResponseModel.getStatus().getMessage() )
-                                    .onErrorReturn( super.emptyList() ) )
-                    .map( PsychologyCard::generate )
+                                    .onErrorReturn( super.emptyList() )
+                    ).map( PsychologyCard::generate )
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) )
-                    : super.convert( PsychologyCard.generate( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) );
+                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                    )
+                    : super.convert(
+                            new PsychologyCard().generate(
+                                    super.error.apply(
+                                            Errors.WRONG_PARAMS.name(),
+                                            Errors.SERVICE_WORK_ERROR
+                                    )
+                            )
+                    );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinflInitial =
             apiResponseModel -> this.checkParam( apiResponseModel.getStatus().getMessage() )
-                    ? Mono.zip( this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
-                            this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() ) )
-                    .map( tuple -> super.saveUserUsageLog.apply( PsychologyCard.generate( tuple ), apiResponseModel ) )
-                    : super.convert( PsychologyCard.generate( super.error.apply( Errors.WRONG_PARAMS.name(), 2 ) ) );
+                    ? Mono.zip(
+                            this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
+                            this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() )
+                    ).map( tuple -> super.saveUserUsageLog.apply( PsychologyCard.generate( tuple ), apiResponseModel ) )
+                    : super.convert(
+                            new PsychologyCard().generate(
+                                    super.error.apply(
+                                            Errors.WRONG_PARAMS.name(),
+                                            Errors.SERVICE_WORK_ERROR
+                                    )
+                            )
+                    );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
@@ -622,35 +994,63 @@ public final class SerDes extends Config implements Runnable {
                     .map( tuple -> PsychologyCard.generate( results, tuple ) )
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
-                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) );
+                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard )
+                            ).map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                    );
 
     private final BiFunction< ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
             getPsychologyCardByData = ( data, apiResponseModel ) -> this.check( data )
-            ? Mono.zip(
-                    this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
-                    this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ),
-                    this.getGetModelForCarList().apply( data.getData().getPerson().getPinpp() ),
-                    this.getGetModelForAddress().apply( data.getData().getPerson().getPCitizen() ),
-                    FindFaceComponent
-                            .getInstance()
-                            .getViolationListByPinfl
-                            .apply( data.getData().getPerson().getPinpp() )
-                            .onErrorReturn( super.emptyList() ) )
-            .flatMap( tuple -> this.getFindAllDataAboutCar().apply( PsychologyCard.generate( data, tuple ) )
-                    .map( psychologyCard -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) ) )
-            : super.convert( PsychologyCard.generate( super.error.apply( data.getData().getPerson().getPinpp(), 3 ) ) );
+                    ? Mono.zip(
+                            this.getGetPinpp().apply( data.getData().getPerson().getPinpp() ),
+                            this.getGetImageByPinfl().apply( data.getData().getPerson().getPinpp() ),
+                            this.getGetModelForCarList().apply( data.getData().getPerson().getPinpp() ),
+                            this.getGetModelForAddress().apply( data.getData().getPerson().getPCitizen() ),
+                            FindFaceComponent
+                                    .getInstance()
+                                    .getViolationListByPinfl
+                                    .apply( data.getData().getPerson().getPinpp() )
+                                    .onErrorReturn( super.emptyList() )
+                    ).flatMap(
+                            tuple -> this.getFindAllDataAboutCar()
+                                    .apply( PsychologyCard.generate( data, tuple ) )
+                                    .map( psychologyCard -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                    )
+                    : super.convert(
+                            new PsychologyCard().generate(
+                                    super.error.apply(
+                                            data.getData().getPerson().getPinpp(),
+                                            Errors.DATA_NOT_FOUND
+                                    )
+                            )
+                    );
 
     private final Function< CrossBoardInfo, Mono< CrossBoardInfo > > analyzeCrossData = crossBoardInfo ->
-            Flux.fromStream( crossBoardInfo.getData().get( 0 ).getCrossBoardList().stream() )
-                    .parallel( super.checkDifference( crossBoardInfo.getData().get( 0 ).getCrossBoardList().size() ) )
-                    .runOn( Schedulers.parallel() )
+            Flux.fromStream(
+                        crossBoardInfo
+                                .getData()
+                                .get( 0 )
+                                .getCrossBoardList()
+                                .stream()
+                    ).parallel(
+                            super.checkDifference(
+                                    crossBoardInfo
+                                            .getData()
+                                            .get( 0 )
+                                            .getCrossBoardList()
+                                            .size()
+                            )
+                    ).runOn( Schedulers.parallel() )
                     .map( crossBoard -> crossBoard.save( crossBoardInfo.getData().get( 0 ).getPerson().getNationalityid() ) )
                     .sequential()
                     .publishOn( Schedulers.single() )
                     .collectList()
                     .map( crossBoards -> {
-                        crossBoardInfo.getData().get( 0 ).getCrossBoardList().sort( Comparator.comparing( CrossBoard::getRegistrationDate ).reversed() );
+                        crossBoardInfo
+                                .getData()
+                                .get( 0 )
+                                .getCrossBoardList()
+                                .sort( Comparator.comparing( CrossBoard::getRegistrationDate ).reversed() );
+
                         return crossBoardInfo;
                     } );
 
@@ -666,7 +1066,8 @@ public final class SerDes extends Config implements Runnable {
                 this.setFlag( false );
                 super.logging( e, Methods.UPDATE_TOKENS, e.getMessage() );
                 SerDes.getSerDes();
-            } }
+            }
+        }
         SerDes.getSerDes();
     }
 }

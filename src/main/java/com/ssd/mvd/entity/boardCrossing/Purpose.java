@@ -38,36 +38,56 @@ public final class Purpose extends Archieve {
     public Purpose (
             final CrossBoard crossBoard,
             final Integer nationalityId ) {
-        if ( super.checkObject( crossBoard.getTrip_purpose_code() ) ) {
+        if ( super.objectIsNotNull( crossBoard.getTrip_purpose_code() ) ) {
             this.setTripPurpose(
-                    super.tripPurposes.getOrDefault( crossBoard.getTrip_purpose_code(), Errors.DATA_NOT_FOUND.name() ) );
+                    super.tripPurposes.getOrDefault(
+                            crossBoard.getTrip_purpose_code(),
+                            Errors.DATA_NOT_FOUND.name()
+                    )
+            );
         }
 
-        if ( super.checkObject( crossBoard.getTrans_category_code() ) ) {
+        if ( super.objectIsNotNull( crossBoard.getTrans_category_code() ) ) {
             this.setTransportCategory(
-                    super.transportCategory.getOrDefault( crossBoard.getTrans_category_code(), Errors.DATA_NOT_FOUND.name() )
+                    super.transportCategory.getOrDefault(
+                            crossBoard.getTrans_category_code(),
+                            Errors.DATA_NOT_FOUND.name()
+                    )
             );
         }
 
-        if ( super.checkObject( crossBoard.getPeriod_code() ) ) {
+        if ( super.objectIsNotNull( crossBoard.getPeriod_code() ) ) {
             this.setPeriods(
-                    super.periods.getOrDefault( crossBoard.getPeriod_code(), Errors.DATA_NOT_FOUND.name() ) );
-        }
-
-        if ( super.checkObject( crossBoard.getDocument_type_code() ) ) {
-            this.setDocumentType(
-                    super.documentTypes.getOrDefault( crossBoard.getDocument_type_code(), Errors.DATA_NOT_FOUND.name() )
+                    super.periods.getOrDefault(
+                            crossBoard.getPeriod_code(),
+                            Errors.DATA_NOT_FOUND.name()
+                    )
             );
         }
 
-        if ( super.checkObject( crossBoard.getDirection_country() ) ) {
+        if ( super.objectIsNotNull( crossBoard.getDocument_type_code() ) ) {
+            this.setDocumentType(
+                    super.documentTypes.getOrDefault(
+                            crossBoard.getDocument_type_code(),
+                            Errors.DATA_NOT_FOUND.name()
+                    )
+            );
+        }
+
+        if ( super.objectIsNotNull( crossBoard.getDirection_country() ) ) {
             this.setCountries(
-                    super.countries.getOrDefault( crossBoard.getDirection_country(), Errors.DATA_NOT_FOUND.name() )
+                    super.countries.getOrDefault(
+                            crossBoard.getDirection_country(),
+                            Errors.DATA_NOT_FOUND.name()
+                    )
             );
         }
 
         this.setNationalities(
-                super.nationalities.getOrDefault( nationalityId, Errors.DATA_NOT_FOUND.name() )
+                super.nationalities.getOrDefault(
+                        nationalityId,
+                        Errors.DATA_NOT_FOUND.name()
+                )
         );
     }
 }

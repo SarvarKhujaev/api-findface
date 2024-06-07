@@ -4,7 +4,7 @@ package com.ssd.mvd.entity;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class Violation {
-    private Long protocol_id;
+    private long protocol_id;
 
     private String pinpp;
     private String decision;

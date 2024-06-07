@@ -8,5 +8,5 @@ import java.util.List;
 public final class First {
     private List< Integer > bbox;
     private String timestamp;
-    private Double quality;
+    private double quality;
 }

@@ -4,7 +4,7 @@ package com.ssd.mvd.entity.foreigner;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
 public final class Foreigner {
-    private Boolean sex; // shows the gender of person TRUE for women. FALSE for men
+    private boolean sex; // shows the gender of person TRUE for women. FALSE for men
 
     private String name;
     private String note;

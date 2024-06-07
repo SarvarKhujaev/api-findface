@@ -1,10 +1,12 @@
 package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.controller.CollectionsInspector;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
+
 import java.util.List;
 
-public final class CrossBoardInfo extends CollectionsInspector {
+public final class CrossBoardInfo extends CollectionsInspector implements EntityCommonMethods< CrossBoardInfo > {
     public List< com.ssd.mvd.entity.boardCrossing.Data > getData() {
         return this.Data;
     }
@@ -32,7 +34,8 @@ public final class CrossBoardInfo extends CollectionsInspector {
         return new CrossBoardInfo( crossBoards, person );
     }
 
-    public static CrossBoardInfo generate (
+    @Override
+    public CrossBoardInfo generate (
             final ErrorResponse errorResponse
     ) {
         return new CrossBoardInfo( errorResponse );
@@ -49,4 +52,6 @@ public final class CrossBoardInfo extends CollectionsInspector {
     private CrossBoardInfo ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
     }
+
+    public CrossBoardInfo () {}
 }

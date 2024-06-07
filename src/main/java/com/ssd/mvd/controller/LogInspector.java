@@ -8,6 +8,7 @@ import com.ssd.mvd.constants.Methods;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.util.function.BiFunction;
 import reactor.util.retry.Retry;
 
@@ -22,27 +23,44 @@ public class LogInspector extends ErrorController {
     protected void logging (
             final Throwable throwable,
             final Methods method,
-            final String params ) {
+            final String params
+    ) {
         this.getLOGGER().error( "Error in {}: {}", method, throwable );
 
         super.saveErrorLog(
-                method.name(),
+                method,
                 params,
-                "Error: " + throwable.getMessage() );
+                "Error: " + throwable.getMessage()
+        );
 
         super.saveErrorLog( throwable.getMessage() );
     }
 
-    protected void logging ( final Retry.RetrySignal retrySignal, final Methods methods ) {
+    protected final synchronized void logging (
+            final Class<?> clazz
+    ) {
+        this.getLOGGER().info( clazz.getName() + " was created at: " + super.newDate() );
+    }
+
+    protected void logging (
+            final Retry.RetrySignal retrySignal,
+            final Methods methods
+    ) {
         this.getLOGGER().info( "Retrying in {} has started {}: ", methods, retrySignal );
     }
 
-    protected void logging ( final Methods methods, final Retry.RetrySignal retrySignal ) {
+    protected void logging (
+            final Methods methods,
+            final Retry.RetrySignal retrySignal
+    ) {
         this.getLOGGER().info( "Retrying in {} has finished {}: ", methods, retrySignal );
     }
 
     // log on error
-    protected void logging ( final Methods method, final Object o ) {
+    protected void logging (
+            final Methods method,
+            final Object o
+    ) {
         this.getLOGGER().info( "Method {} has completed successfully {}", method, o );
     }
 
@@ -60,13 +78,18 @@ public class LogInspector extends ErrorController {
             ( psychologyCard, apiResponseModel ) -> {
                 KafkaDataControl
                         .getInstance()
-                        .getWriteToKafkaServiceUsage()
+                        .writeToKafkaServiceUsage
                         .accept( SerDes
                                 .getSerDes()
                                 .getGson()
-                                .toJson( new UserRequest(
-                                        psychologyCard,
-                                        apiResponseModel ) ) );
+                                .toJson(
+                                        new UserRequest(
+                                            psychologyCard,
+                                            apiResponseModel
+                                        )
+                                )
+                        );
+
                 return psychologyCard;
-    };
+            };
 }
