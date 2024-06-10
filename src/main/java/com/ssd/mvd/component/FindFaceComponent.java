@@ -6,12 +6,15 @@ import java.util.function.Function;
 import com.ssd.mvd.entity.Results;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.FindFaceServiceApplication;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.controller.DataValidationInspector;
 
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
-public final class FindFaceComponent extends DataValidationInspector {
+public final class FindFaceComponent
+        extends DataValidationInspector
+        implements ServiceCommonMethods {
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 
@@ -23,15 +26,15 @@ public final class FindFaceComponent extends DataValidationInspector {
         this.requester = FindFaceServiceApplication.context.getBean( RSocketRequester.class );
     }
 
+    private RSocketRequester getRequester() {
+        return this.requester;
+    }
+
     public final Function< String, Mono< Results > > getPapilonList = base64url -> this.getRequester()
             .route( Methods.GET_FACE_CARD.name() )
             .data( base64url )
             .retrieveMono( Results.class )
             .onErrorReturn( new Results() );
-
-    private RSocketRequester getRequester() {
-        return this.requester;
-    }
 
     public final Function< String, Mono< List > > getViolationListByPinfl = pinfl -> super.checkParam( pinfl )
             ? this.getRequester()
@@ -41,4 +44,10 @@ public final class FindFaceComponent extends DataValidationInspector {
             .defaultIfEmpty( super.emptyList() )
             .onErrorReturn( super.emptyList() )
             : super.convert( super.emptyList() );
+
+    @Override
+    public void close() {
+        component = null;
+        this.getRequester().dispose();
+    }
 }
