@@ -7,10 +7,11 @@ import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 
 public final class CarTotalData
         extends ErrorController
-        implements EntityCommonMethods< CarTotalData > {
+        implements EntityCommonMethods< CarTotalData >, ServiceCommonMethods {
     public void setTonirovka ( final Tonirovka tonirovka ) {
         this.tonirovka = tonirovka;
     }
@@ -137,5 +138,14 @@ public final class CarTotalData
         this.setModelForCar( objects.getT2() );
         this.setTonirovka( objects.getT1() );
         this.setInsurance( objects.getT4() );
+    }
+
+    @Override
+    public void close() {
+        this.violationsList.close();
+        this.psychologyCard.close();
+        this.doverennostList.close();
+        this.modelForCarList.close();
+        this.getModelForCar().getDoverennostList().close();
     }
 }

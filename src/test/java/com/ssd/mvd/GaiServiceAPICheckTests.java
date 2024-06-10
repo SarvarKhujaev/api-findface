@@ -374,6 +374,9 @@ public final class GaiServiceAPICheckTests extends TestCase {
         assertFalse( violationsList.getViolationsInformationsList().isEmpty() );
         assertNotNull( violationsList.getViolationsInformationsList().getFirst() );
 
+        assertFalse( violationsList.getViolationsInformationsList().getFirst().getAmount() < 0 );
+        assertFalse( violationsList.getViolationsInformationsList().getFirst().getDecreeStatus() == 0 );
+
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getBill().isBlank() );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getModel().isBlank() );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getOwner().isBlank() );
@@ -381,9 +384,7 @@ public final class GaiServiceAPICheckTests extends TestCase {
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getAddress().isBlank() );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getArticle().isBlank() );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getDivision().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getAmount() < 0 );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getViolation().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getDecreeStatus() == 0 );
         assertFalse( violationsList.getViolationsInformationsList().getFirst().getDecreeSerialNumber().isBlank() );
 
         violationsList.close();
