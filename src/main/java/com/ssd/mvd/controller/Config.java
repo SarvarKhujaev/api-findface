@@ -20,7 +20,7 @@ public class Config extends LogInspector {
 
     private String tokenForGai;
 
-    protected String getTokenForGai() {
+    public String getTokenForGai() {
         return this.tokenForGai;
     }
 
@@ -142,11 +142,11 @@ public class Config extends LogInspector {
         return this.GROUP_ID_FOR_KAFKA;
     }
 
-    public int getKAFKA_SENDER_MAX_IN_FLIGHT() {
+    protected int getKAFKA_SENDER_MAX_IN_FLIGHT() {
         return this.KAFKA_SENDER_MAX_IN_FLIGHT;
     }
 
-    public String getKAFKA_ACKS_CONFIG() {
+    protected String getKAFKA_ACKS_CONFIG() {
         return this.KAFKA_ACKS_CONFIG;
     }
 

@@ -1,9 +1,25 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
-public final class Insurance implements EntityCommonMethods< Insurance > {
+public final class Insurance
+        extends ErrorController
+        implements EntityCommonMethods< Insurance > {
+    public String getDateBegin() {
+        return this.DateBegin;
+    }
+
+    public String getDateValid() {
+        return this.DateValid;
+    }
+
+    public String getTintinType() {
+        return this.TintinType;
+    }
+
     private String DateBegin;
     private String DateValid;
     private String TintinType;
@@ -17,6 +33,19 @@ public final class Insurance implements EntityCommonMethods< Insurance > {
     }
 
     private ErrorResponse errorResponse;
+
+    @Override
+    public Insurance generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new Insurance().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
+    }
 
     @Override
     public Insurance generate (

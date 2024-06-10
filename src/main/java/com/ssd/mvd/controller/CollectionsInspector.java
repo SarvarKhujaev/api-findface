@@ -10,7 +10,7 @@ public class CollectionsInspector extends TimeInspector {
         return Collections.emptyList();
     }
 
-    public <T> ArrayList<T> newList () {
+    protected final synchronized <T> ArrayList<T> newList () {
         return new ArrayList<>();
     }
 

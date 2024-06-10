@@ -1,12 +1,16 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.controller.CollectionsInspector;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
-public final class CrossBoardInfo extends CollectionsInspector implements EntityCommonMethods< CrossBoardInfo > {
+public final class CrossBoardInfo
+        extends ErrorController
+        implements EntityCommonMethods< CrossBoardInfo >, ServiceCommonMethods {
     public List< com.ssd.mvd.entity.boardCrossing.Data > getData() {
         return this.Data;
     }
@@ -23,6 +27,10 @@ public final class CrossBoardInfo extends CollectionsInspector implements Entity
         this.errorResponse = errorResponse;
     }
 
+    public String getResult() {
+        return this.Result;
+    }
+
     private String Result;
     private List< Data > Data;
     private ErrorResponse errorResponse;
@@ -32,6 +40,19 @@ public final class CrossBoardInfo extends CollectionsInspector implements Entity
             final Person person
     ) {
         return new CrossBoardInfo( crossBoards, person );
+    }
+
+    @Override
+    public CrossBoardInfo generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new CrossBoardInfo().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
     }
 
     @Override
@@ -54,4 +75,14 @@ public final class CrossBoardInfo extends CollectionsInspector implements Entity
     }
 
     public CrossBoardInfo () {}
+
+    @Override
+    public void close() {
+        super.analyze(
+                this.getData(),
+                com.ssd.mvd.entity.boardCrossing.Data::close
+        );
+
+        this.getData().clear();
+    }
 }

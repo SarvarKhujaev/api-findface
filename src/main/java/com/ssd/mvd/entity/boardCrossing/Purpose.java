@@ -1,7 +1,7 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.controller.Archieve;
+import com.ssd.mvd.constants.Errors;
 
 public final class Purpose extends Archieve {
     public void setPeriods ( final String periods ) {
@@ -28,6 +28,30 @@ public final class Purpose extends Archieve {
         this.transportCategory = transportCategory;
     }
 
+    public String getPeriods() {
+        return this.periods;
+    }
+
+    public String getCountries() {
+        return this.countries;
+    }
+
+    public String getTripPurpose() {
+        return this.tripPurpose;
+    }
+
+    public String getDocumentType() {
+        return this.documentType;
+    }
+
+    public String getNationalities() {
+        return this.nationalities;
+    }
+
+    public String getTransportCategory() {
+        return this.transportCategory;
+    }
+
     private String periods;
     private String countries;
     private String tripPurpose;
@@ -37,7 +61,8 @@ public final class Purpose extends Archieve {
 
     public Purpose (
             final CrossBoard crossBoard,
-            final Integer nationalityId ) {
+            final Integer nationalityId
+    ) {
         if ( super.objectIsNotNull( crossBoard.getTrip_purpose_code() ) ) {
             this.setTripPurpose(
                     super.tripPurposes.getOrDefault(

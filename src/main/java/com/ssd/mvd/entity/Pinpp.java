@@ -1,9 +1,13 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
-public final class Pinpp implements EntityCommonMethods< Pinpp > {
+public final class Pinpp
+        extends ErrorController
+        implements EntityCommonMethods< Pinpp > {
     public String getName() {
         return this.Name;
     }
@@ -62,6 +66,19 @@ public final class Pinpp implements EntityCommonMethods< Pinpp > {
     private String BirthPlaceDistrict;
 
     private ErrorResponse errorResponse;
+
+    @Override
+    public Pinpp generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new Pinpp().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
+    }
 
     @Override
     public Pinpp generate (

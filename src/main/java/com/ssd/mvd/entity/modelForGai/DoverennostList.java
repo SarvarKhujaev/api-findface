@@ -1,11 +1,16 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
-public final class DoverennostList implements EntityCommonMethods< DoverennostList > {
+public final class DoverennostList
+        extends ErrorController
+        implements EntityCommonMethods< DoverennostList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -24,6 +29,19 @@ public final class DoverennostList implements EntityCommonMethods< DoverennostLi
 
     private ErrorResponse errorResponse;
     private List< Doverennost > doverennostsList;
+
+    @Override
+    public DoverennostList generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new DoverennostList().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
+    }
 
     @Override
     public DoverennostList generate (
@@ -47,4 +65,9 @@ public final class DoverennostList implements EntityCommonMethods< DoverennostLi
     }
 
     public DoverennostList () {}
+
+    @Override
+    public void close() {
+        this.getDoverennostsList().clear();
+    }
 }

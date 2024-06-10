@@ -4,17 +4,23 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import reactor.util.function.*;
 import java.util.List;
 
-public final class PsychologyCard implements EntityCommonMethods< PsychologyCard > {
+public final class PsychologyCard
+        extends ErrorController
+        implements EntityCommonMethods< PsychologyCard >, ServiceCommonMethods {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
     private List< PapilonData > papilonData;
+
     private List< Violation > violationList;
     private List< Foreigner > foreignerList;
 
@@ -24,6 +30,14 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
     private ErrorResponse errorResponse;
     private ModelForPassport modelForPassport;
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
+
+    public String getPersonImage() {
+        return this.personImage;
+    }
+
+    public List< Violation > getViolationList() {
+        return this.violationList;
+    }
 
     public Pinpp getPinpp() {
         return this.pinpp;
@@ -37,7 +51,7 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
         this.personImage = personImage;
     }
 
-    public List<PapilonData> getPapilonData() {
+    public List< PapilonData > getPapilonData() {
         return this.papilonData;
     }
 
@@ -49,7 +63,7 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
         this.violationList = violationList;
     }
 
-    public List<Foreigner> getForeignerList() {
+    public List< Foreigner > getForeignerList() {
         return this.foreignerList;
     }
 
@@ -132,6 +146,19 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
             final ErrorResponse errorResponse
     ) {
         return new PsychologyCard( errorResponse );
+    }
+
+    @Override
+    public PsychologyCard generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new PsychologyCard().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
     }
 
     public static PsychologyCard generate (
@@ -229,5 +256,15 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
     private PsychologyCard ( final Tuple2< Pinpp, String > tuple ) {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() );
+    }
+
+    @Override
+    public void close() {
+        this.getPapilonData().clear();
+        this.getForeignerList().clear();
+        this.getViolationList().clear();
+        this.getModelForCarList().close();
+        this.getModelForCadastr().close();
+        this.getModelForAddress().close();
     }
 }

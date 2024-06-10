@@ -4,6 +4,7 @@ import java.util.*;
 import java.time.Duration;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 
 import reactor.util.retry.Retry;
 import reactor.core.publisher.Flux;
@@ -37,6 +38,7 @@ import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.boardCrossing.CrossBoard;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.publisher.CustomPublisherForRequest;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -44,21 +46,27 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
-public final class SerDes extends Config implements Runnable {
+public final class SerDes extends Config implements ServiceCommonMethods {
     private Thread thread;
+    private final Semaphore semaphore = new Semaphore( 1 );
+
     private final Gson gson = new Gson();
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = HttpClient
             .create()
             .responseTimeout( Duration.ofSeconds( 20 ) )
             .headers( h -> h.add( "Content-Type", "application/json" ) )
-            .wiretap( "reactor.netty.http.client.HttpClient", LogLevel.TRACE, AdvancedByteBufFormat.TEXTUAL );
+            .wiretap(
+                    "reactor.netty.http.client.HttpClient",
+                    LogLevel.TRACE,
+                    AdvancedByteBufFormat.TEXTUAL
+            );
 
     public static SerDes getSerDes () {
         return serDes != null ? serDes : ( serDes = new SerDes() );
     }
 
-    public  <T> List<T> stringToArrayList (
+    private synchronized <T> List<T> stringToArrayList (
             final String object,
             final Class< T[] > clazz
     ) {
@@ -89,7 +97,23 @@ public final class SerDes extends Config implements Runnable {
         } );
 
         super.getHeaders().put( "accept", "application/json" );
-        this.setThread( new Thread( this, this.getClass().getName() ) );
+        this.setThread(
+                new Thread(
+                        () -> {
+                            while ( this.getThread().isAlive() ) {
+                                this.getUpdateTokens().get();
+                                try {
+                                    TimeUnit.MINUTES.sleep( super.getWaitingMins() );
+                                    this.semaphore.release();
+                                }
+                                catch ( final InterruptedException e ) {
+                                    this.close( e );
+                                }
+                            }
+                        }
+                )
+        );
+        this.getThread().setName( this.getClass().getName() );
         this.getThread().start();
         this.updateTokens.get();
     }
@@ -156,7 +180,7 @@ public final class SerDes extends Config implements Runnable {
                                                 : new Person()
                                     )
                                 )
-                                : super.convert( new CrossBoardInfo().generate( super.error.apply( SerialNumber, Errors.DATA_NOT_FOUND ) ) );
+                                : super.convert( new CrossBoardInfo().generate( SerialNumber, Errors.DATA_NOT_FOUND ) );
                     } )
                     .retryWhen(
                             Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -167,26 +191,23 @@ public final class SerDes extends Config implements Runnable {
                             ConnectTimeoutException.class,
                             throwable -> super.convert(
                                     new CrossBoardInfo().generate(
-                                            super.error.apply( throwable.getMessage(), Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                     )
                             )
                     ).onErrorResume(
                             IllegalArgumentException.class,
                             throwable -> super.convert(
                                     new CrossBoardInfo().generate(
-                                            super.error.apply(
-                                                    Methods.GET_CROSS_BOARDING.name(),
-                                                    Errors.TOO_MANY_RETRIES_ERROR
-                                            )
+                                            Methods.GET_CROSS_BOARDING.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
                                     )
                             )
                     ).doOnError( e -> super.logging( e, Methods.GET_CROSS_BOARDING, SerialNumber ) )
                     .onErrorReturn(
                             new CrossBoardInfo().generate(
-                                    super.error.apply(
                                             Errors.SERVICE_WORK_ERROR.name(),
                                             Errors.SERVICE_WORK_ERROR
-                                    )
                             )
                     );
 
@@ -235,7 +256,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Pinpp.class ) )
-                        : super.convert( new Pinpp().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new Pinpp().generate( pinfl, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -246,20 +267,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new Pinpp().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new Pinpp().generate(
-                                    super.error.apply(
-                                            Methods.GET_PINPP.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_PINPP.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( throwable -> super.logging( throwable, Methods.GET_PINPP, pinfl ) )
@@ -284,7 +301,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s.substring( s.indexOf( "Data" ) + 6, s.indexOf( ",\"AnswereId" ) ), Data.class ) )
-                        : super.convert( new Data().generate( super.error.apply( cadaster, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new Data().generate( cadaster, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -295,20 +312,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new Data().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new Data().generate(
-                                    super.error.apply(
-                                            Methods.CADASTER.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.CADASTER.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.CADASTER, cadaster ) )
@@ -316,10 +329,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_CADASTR() ) )
             .onErrorReturn(
                     new Data().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR )
-                    )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR )
             );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
@@ -375,7 +386,7 @@ public final class SerDes extends Config implements Runnable {
                                     ModelForAddress.class
                             )
                         )
-                        : super.convert( new ModelForAddress().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new ModelForAddress().generate( pinfl, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -386,20 +397,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new ModelForAddress().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new ModelForAddress().generate(
-                                    super.error.apply(
-                                            Methods.GET_MODEL_FOR_ADDRESS.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_MODEL_FOR_ADDRESS.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_ADDRESS, pinfl ) )
@@ -407,10 +414,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_ADDRESS() ) )
             .onErrorReturn(
                     new ModelForAddress().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -437,7 +442,16 @@ public final class SerDes extends Config implements Runnable {
                                 ? content
                                 .asString()
                                 .map( s -> this.getGson().fromJson( s, ModelForPassport.class ) )
-                                : super.convert( new ModelForPassport().generate( super.error.apply( SerialNumber + " : " + SerialNumber, Errors.DATA_NOT_FOUND ) ) );
+                                : super.convert(
+                                        new ModelForPassport().generate(
+                                                String.join(
+                                                        " : ",
+                                                        SerialNumber,
+                                                        SerialNumber
+                                                ),
+                                                Errors.DATA_NOT_FOUND
+                                        )
+                                );
                     } )
                     .retryWhen(
                             Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -448,20 +462,16 @@ public final class SerDes extends Config implements Runnable {
                             io.netty.channel.ConnectTimeoutException.class,
                             throwable -> super.convert(
                                     new ModelForPassport().generate(
-                                            super.error.apply(
-                                                    throwable.getMessage(),
-                                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                            )
+                                            throwable.getMessage(),
+                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                     )
                             )
                     ).onErrorResume(
                             IllegalArgumentException.class,
                             throwable -> super.convert(
                                     new ModelForPassport().generate(
-                                            super.error.apply(
-                                                    Methods.GET_MODEL_FOR_PASSPORT.name(),
-                                                    Errors.TOO_MANY_RETRIES_ERROR
-                                            )
+                                            Methods.GET_MODEL_FOR_PASSPORT.name(),
+                                            Errors.TOO_MANY_RETRIES_ERROR
                                     )
                             )
                     ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_PASSPORT, SerialNumber + "_" + BirthDate ) )
@@ -469,10 +479,8 @@ public final class SerDes extends Config implements Runnable {
                     .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PASSPORT_MODEL() ) )
                     .onErrorReturn(
                             new ModelForPassport().generate(
-                                    super.error.apply(
-                                            Errors.SERVICE_WORK_ERROR.name(),
-                                            Errors.SERVICE_WORK_ERROR
-                                    )
+                                    Errors.SERVICE_WORK_ERROR.name(),
+                                    Errors.SERVICE_WORK_ERROR
                             )
                     );
 
@@ -488,8 +496,8 @@ public final class SerDes extends Config implements Runnable {
                         .asString()
                         .map( s -> !s.contains( "топилмади" )
                                 ? this.getGson().fromJson( s, Insurance.class )
-                                : new Insurance().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) )
-                        : super.convert( new Insurance().generate ( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
+                                : new Insurance().generate( gosno, Errors.DATA_NOT_FOUND ) )
+                        : super.convert( new Insurance().generate ( gosno, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -500,20 +508,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new Insurance().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new Insurance().generate(
-                                    super.error.apply(
-                                            Methods.GET_INSURANCE.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_INSURANCE.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_INSURANCE, gosno ) )
@@ -521,10 +525,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_FOR_INSURANCE() ) )
             .onErrorReturn(
                     new Insurance().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -539,7 +541,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, ModelForCar.class ) )
-                        : super.convert( new ModelForCar().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new ModelForCar().generate( gosno, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -550,20 +552,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new ModelForCar().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new ModelForCar().generate(
-                                    super.error.apply(
-                                            Methods.GET_VEHILE_DATA.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_VEHILE_DATA.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_VEHILE_DATA, gosno ) )
@@ -571,10 +569,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VEHICLE_DATA() ) )
             .onErrorReturn(
                     new ModelForCar().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -589,7 +585,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> this.getGson().fromJson( s, Tonirovka.class ) )
-                        : super.convert( new Tonirovka().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new Tonirovka().generate( gosno, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -600,20 +596,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new Tonirovka().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new Tonirovka().generate(
-                                    super.error.apply(
-                                            Methods.GET_TONIROVKA.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_TONIROVKA.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_TONIROVKA, gosno ) )
@@ -621,10 +613,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_TONIROVKA() ) )
             .onErrorReturn(
                     new Tonirovka().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -639,7 +629,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> ViolationsList.generate( this.stringToArrayList( s, ViolationsInformation[].class ) ) )
-                        : super.convert( new ViolationsList().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new ViolationsList().generate( gosno, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -650,20 +640,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new ViolationsList().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new ViolationsList().generate(
-                                    super.error.apply(
-                                            Methods.GET_VIOLATION_LIST.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_VIOLATION_LIST.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_VIOLATION_LIST, gosno ) )
@@ -671,10 +657,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VIOLATION_LIST() ) )
             .onErrorReturn(
                     new ViolationsList().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -689,7 +673,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> DoverennostList.generate( this.stringToArrayList( s, Doverennost[].class ) ) )
-                        : super.convert( new DoverennostList().generate( super.error.apply( gosno, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new DoverennostList().generate( gosno, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 1 ) )
@@ -700,20 +684,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new DoverennostList().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new DoverennostList().generate(
-                                    super.error.apply(
-                                            Methods.GET_DOVERENNOST_LIST.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_DOVERENNOST_LIST.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_DOVERENNOST_LIST, gosno ) )
@@ -721,10 +701,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_DOVERENNOST_LIST() ) )
             .onErrorReturn(
                     new DoverennostList().generate(
-                            super.error.apply(
-                                    gosno,
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            gosno,
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -739,7 +717,7 @@ public final class SerDes extends Config implements Runnable {
                         ? content
                         .asString()
                         .map( s -> ModelForCarList.generate( this.stringToArrayList( s, ModelForCar[].class ) ) )
-                        : super.convert( new ModelForCarList().generate( super.error.apply( pinfl, Errors.DATA_NOT_FOUND ) ) );
+                        : super.convert( new ModelForCarList().generate( pinfl, Errors.DATA_NOT_FOUND ) );
             } )
             .retryWhen(
                     Retry.backoff( 2, Duration.ofSeconds( 2 ) )
@@ -750,20 +728,16 @@ public final class SerDes extends Config implements Runnable {
                     io.netty.channel.ConnectTimeoutException.class,
                     throwable -> super.convert(
                             new ModelForCarList().generate(
-                                    super.error.apply(
-                                            throwable.getMessage(),
-                                            Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                    )
+                                    throwable.getMessage(),
+                                    Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                             )
                     )
             ).onErrorResume(
                     IllegalArgumentException.class,
                     throwable -> super.convert(
                             new ModelForCarList().generate(
-                                    super.error.apply(
-                                            Methods.GET_MODEL_FOR_CAR_LIST.name(),
-                                            Errors.TOO_MANY_RETRIES_ERROR
-                                    )
+                                    Methods.GET_MODEL_FOR_CAR_LIST.name(),
+                                    Errors.TOO_MANY_RETRIES_ERROR
                             )
                     )
             ).doOnError( e -> super.logging( e, Methods.GET_MODEL_FOR_CAR_LIST, pinfl ) )
@@ -771,10 +745,8 @@ public final class SerDes extends Config implements Runnable {
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
             .onErrorReturn(
                     new ModelForCarList().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -848,10 +820,8 @@ public final class SerDes extends Config implements Runnable {
                             ).map( psychologyCard::save )
                             .onErrorResume( throwable -> super.convert(
                                     new PsychologyCard().generate(
-                                            super.error.apply(
-                                                    throwable.getMessage(),
-                                                    Errors.SERVICE_WORK_ERROR
-                                            )
+                                            throwable.getMessage(),
+                                            Errors.SERVICE_WORK_ERROR
                                     )
                                 )
                             )
@@ -928,20 +898,16 @@ public final class SerDes extends Config implements Runnable {
                     } )
                     : super.convert(
                             PersonTotalDataByFIO.generate().generate(
-                                    super.error.apply(
-                                            fio.getName(),
-                                            Errors.DATA_NOT_FOUND
-                                    )
+                                    fio.getName(),
+                                    Errors.DATA_NOT_FOUND
                             )
                     )
             )
             .doOnError( e -> super.logging( e, Methods.GET_DATA_BY_FIO, fio.getName() ) )
             .onErrorReturn(
                     PersonTotalDataByFIO.generate().generate(
-                            super.error.apply(
-                                    Errors.SERVICE_WORK_ERROR.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.SERVICE_WORK_ERROR.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
 
@@ -959,15 +925,13 @@ public final class SerDes extends Config implements Runnable {
                     ).map( PsychologyCard::generate )
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
-                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard ) )
-                            .map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                                    this.getSetPersonPrivateDataAsync().apply( psychologyCard )
+                            ).map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
                     )
                     : super.convert(
                             new PsychologyCard().generate(
-                                    super.error.apply(
                                             Errors.WRONG_PARAMS.name(),
                                             Errors.SERVICE_WORK_ERROR
-                                    )
                             )
                     );
 
@@ -979,10 +943,8 @@ public final class SerDes extends Config implements Runnable {
                     ).map( tuple -> super.saveUserUsageLog.apply( PsychologyCard.generate( tuple ), apiResponseModel ) )
                     : super.convert(
                             new PsychologyCard().generate(
-                                    super.error.apply(
                                             Errors.WRONG_PARAMS.name(),
                                             Errors.SERVICE_WORK_ERROR
-                                    )
                             )
                     );
 
@@ -990,8 +952,8 @@ public final class SerDes extends Config implements Runnable {
             ( results, apiResponseModel ) -> Mono.zip(
                             this.getGetPinpp().apply( results.getResults().get( 0 ).getPersonal_code() ),
                             this.getGetImageByPinfl().apply( results.getResults().get( 0 ).getPersonal_code() ),
-                            this.getGetModelForCarList().apply( results.getResults().get( 0 ).getPersonal_code() ) )
-                    .map( tuple -> PsychologyCard.generate( results, tuple ) )
+                            this.getGetModelForCarList().apply( results.getResults().get( 0 ).getPersonal_code() )
+                    ).map( tuple -> PsychologyCard.generate( results, tuple ) )
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard )
@@ -1017,10 +979,8 @@ public final class SerDes extends Config implements Runnable {
                     )
                     : super.convert(
                             new PsychologyCard().generate(
-                                    super.error.apply(
-                                            data.getData().getPerson().getPinpp(),
-                                            Errors.DATA_NOT_FOUND
-                                    )
+                                    data.getData().getPerson().getPinpp(),
+                                    Errors.DATA_NOT_FOUND
                             )
                     );
 
@@ -1055,19 +1015,19 @@ public final class SerDes extends Config implements Runnable {
                     } );
 
     @Override
-    public void run () {
-        while ( this.getThread().isAlive() ) {
-            this.getUpdateTokens().get();
-            try {
-                TimeUnit.MINUTES.sleep( super.getWaitingMins() );
-            }
-            catch ( final InterruptedException e ) {
-                serDes = null;
-                this.setFlag( false );
-                super.logging( e, Methods.UPDATE_TOKENS, e.getMessage() );
-                SerDes.getSerDes();
-            }
-        }
+    public void close() {
+        serDes = null;
+        this.setFlag( false );
+        this.getThread().interrupt();
+        this.semaphore.release();
         SerDes.getSerDes();
+    }
+
+    @Override
+    public void close(
+        final Throwable throwable
+    ) {
+        super.logging( throwable, Methods.UPDATE_TOKENS, throwable.getMessage() );
+        this.close();
     }
 }

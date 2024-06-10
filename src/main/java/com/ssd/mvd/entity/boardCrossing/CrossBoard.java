@@ -56,6 +56,54 @@ public final class CrossBoard extends LogInspector {
         this.purpose = purpose;
     }
 
+    public long getCard_id() {
+        return this.card_id;
+    }
+
+    public int getCitizenship() {
+        return this.citizenship;
+    }
+
+    public String getDocument() {
+        return this.document;
+    }
+
+    public String getFull_name() {
+        return this.full_name;
+    }
+
+    public String getBirth_date() {
+        return this.birth_date;
+    }
+
+    public String getPoint_code() {
+        return this.point_code;
+    }
+
+    public String getVisa_number() {
+        return this.visa_number;
+    }
+
+    public String getNationality() {
+        return this.nationality;
+    }
+
+    public String getTrans_number() {
+        return this.trans_number;
+    }
+
+    public String getTrans_add_info() {
+        return this.trans_add_info;
+    }
+
+    public String getDate_end_document() {
+        return this.date_end_document;
+    }
+
+    public Purpose getPurpose() {
+        return this.purpose;
+    }
+
     private long card_id;
     private Date registrationDate;
 

@@ -19,6 +19,10 @@ public class LogInspector extends ErrorController {
         return this.LOGGER;
     }
 
+    protected final synchronized void logging ( final Object o ) {
+        this.getLOGGER().info( o.getClass().getName() + " was closed successfully at: " + super.newDate() );
+    }
+
     // log on error
     protected void logging (
             final Throwable throwable,
@@ -79,15 +83,16 @@ public class LogInspector extends ErrorController {
                 KafkaDataControl
                         .getInstance()
                         .writeToKafkaServiceUsage
-                        .accept( SerDes
-                                .getSerDes()
-                                .getGson()
-                                .toJson(
-                                        new UserRequest(
-                                            psychologyCard,
-                                            apiResponseModel
-                                        )
-                                )
+                        .accept(
+                                SerDes
+                                    .getSerDes()
+                                    .getGson()
+                                    .toJson(
+                                            new UserRequest(
+                                                psychologyCard,
+                                                apiResponseModel
+                                            )
+                                    )
                         );
 
                 return psychologyCard;

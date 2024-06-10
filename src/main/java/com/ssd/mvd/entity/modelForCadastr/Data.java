@@ -2,12 +2,17 @@ package com.ssd.mvd.entity.modelForCadastr;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
-public final class Data implements EntityCommonMethods< Data > {
+public final class Data
+        extends ErrorController
+        implements EntityCommonMethods< Data >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -20,11 +25,30 @@ public final class Data implements EntityCommonMethods< Data > {
         return this.PermanentRegistration;
     }
 
+    public List< com.ssd.mvd.entity.modelForCadastr.TemproaryRegistration > getTemproaryRegistration() {
+        return this.TemproaryRegistration;
+    }
+
     private ErrorResponse errorResponse;
+
     @JsonDeserialize
     private List< Person > PermanentRegistration;
+
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
+
+    @Override
+    public Data generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new Data().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
+    }
 
     @Override
     public Data generate (
@@ -38,4 +62,10 @@ public final class Data implements EntityCommonMethods< Data > {
     }
 
     public Data () {}
+
+    @Override
+    public void close() {
+        this.getTemproaryRegistration().clear();
+        this.getPermanentRegistration().clear();
+    }
 }

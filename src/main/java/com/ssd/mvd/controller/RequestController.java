@@ -44,18 +44,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new Tonirovka().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new Tonirovka().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert(
@@ -81,10 +77,8 @@ public final class RequestController extends LogInspector {
                         PersonTotalDataByFIO
                                 .generate()
                                 .generate(
-                                        super.error.apply(
-                                                Errors.SERVICE_WORK_ERROR.name(),
-                                                Errors.SERVICE_WORK_ERROR
-                                        )
+                                        Errors.SERVICE_WORK_ERROR.name(),
+                                        Errors.SERVICE_WORK_ERROR
                                 )
                 )
                 : super.convert(
@@ -140,10 +134,8 @@ public final class RequestController extends LogInspector {
                                 io.netty.handler.timeout.ReadTimeoutException.class,
                                 throwable -> super.convert(
                                         new CarTotalData().generate(
-                                                super.error.apply(
-                                                        throwable.getMessage(),
-                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                )
+                                                throwable.getMessage(),
+                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                         )
                                 )
                         )
@@ -152,19 +144,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new CarTotalData().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
-                )
-                .onErrorReturn(
+                ).onErrorReturn(
                         new CarTotalData().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new CarTotalData().generate( super.getErrorResponse.get() ) );
@@ -200,10 +187,8 @@ public final class RequestController extends LogInspector {
                                 io.netty.handler.timeout.ReadTimeoutException.class,
                                 throwable -> super.convert(
                                         new PsychologyCard().generate(
-                                                super.error.apply(
-                                                        throwable.getMessage(),
-                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                )
+                                                throwable.getMessage(),
+                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                         )
                                 )
                         )
@@ -218,10 +203,8 @@ public final class RequestController extends LogInspector {
                 )
                 : super.convert(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.WRONG_PARAMS.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.WRONG_PARAMS.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 );
     }
@@ -251,10 +234,8 @@ public final class RequestController extends LogInspector {
                                                 io.netty.handler.timeout.ReadTimeoutException.class,
                                                 throwable -> super.convert(
                                                         new PsychologyCard().generate(
-                                                                super.error.apply(
-                                                                        throwable.getMessage(),
-                                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                                )
+                                                                throwable.getMessage(),
+                                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                                         )
                                                 )
                                         )
@@ -263,26 +244,20 @@ public final class RequestController extends LogInspector {
                                 io.netty.handler.timeout.ReadTimeoutException.class,
                                 throwable -> super.convert(
                                         new PsychologyCard().generate(
-                                                super.error.apply(
-                                                        throwable.getMessage(),
-                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                )
+                                                throwable.getMessage(),
+                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                         )
                                 )
                         ).onErrorReturn(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                Errors.SERVICE_WORK_ERROR.name(),
-                                                Errors.EXTERNAL_SERVICE_500_ERROR
-                                        )
+                                        Errors.SERVICE_WORK_ERROR.name(),
+                                        Errors.EXTERNAL_SERVICE_500_ERROR
                                 )
                         )
                         : Flux.just(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                apiResponseModel.getStatus().getMessage(),
-                                                Errors.DATA_NOT_FOUND
-                                        )
+                                        apiResponseModel.getStatus().getMessage(),
+                                        Errors.DATA_NOT_FOUND
                                 )
                         )
                 )
@@ -331,18 +306,14 @@ public final class RequestController extends LogInspector {
                         ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new CarTotalData().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new CarTotalData().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new CarTotalData().generate( super.getErrorResponse.get() ) );
@@ -364,19 +335,15 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 )
                 : super.convert(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.WRONG_PARAMS.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.WRONG_PARAMS.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 )
                 : super.convert( new PsychologyCard().generate( super.getErrorResponse.get() ) );
@@ -389,10 +356,8 @@ public final class RequestController extends LogInspector {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
             return super.convert(
                     new PsychologyCard().generate(
-                            super.error.apply(
-                                    Errors.WRONG_PARAMS.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.WRONG_PARAMS.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
         }
@@ -412,18 +377,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 )
                 : super.convert( new PsychologyCard().generate( super.getErrorResponse.get() ) );
@@ -454,18 +415,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new CarTotalData().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new CarTotalData().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new CarTotalData().generate( super.getErrorResponse.get() ) );
@@ -493,18 +450,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new ModelForCarList().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new ModelForCarList().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new ModelForCarList().generate( super.getErrorResponse.get() ) );
@@ -523,19 +476,15 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new ViolationsList().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 )
                 .onErrorReturn(
                         new ViolationsList().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new ViolationsList().generate( super.getErrorResponse.get() ) );
@@ -558,19 +507,15 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new Pinpp().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 )
                 .onErrorReturn(
                         new Pinpp().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new Pinpp().generate( super.getErrorResponse.get() ) );
@@ -617,18 +562,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new CrossBoardInfo().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new CrossBoardInfo().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new CrossBoardInfo().generate( super.getErrorResponse.get() ) );
@@ -649,18 +590,14 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new ModelForAddress().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 ).onErrorReturn(
                         new ModelForAddress().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert( new ModelForAddress().generate( super.getErrorResponse.get() ) );
@@ -696,19 +633,15 @@ public final class RequestController extends LogInspector {
                                                 ReadTimeoutException.class,
                                                 throwable -> super.convert(
                                                         new PsychologyCard().generate(
-                                                                super.error.apply(
-                                                                        throwable.getMessage(),
-                                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                                )
+                                                                throwable.getMessage(),
+                                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                                         )
                                                 )
                                         )
                                         : super.convert(
                                                 new PsychologyCard().generate(
-                                                        super.error.apply(
-                                                                person.getPPsp() + " : " + person.getPDateBirth(),
-                                                                Errors.DATA_NOT_FOUND
-                                                        )
+                                                        person.getPPsp() + " : " + person.getPDateBirth(),
+                                                        Errors.DATA_NOT_FOUND
                                                 )
                                         )
                                 )
@@ -716,26 +649,20 @@ public final class RequestController extends LogInspector {
                                 ReadTimeoutException.class,
                                 throwable -> super.convert(
                                         new PsychologyCard().generate(
-                                                super.error.apply(
-                                                        throwable.getMessage(),
-                                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                                )
+                                                throwable.getMessage(),
+                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                         )
                                 )
                         ).onErrorReturn(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                Errors.SERVICE_WORK_ERROR.name(),
-                                                Errors.EXTERNAL_SERVICE_500_ERROR
-                                        )
+                                        Errors.SERVICE_WORK_ERROR.name(),
+                                        Errors.EXTERNAL_SERVICE_500_ERROR
                                 )
                         )
                         : Flux.just(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                apiResponseModel.getStatus().getMessage(),
-                                                Errors.DATA_NOT_FOUND
-                                        )
+                                        apiResponseModel.getStatus().getMessage(),
+                                        Errors.DATA_NOT_FOUND
                                 )
                         )
                 )
@@ -774,27 +701,20 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
-                )
-                .onErrorReturn(
+                ).onErrorReturn(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.EXTERNAL_SERVICE_500_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
                 : super.convert(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.WRONG_PARAMS.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.WRONG_PARAMS.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 );
     }
@@ -815,19 +735,15 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
-                                        )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED
                                 )
                         )
                 )
                 : super.convert(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.WRONG_PARAMS.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.WRONG_PARAMS.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 )
                 : super.convert( new PsychologyCard().generate( super.getErrorResponse.get() ) );
@@ -840,10 +756,8 @@ public final class RequestController extends LogInspector {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
             return super.convert(
                     new PsychologyCard().generate(
-                            super.error.apply(
-                                    Errors.WRONG_PARAMS.name(),
-                                    Errors.SERVICE_WORK_ERROR
-                            )
+                            Errors.WRONG_PARAMS.name(),
+                            Errors.SERVICE_WORK_ERROR
                     )
             );
         }
@@ -866,17 +780,13 @@ public final class RequestController extends LogInspector {
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.convert(
                                 new PsychologyCard().generate(
-                                        super.error.apply(
-                                                throwable.getMessage(),
-                                                Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
+                                        throwable.getMessage(),
+                                        Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
                                 )
-                        )
                 ).onErrorReturn(
                         new PsychologyCard().generate(
-                                super.error.apply(
-                                        Errors.SERVICE_WORK_ERROR.name(),
-                                        Errors.SERVICE_WORK_ERROR
-                                )
+                                Errors.SERVICE_WORK_ERROR.name(),
+                                Errors.SERVICE_WORK_ERROR
                         )
                 )
                 : super.convert( new PsychologyCard().generate( super.getErrorResponse.get() ) );

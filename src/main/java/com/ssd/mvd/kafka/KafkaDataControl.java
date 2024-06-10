@@ -7,12 +7,13 @@ import java.util.function.Consumer;
 import com.ssd.mvd.controller.Config;
 import com.ssd.mvd.publisher.CustomPublisher;
 import com.ssd.mvd.subscribers.CustomSubscriber;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
-public final class KafkaDataControl extends Config {
+public final class KafkaDataControl extends Config implements ServiceCommonMethods {
     private final static KafkaDataControl instance = new KafkaDataControl();
 
     public static KafkaDataControl getInstance () {
@@ -128,4 +129,10 @@ public final class KafkaDataControl extends Config {
                             )
                     )
             );
+
+    @Override
+    public void close () {
+        this.kafkaSender.close();
+        super.logging( this );
+    }
 }

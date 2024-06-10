@@ -1,8 +1,9 @@
 package com.ssd.mvd.entity.boardCrossing;
 
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import java.util.List;
 
-public final class Data {
+public final class Data implements ServiceCommonMethods {
     public Person getPerson() {
         return this.person;
     }
@@ -35,5 +36,10 @@ public final class Data {
     ) {
         this.setCrossBoardList( data );
         this.setPerson( person );
+    }
+
+    @Override
+    public void close() {
+        this.getCrossBoardList().clear();
     }
 }

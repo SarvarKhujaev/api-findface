@@ -1,11 +1,16 @@
 package com.ssd.mvd.entity;
 
 import reactor.util.function.Tuple5;
+
+import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 
-public final class CarTotalData implements EntityCommonMethods< CarTotalData > {
+public final class CarTotalData
+        extends ErrorController
+        implements EntityCommonMethods< CarTotalData > {
     public void setTonirovka ( final Tonirovka tonirovka ) {
         this.tonirovka = tonirovka;
     }
@@ -89,6 +94,19 @@ public final class CarTotalData implements EntityCommonMethods< CarTotalData > {
             final ErrorResponse errorResponse
     ) {
         return new CarTotalData( errorResponse );
+    }
+
+    @Override
+    public CarTotalData generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new CarTotalData().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
     }
 
     private CarTotalData ( final ErrorResponse errorResponse ) {

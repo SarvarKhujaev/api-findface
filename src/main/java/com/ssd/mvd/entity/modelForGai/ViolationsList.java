@@ -2,12 +2,17 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
-public final class ViolationsList implements EntityCommonMethods< ViolationsList > {
+public final class ViolationsList
+        extends ErrorController
+        implements EntityCommonMethods< ViolationsList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -16,13 +21,17 @@ public final class ViolationsList implements EntityCommonMethods< ViolationsList
         this.errorResponse = errorResponse;
     }
 
-    private ErrorResponse errorResponse;
-
     public void setViolationsInformationsList(
             final List< ViolationsInformation > violationsInformationsList
     ) {
         this.violationsInformationsList = violationsInformationsList;
     }
+
+    public List< ViolationsInformation > getViolationsInformationsList() {
+        return this.violationsInformationsList;
+    }
+
+    private ErrorResponse errorResponse;
 
     @JsonDeserialize
     private List< ViolationsInformation > violationsInformationsList;
@@ -40,6 +49,19 @@ public final class ViolationsList implements EntityCommonMethods< ViolationsList
     }
 
     @Override
+    public ViolationsList generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new ViolationsList().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
+    }
+
+    @Override
     public ViolationsList generate (
             final ErrorResponse errorResponse
     ) {
@@ -53,4 +75,9 @@ public final class ViolationsList implements EntityCommonMethods< ViolationsList
     }
 
     public ViolationsList () {}
+
+    @Override
+    public void close() {
+        this.getViolationsInformationsList().clear();
+    }
 }

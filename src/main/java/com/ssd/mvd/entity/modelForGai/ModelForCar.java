@@ -1,12 +1,16 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import reactor.util.function.Tuple3;
+import com.ssd.mvd.constants.Errors;
 
-public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
+public final class ModelForCar
+        extends ErrorController
+        implements EntityCommonMethods< ModelForCar > {
     public String getPinpp() {
         return this.Pinpp;
     }
@@ -45,6 +49,90 @@ public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
 
     public void setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+    }
+
+    public String getStir() {
+        return this.Stir;
+    }
+
+    public String getYear() {
+        return this.Year;
+    }
+
+    public String getModel() {
+        return this.Model;
+    }
+
+    public String getColor() {
+        return this.Color;
+    }
+
+    public String getKuzov() {
+        return this.Kuzov;
+    }
+
+    public String getPower() {
+        return this.Power;
+    }
+
+    public String getSeats() {
+        return this.Seats;
+    }
+
+    public String getEngine() {
+        return this.Engine;
+    }
+
+    public String getStands() {
+        return this.Stands;
+    }
+
+    public String getAddress() {
+        return this.Address;
+    }
+
+    public String getFuelType() {
+        return this.FuelType;
+    }
+
+    public String getAdditional() {
+        return this.Additional;
+    }
+
+    public String getFullWeight() {
+        return this.FullWeight;
+    }
+
+    public String getVehicleType() {
+        return this.VehicleType;
+    }
+
+    public String getEmptyWeight() {
+        return this.EmptyWeight;
+    }
+
+    public String getOrganization() {
+        return this.Organization;
+    }
+
+    public String getRegistrationDate() {
+        return this.RegistrationDate;
+    }
+
+    public String getTexPassportSerialNumber() {
+        return this.TexPassportSerialNumber;
+    }
+
+    public Tonirovka getTonirovka() {
+        return this.tonirovka;
+    }
+
+    public Insurance getInsurance() {
+        return this.insurance;
+    }
+
+    public DoverennostList getDoverennostList() {
+        return this.doverennostList;
     }
 
     private String Stir;
@@ -98,6 +186,19 @@ public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
         return modelForCarList;
+    }
+
+    @Override
+    public ModelForCar generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new ModelForCar().generate(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
     }
 
     @Override

@@ -19,8 +19,21 @@ public final class FIO {
         return this.patronym;
     }
 
+    public void setSurname(
+            final String surname
+    ) {
+        this.surname = surname;
+    }
+
+    public void setPatronym(
+            final String patronym
+    ) {
+        this.patronym = patronym;
+    }
+
     private User user;
     private String name;
+
     private String surname;
     private String patronym;
 }

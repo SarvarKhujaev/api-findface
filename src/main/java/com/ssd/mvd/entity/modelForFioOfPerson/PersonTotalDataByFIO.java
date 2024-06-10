@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.controller.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
-public final class PersonTotalDataByFIO implements EntityCommonMethods< PersonTotalDataByFIO > {
+public final class PersonTotalDataByFIO
+        extends ErrorController
+        implements EntityCommonMethods< PersonTotalDataByFIO > {
     public List< Person > getData() {
         return this.Data;
     }
@@ -26,6 +30,18 @@ public final class PersonTotalDataByFIO implements EntityCommonMethods< PersonTo
         this.errorResponse = errorResponse;
     }
 
+    public int getAnswereId() {
+        return AnswereId;
+    }
+
+    public String getAnswereMessage() {
+        return AnswereMessage;
+    }
+
+    public String getAnswereComment() {
+        return AnswereComment;
+    }
+
     private int AnswereId;
     private String AnswereMessage;
     private String AnswereComment;
@@ -35,8 +51,23 @@ public final class PersonTotalDataByFIO implements EntityCommonMethods< PersonTo
     private ErrorResponse errorResponse;
 
     @Override
-    public PersonTotalDataByFIO generate ( final ErrorResponse errorResponse ) {
+    public PersonTotalDataByFIO generate (
+            final ErrorResponse errorResponse
+    ) {
         return new PersonTotalDataByFIO( errorResponse );
+    }
+
+    @Override
+    public PersonTotalDataByFIO generate(
+            final String message,
+            final Errors errors
+    ) {
+        return new PersonTotalDataByFIO(
+                super.error.apply(
+                        message,
+                        errors
+                )
+        );
     }
 
     public static PersonTotalDataByFIO generate () {
