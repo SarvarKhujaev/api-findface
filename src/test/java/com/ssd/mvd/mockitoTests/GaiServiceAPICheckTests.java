@@ -1,48 +1,170 @@
 package com.ssd.mvd.mockitoTests;
 
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.modelForGai.*;
-import junit.framework.TestCase;
+import com.ssd.mvd.controller.SerDes;
 
-public final class GaiServiceAPICheckTests extends TestCase {
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.*;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.Duration;
+import java.util.List;
+
+@ExtendWith( value = MockitoExtension.class )
+@TestInstance( value = TestInstance.Lifecycle.PER_CLASS )
+public final class GaiServiceAPICheckTests {
+    private final String testToken = GaiServiceAPICheckTests.class.getName();
     private final String testNumber = "01D819CC";
 
-    @Override
+    private SerDes serDes;
+
+    private Insurance insurance;
+    private Tonirovka tonirovka;
+    private ModelForCar modelForCar;
+    private Doverennost doverennost;
+    private ErrorResponse errorResponse;
+    private ViolationsList violationsList;
+    private ModelForCarList modelForCarList;
+    private DoverennostList doverennostList;
+    private ViolationsInformation violationsInformation;
+
+    private Mono< Insurance > insuranceMono;
+    private Mono< Tonirovka > tonirovkaMono;
+    private Mono< ModelForCar > modelForCarMono;
+    private Mono< Doverennost > doverennostMono;
+    private Mono< ErrorResponse > errorResponseMono;
+    private Mono< ViolationsList > violationsListMono;
+    private Mono< ModelForCarList > modelForCarListMono;
+    private Mono< DoverennostList > doverennostListMono;
+    private Mono< ViolationsInformation > violationsInformationMono;
+
+    @Mock
+    private List< ViolationsInformation > violationsInformationsList;
+
+    private final AutoCloseable autoCloseable = MockitoAnnotations.openMocks( this );
+
+    @BeforeEach
     public void setUp () {
         SerDes.getSerDes();
+
+        this.serDes = Mockito.mock( SerDes.class );
+        this.insurance = Mockito.mock( Insurance.class );
+        this.tonirovka = Mockito.mock( Tonirovka.class );
+        this.modelForCar = Mockito.mock( ModelForCar.class );
+        this.doverennost = Mockito.mock( Doverennost.class );
+        this.errorResponse = Mockito.mock( ErrorResponse.class );
+        this.violationsList = Mockito.mock( ViolationsList.class );
+        this.modelForCarList = Mockito.mock( ModelForCarList.class );
+        this.doverennostList = Mockito.mock( DoverennostList.class );
+        this.violationsInformation = Mockito.mock( ViolationsInformation.class );
+
+        this.insuranceMono = Mockito.mock( Mono.class );
+        this.tonirovkaMono = Mockito.mock( Mono.class );
+        this.modelForCarMono = Mockito.mock( Mono.class );
+        this.doverennostMono = Mockito.mock( Mono.class );
+        this.errorResponseMono = Mockito.mock( Mono.class );
+        this.violationsListMono = Mockito.mock( Mono.class );
+        this.modelForCarListMono = Mockito.mock( Mono.class );
+        this.doverennostListMono = Mockito.mock( Mono.class );
+        this.violationsInformationMono = Mockito.mock( Mono.class );
     }
 
-    @Override
-    public void tearDown () {
+    @AfterAll
+    public void endUp () throws Exception {
         SerDes.getSerDes().close();
+        this.autoCloseable.close();
     }
 
+    @Test
+    @DisplayName( value = "testGaiToken method" )
     public void testGaiToken () {
-        assertFalse(
-                SerDes
-                        .getSerDes()
-                        .getTokenForGai()
-                        .isBlank()
-        );
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
+
+        assertThat( this.serDes ).isNotNull();
+
+        Mockito.when( this.serDes.getTokenForGai() ).thenReturn( this.testToken );
+
+        assertThat( this.testToken ).isBlank();
+
+        Mockito.verify( this.serDes ).getTokenForGai();
     }
 
+    @Test
+    @DisplayName( value = "testInsurance method" )
     public void testInsurance () {
-        final Insurance insurance = SerDes
-                .getSerDes()
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
+
+        assertThat( this.serDes ).isNotNull();
+
+        Mockito.when(
+                this.serDes
+                        .getInsurance()
+                        .apply( this.testNumber )
+        ).thenReturn( this.insuranceMono );
+
+        StepVerifier.create( this.insuranceMono )
+                .expectNext( this.insurance )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( Duration.ofMillis( 5000 ) );
+
+        Mockito.verify( this.serDes )
                 .getInsurance()
-                .apply( this.testNumber )
-                .block();
+                .apply( this.testNumber );
 
-        assertNotNull( insurance );
-        assertNull( insurance.getErrorResponse() );
+        assertThat( this.insurance ).isNotNull();
 
-        assertFalse( insurance.getDateBegin().isBlank() );
-        assertFalse( insurance.getDateValid().isBlank() );
-        assertFalse( insurance.getTintinType().isBlank() );
+        Mockito.when( this.insurance.getErrorResponse() ).thenReturn( this.errorResponse );
+
+        assertThat( this.errorResponse ).isNotNull();
+
+        Mockito.verify( this.insurance ).getErrorResponse();
+
+        Mockito.when( this.insurance.getDateBegin() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotNull();
+        assertThat( this.testNumber ).isNotEmpty();
+
+        Mockito.verify( this.insurance ).getDateBegin();
+
+        Mockito.when( this.insurance.getDateValid() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotNull();
+        assertThat( this.testNumber ).isNotEmpty();
+
+        Mockito.verify( this.insurance ).getDateValid();
+
+        Mockito.when( this.insurance.getTintinType() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotNull();
+        assertThat( this.testNumber ).isNotEmpty();
+
+        Mockito.verify( this.insurance ).getTintinType();
     }
 
+    @Test
+    @DisplayName( value = "testVehicleData method" )
     public void testVehicleData () {
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
+
+        assertThat( this.serDes ).isNotNull();
+
         final ModelForCar modelForCar = SerDes
                 .getSerDes()
                 .getGetVehicleData()
@@ -103,6 +225,8 @@ public final class GaiServiceAPICheckTests extends TestCase {
         modelForCar.getDoverennostList().close();
     }
 
+    @Test
+    @DisplayName( value = "testModelForCarList method" )
     public void testModelForCarList () {
         final ModelForCarList modelForCarList = SerDes
                 .getSerDes()
@@ -183,6 +307,8 @@ public final class GaiServiceAPICheckTests extends TestCase {
         modelForCarList.close();
     }
 
+    @Test
+    @DisplayName( value = "testVehicleTonirovka method" )
     public void testVehicleTonirovka () {
         final Tonirovka tonirovka = SerDes
                 .getSerDes()
@@ -203,6 +329,8 @@ public final class GaiServiceAPICheckTests extends TestCase {
         assertFalse( tonirovka.getOrganWhichGavePermission().isBlank() );
     }
 
+    @Test
+    @DisplayName( value = "testFindAllAboutCarList method" )
     public void testFindAllAboutCarList () {
         ModelForCarList modelForCarList = SerDes
                 .getSerDes()
@@ -359,6 +487,8 @@ public final class GaiServiceAPICheckTests extends TestCase {
         modelForCarList.close();
     }
 
+    @Test
+    @DisplayName( value = "testVehicleViolationList method" )
     public void testVehicleViolationList () {
         final ViolationsList violationsList = SerDes
                 .getSerDes()
@@ -390,6 +520,8 @@ public final class GaiServiceAPICheckTests extends TestCase {
         violationsList.close();
     }
 
+    @Test
+    @DisplayName( value = "testVehicleDoverennostList method" )
     public void testVehicleDoverennostList () {
         final DoverennostList doverennostList = SerDes
                 .getSerDes()

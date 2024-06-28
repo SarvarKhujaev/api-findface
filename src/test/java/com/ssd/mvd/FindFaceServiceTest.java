@@ -33,7 +33,6 @@ public final class FindFaceServiceTest extends TestCase {
         assertFalse( results.getResults().isEmpty() );
         assertFalse( results.getResults().getFirst().getRank() == 0 );
         assertFalse( results.getResults().getFirst().getScore() == 0 );
-        assertFalse( results.getResults().getFirst().getScore() == 0.0 );
 
         assertFalse( results.getResults().getFirst().getName().isBlank() );
         assertFalse( results.getResults().getFirst().getPhoto().isBlank() );
