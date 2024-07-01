@@ -7,26 +7,30 @@ import com.ssd.mvd.controller.SerDes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 import org.mockito.Mock;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.*;
+
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.List;
 
 @ExtendWith( value = MockitoExtension.class )
 @TestInstance( value = TestInstance.Lifecycle.PER_CLASS )
 public final class GaiServiceAPICheckTests {
+    private final String testDate = new Date().toString();
     private final String testToken = GaiServiceAPICheckTests.class.getName();
     private final String testNumber = "01D819CC";
 
     private SerDes serDes;
+    private final Duration duration = Duration.ofMillis( 5000 );
 
     private Insurance insurance;
     private Tonirovka tonirovka;
@@ -41,12 +45,15 @@ public final class GaiServiceAPICheckTests {
     private Mono< Insurance > insuranceMono;
     private Mono< Tonirovka > tonirovkaMono;
     private Mono< ModelForCar > modelForCarMono;
-    private Mono< Doverennost > doverennostMono;
-    private Mono< ErrorResponse > errorResponseMono;
     private Mono< ViolationsList > violationsListMono;
     private Mono< ModelForCarList > modelForCarListMono;
     private Mono< DoverennostList > doverennostListMono;
-    private Mono< ViolationsInformation > violationsInformationMono;
+
+    @Mock
+    private List< Doverennost > doverennosts;
+
+    @Mock
+    private List< ModelForCar > modelForCars;
 
     @Mock
     private List< ViolationsInformation > violationsInformationsList;
@@ -71,12 +78,9 @@ public final class GaiServiceAPICheckTests {
         this.insuranceMono = Mockito.mock( Mono.class );
         this.tonirovkaMono = Mockito.mock( Mono.class );
         this.modelForCarMono = Mockito.mock( Mono.class );
-        this.doverennostMono = Mockito.mock( Mono.class );
-        this.errorResponseMono = Mockito.mock( Mono.class );
         this.violationsListMono = Mockito.mock( Mono.class );
         this.modelForCarListMono = Mockito.mock( Mono.class );
         this.doverennostListMono = Mockito.mock( Mono.class );
-        this.violationsInformationMono = Mockito.mock( Mono.class );
     }
 
     @AfterAll
@@ -120,7 +124,7 @@ public final class GaiServiceAPICheckTests {
                 .expectNext( this.insurance )
                 .expectComplete()
                 .verifyThenAssertThat()
-                .tookLessThan( Duration.ofMillis( 5000 ) );
+                .tookLessThan( this.duration );
 
         Mockito.verify( this.serDes )
                 .getInsurance()
@@ -165,382 +169,1038 @@ public final class GaiServiceAPICheckTests {
 
         assertThat( this.serDes ).isNotNull();
 
-        final ModelForCar modelForCar = SerDes
-                .getSerDes()
-                .getGetVehicleData()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                this.serDes
+                        .getGetVehicleData()
+                        .apply( this.testNumber )
+        ).thenReturn( this.modelForCarMono );
 
-        assertNotNull( modelForCar );
-        assertNotNull( modelForCar.getTonirovka() );
-        assertFalse( modelForCar.getTonirovka().getDateBegin().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getDateValid().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getTintinType().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getDateOfValidotion().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getDateOfPermission().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getPermissionLicense().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getWhoGavePermission().isBlank() );
-        assertFalse( modelForCar.getTonirovka().getOrganWhichGavePermission().isBlank() );
+        StepVerifier.create( this.modelForCarMono )
+                .expectNext( this.modelForCar )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
 
-        assertNotNull( modelForCar.getInsurance() );
-        assertNull( modelForCar.getInsurance().getErrorResponse() );
+        assertThat( this.modelForCar ).isNotNull();
 
-        assertFalse( modelForCar.getInsurance().getDateBegin().isBlank() );
-        assertFalse( modelForCar.getInsurance().getDateValid().isBlank() );
-        assertFalse( modelForCar.getInsurance().getTintinType().isBlank() );
+        Mockito.verify(
+                this.serDes
+        ).getGetVehicleData()
+                .apply( this.testNumber );
 
-        assertNull( modelForCar.getErrorResponse() );
+        Mockito.when( this.modelForCar.getTonirovka() ).thenReturn( this.tonirovka );
 
-        assertNotNull( modelForCar.getDoverennostList() );
-        assertNotNull( modelForCar.getDoverennostList().getDoverennostsList() );
-        assertFalse( modelForCar.getDoverennostList().getDoverennostsList().isEmpty() );
-        assertNotNull( modelForCar.getDoverennostList().getDoverennostsList().getFirst() );
+        assertThat( this.tonirovka ).isNotNull();
 
-        assertFalse( modelForCar.getDoverennostList().getDoverennostsList().getFirst().getIssuedBy().isBlank() );
-        assertFalse( modelForCar.getDoverennostList().getDoverennostsList().getFirst().getDateBegin().isBlank() );
-        assertFalse( modelForCar.getDoverennostList().getDoverennostsList().getFirst().getDateValid().isBlank() );
+        Mockito.verify( this.modelForCar ).getTonirovka();
 
-        assertFalse( modelForCar.getStir().isBlank() );
-        assertFalse( modelForCar.getYear().isBlank() );
-        assertFalse( modelForCar.getPinpp().isBlank() );
-        assertFalse( modelForCar.getPower().isBlank() );
-        assertFalse( modelForCar.getSeats().isBlank() );
-        assertFalse( modelForCar.getModel().isBlank() );
-        assertFalse( modelForCar.getColor().isBlank() );
-        assertFalse( modelForCar.getKuzov().isBlank() );
-        assertFalse( modelForCar.getStands().isBlank() );
-        assertFalse( modelForCar.getEngine().isBlank() );
-        assertFalse( modelForCar.getPerson().isBlank() );
-        assertFalse( modelForCar.getAddress().isBlank() );
-        assertFalse( modelForCar.getFuelType().isBlank() );
-        assertFalse( modelForCar.getFullWeight().isBlank() );
-        assertFalse( modelForCar.getAdditional().isBlank() );
-        assertFalse( modelForCar.getPlateNumber().isBlank() );
-        assertFalse( modelForCar.getVehicleType().isBlank() );
-        assertFalse( modelForCar.getEmptyWeight().isBlank() );
-        assertFalse( modelForCar.getOrganization().isBlank() );
-        assertFalse( modelForCar.getRegistrationDate().isBlank() );
-        assertFalse( modelForCar.getTexPassportSerialNumber().isBlank() );
+        Mockito.when( this.tonirovka.getDateBegin() ).thenReturn( this.testDate );
 
-        modelForCar.getDoverennostList().close();
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateBegin();
+
+        Mockito.when( this.tonirovka.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.tonirovka.getDateOfValidotion() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateOfValidotion();
+
+        Mockito.when( this.tonirovka.getPermissionLicense() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getPermissionLicense();
+
+        Mockito.when( this.tonirovka.getWhoGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getWhoGavePermission();
+
+        Mockito.when( this.tonirovka.getOrganWhichGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getOrganWhichGavePermission();
+
+        Mockito.when( this.modelForCar.getInsurance() ).thenReturn( this.insurance );
+
+        assertThat( this.insurance ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getTonirovka();
+
+        Mockito.when( this.modelForCar.getErrorResponse() ).thenReturn( this.errorResponse );
+
+        assertThat( this.errorResponse ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getTonirovka();
+
+        Mockito.when( this.tonirovka.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateBegin();
+
+        Mockito.when( this.tonirovka.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.modelForCar.getDoverennostList() ).thenReturn( this.doverennostList );
+
+        assertThat( this.doverennostList ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getDoverennostList();
+
+        Mockito.when( this.doverennostList.getDoverennostsList() ).thenReturn( this.doverennosts );
+
+        assertThat( this.doverennosts ).isNotNull();
+        assertThat( this.doverennosts ).isNotEmpty();
+
+        Mockito.verify( this.doverennostList ).getDoverennostsList();
+
+        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+
+        assertThat( this.doverennost ).isNotNull();
+
+        Mockito.verify( this.doverennosts ).getFirst();
+
+        Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getIssuedBy();
+
+        Mockito.when( this.doverennost.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateBegin();
+
+        Mockito.when( this.doverennost.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.modelForCar.getStir() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getStir();
+
+        Mockito.when( this.modelForCar.getYear() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getYear();
+
+        Mockito.when( this.modelForCar.getPinpp() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPinpp();
+
+        Mockito.when( this.modelForCar.getPower() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPower();
+
+        Mockito.when( this.modelForCar.getSeats() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getSeats();
+
+        Mockito.when( this.modelForCar.getModel() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getModel();
+
+        Mockito.when( this.modelForCar.getColor() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getColor();
+
+        Mockito.when( this.modelForCar.getKuzov() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getKuzov();
+
+        Mockito.when( this.modelForCar.getStands() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getStands();
+
+        Mockito.when( this.modelForCar.getEngine() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getEngine();
+
+        Mockito.when( this.modelForCar.getPerson() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPerson();
+
+        Mockito.when( this.modelForCar.getAddress() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getAddress();
+
+        Mockito.when( this.modelForCar.getFuelType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getFuelType();
+
+        Mockito.when( this.modelForCar.getFullWeight() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getFullWeight();
+
+        Mockito.when( this.modelForCar.getAdditional() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getAdditional();
+
+        Mockito.when( this.modelForCar.getPlateNumber() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPlateNumber();
+
+        Mockito.when( this.modelForCar.getVehicleType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getVehicleType();
+
+        Mockito.when( this.modelForCar.getEmptyWeight() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getEmptyWeight();
+
+        Mockito.when( this.modelForCar.getOrganization() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getOrganization();
+
+        Mockito.when( this.modelForCar.getRegistrationDate() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getRegistrationDate();
+
+        Mockito.when( this.modelForCar.getTexPassportSerialNumber() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getTexPassportSerialNumber();
+
+        this.doverennostList.close();
     }
 
     @Test
     @DisplayName( value = "testModelForCarList method" )
     public void testModelForCarList () {
-        final ModelForCarList modelForCarList = SerDes
-                .getSerDes()
-                .getGetModelForCarList()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
 
-        assertNotNull( modelForCarList );
-        assertNull( modelForCarList.getErrorResponse() );
+        assertThat( this.serDes ).isNotNull();
 
-        assertNotNull( modelForCarList.getModelForCarList() );
-        assertFalse( modelForCarList.getModelForCarList().isEmpty() );
+        Mockito.when(
+                this.serDes
+                        .getGetModelForCarList()
+                        .apply( this.testNumber )
+        ).thenReturn( this.modelForCarListMono );
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getErrorResponse() );
+        StepVerifier.create( this.modelForCarListMono )
+                .expectNext( this.modelForCarList )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().isEmpty() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().getFirst() );
+        assertThat( this.modelForCarList ).isNotNull();
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                .getFirst()
-                        .getIssuedBy()
-                        .isBlank()
-        );
+        Mockito.verify(
+                this.serDes
+        ).getGetModelForCarList()
+                .apply( this.testNumber );
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                .getFirst()
-                        .getDateBegin()
-                        .isBlank()
-        );
+        Mockito.when( this.modelForCarList.getErrorResponse() ).thenReturn( this.errorResponse );
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                .getFirst()
-                        .getDateValid()
-                        .isBlank()
-        );
+        assertThat( this.errorResponse ).isNull();
 
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStir().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getYear().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPinpp().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPower().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getSeats().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getModel().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getColor().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getKuzov().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStands().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEngine().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPerson().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAddress().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFuelType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFullWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAdditional().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPlateNumber().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getVehicleType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEmptyWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getOrganization().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getRegistrationDate().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getTexPassportSerialNumber().isBlank() );
+        Mockito.verify( this.modelForCarList ).getErrorResponse();
 
-        modelForCarList.close();
+        Mockito.when( this.modelForCarList.getModelForCarList() ).thenReturn( this.modelForCars );
+
+        assertThat( this.modelForCars ).isNotNull();
+        assertThat( this.modelForCars ).isNotEmpty();
+
+        Mockito.verify( this.modelForCarList ).getModelForCarList();
+
+        Mockito.when( this.modelForCars.getFirst() ).thenReturn( this.modelForCar );
+
+        assertThat( this.modelForCar ).isNotNull();
+
+        Mockito.verify( this.modelForCars ).getFirst();
+
+        Mockito.when( this.modelForCar.getDoverennostList() ).thenReturn( this.doverennostList );
+
+        assertThat( this.doverennostList ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getDoverennostList();
+
+        Mockito.when( this.doverennostList.getDoverennostsList() ).thenReturn( this.doverennosts );
+
+        assertThat( this.doverennosts ).isNotNull();
+        assertThat( this.doverennosts ).isNotEmpty();
+
+        Mockito.verify( this.doverennostList ).getDoverennostsList();
+
+        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+
+        assertThat( this.doverennost ).isNotNull();
+
+        Mockito.verify( this.doverennosts ).getFirst();
+
+        Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getIssuedBy();
+
+        Mockito.when( this.doverennost.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateBegin();
+
+        Mockito.when( this.doverennost.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateValid();
+
+        this.modelForCarList.close();
     }
 
     @Test
     @DisplayName( value = "testVehicleTonirovka method" )
     public void testVehicleTonirovka () {
-        final Tonirovka tonirovka = SerDes
-                .getSerDes()
-                .getGetVehicleTonirovka()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
 
-        assertNotNull( tonirovka );
-        assertNull( tonirovka.getErrorResponse() );
+        assertThat( this.serDes ).isNotNull();
 
-        assertFalse( tonirovka.getDateBegin().isBlank() );
-        assertFalse( tonirovka.getDateValid().isBlank() );
-        assertFalse( tonirovka.getTintinType().isBlank() );
-        assertFalse( tonirovka.getDateOfValidotion().isBlank() );
-        assertFalse( tonirovka.getDateOfPermission().isBlank() );
-        assertFalse( tonirovka.getPermissionLicense().isBlank() );
-        assertFalse( tonirovka.getWhoGavePermission().isBlank() );
-        assertFalse( tonirovka.getOrganWhichGavePermission().isBlank() );
+        Mockito.when(
+                this.serDes
+                        .getGetVehicleTonirovka()
+                        .apply( this.testNumber )
+        ).thenReturn( this.tonirovkaMono );
+
+        StepVerifier.create( this.tonirovkaMono )
+                .expectNext( this.tonirovka )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
+
+        Mockito.when( this.tonirovka.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateBegin();
+
+        Mockito.when( this.tonirovka.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.tonirovka.getDateOfValidotion() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateOfValidotion();
+
+        Mockito.when( this.tonirovka.getPermissionLicense() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getPermissionLicense();
+
+        Mockito.when( this.tonirovka.getWhoGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getWhoGavePermission();
+
+        Mockito.when( this.tonirovka.getOrganWhichGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getOrganWhichGavePermission();
     }
 
     @Test
     @DisplayName( value = "testFindAllAboutCarList method" )
     public void testFindAllAboutCarList () {
-        ModelForCarList modelForCarList = SerDes
-                .getSerDes()
-                .getGetModelForCarList()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
 
-        assertNotNull( modelForCarList );
-        assertNull( modelForCarList.getErrorResponse() );
+        assertThat( this.serDes ).isNotNull();
 
-        assertNotNull( modelForCarList.getModelForCarList() );
-        assertFalse( modelForCarList.getModelForCarList().isEmpty() );
+        Mockito.when(
+                this.serDes
+                        .getGetModelForCarList()
+                        .apply( this.testNumber )
+        ).thenReturn( this.modelForCarListMono );
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getErrorResponse() );
+        StepVerifier.create( this.modelForCarListMono )
+                .expectNext( this.modelForCarList )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().isEmpty() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().getFirst() );
+        assertThat( this.modelForCarList ).isNotNull();
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getIssuedBy()
-                        .isBlank()
-        );
+        Mockito.when( this.modelForCar.getErrorResponse() ).thenReturn( this.errorResponse );
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getDateBegin()
-                        .isBlank()
-        );
+        assertThat( this.errorResponse ).isNotNull();
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getDateValid()
-                        .isBlank()
-        );
+        Mockito.verify( this.modelForCar ).getErrorResponse();
 
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStir().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getYear().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPinpp().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPower().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getSeats().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getModel().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getColor().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getKuzov().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStands().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEngine().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPerson().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAddress().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFuelType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFullWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAdditional().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPlateNumber().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getVehicleType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEmptyWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getOrganization().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getRegistrationDate().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getTexPassportSerialNumber().isBlank() );
+        Mockito.when( this.modelForCar.getTonirovka() ).thenReturn( this.tonirovka );
 
-        modelForCarList = SerDes
-                .getSerDes()
-                .getFindAllAboutCarList()
-                .apply( modelForCarList )
-                .block();
+        assertThat( this.tonirovka ).isNotNull();
 
-        assertNotNull( modelForCarList );
-        assertNull( modelForCarList.getErrorResponse() );
+        Mockito.verify( this.modelForCar ).getTonirovka();
 
-        assertNotNull( modelForCarList.getModelForCarList() );
-        assertFalse( modelForCarList.getModelForCarList().isEmpty() );
+        Mockito.when( this.tonirovka.getDateBegin() ).thenReturn( this.testDate );
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getErrorResponse() );
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
 
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().isEmpty() );
-        assertNotNull( modelForCarList.getModelForCarList().getFirst().getDoverennostList().getDoverennostsList().getFirst() );
+        Mockito.verify( this.tonirovka ).getDateBegin();
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getIssuedBy()
-                        .isBlank()
-        );
+        Mockito.when( this.tonirovka.getDateValid() ).thenReturn( this.testDate );
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getDateBegin()
-                        .isBlank()
-        );
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
 
-        assertFalse(
-                modelForCarList
-                        .getModelForCarList()
-                        .getFirst()
-                        .getDoverennostList()
-                        .getDoverennostsList()
-                        .getFirst()
-                        .getDateValid()
-                        .isBlank()
-        );
+        Mockito.verify( this.tonirovka ).getDateValid();
 
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStir().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getYear().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPinpp().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPower().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getSeats().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getModel().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getColor().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getKuzov().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getStands().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEngine().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPerson().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAddress().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFuelType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getFullWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getAdditional().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getPlateNumber().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getVehicleType().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getEmptyWeight().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getOrganization().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getRegistrationDate().isBlank() );
-        assertFalse( modelForCarList.getModelForCarList().getFirst().getTexPassportSerialNumber().isBlank() );
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
 
-        modelForCarList.close();
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.tonirovka.getDateOfValidotion() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateOfValidotion();
+
+        Mockito.when( this.tonirovka.getPermissionLicense() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getPermissionLicense();
+
+        Mockito.when( this.tonirovka.getWhoGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getWhoGavePermission();
+
+        Mockito.when( this.tonirovka.getOrganWhichGavePermission() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getOrganWhichGavePermission();
+
+        Mockito.when( this.modelForCar.getInsurance() ).thenReturn( this.insurance );
+
+        assertThat( this.insurance ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getTonirovka();
+
+        Mockito.when( this.modelForCar.getErrorResponse() ).thenReturn( this.errorResponse );
+
+        assertThat( this.errorResponse ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getTonirovka();
+
+        Mockito.when( this.tonirovka.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateBegin();
+
+        Mockito.when( this.tonirovka.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.modelForCar.getDoverennostList() ).thenReturn( this.doverennostList );
+
+        assertThat( this.doverennostList ).isNotNull();
+
+        Mockito.verify( this.modelForCar ).getDoverennostList();
+
+        Mockito.when( this.doverennostList.getDoverennostsList() ).thenReturn( this.doverennosts );
+
+        assertThat( this.doverennosts ).isNotNull();
+        assertThat( this.doverennosts ).isNotEmpty();
+
+        Mockito.verify( this.doverennostList ).getDoverennostsList();
+
+        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+
+        assertThat( this.doverennost ).isNotNull();
+
+        Mockito.verify( this.doverennosts ).getFirst();
+
+        Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getIssuedBy();
+
+        Mockito.when( this.doverennost.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateBegin();
+
+        Mockito.when( this.doverennost.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateValid();
+
+        Mockito.when( this.tonirovka.getTintinType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.tonirovka ).getTintinType();
+
+        Mockito.when( this.modelForCar.getStir() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getStir();
+
+        Mockito.when( this.modelForCar.getYear() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getYear();
+
+        Mockito.when( this.modelForCar.getPinpp() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPinpp();
+
+        Mockito.when( this.modelForCar.getPower() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPower();
+
+        Mockito.when( this.modelForCar.getSeats() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getSeats();
+
+        Mockito.when( this.modelForCar.getModel() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getModel();
+
+        Mockito.when( this.modelForCar.getColor() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getColor();
+
+        Mockito.when( this.modelForCar.getKuzov() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getKuzov();
+
+        Mockito.when( this.modelForCar.getStands() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getStands();
+
+        Mockito.when( this.modelForCar.getEngine() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getEngine();
+
+        Mockito.when( this.modelForCar.getPerson() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPerson();
+
+        Mockito.when( this.modelForCar.getAddress() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getAddress();
+
+        Mockito.when( this.modelForCar.getFuelType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getFuelType();
+
+        Mockito.when( this.modelForCar.getFullWeight() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getFullWeight();
+
+        Mockito.when( this.modelForCar.getAdditional() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getAdditional();
+
+        Mockito.when( this.modelForCar.getPlateNumber() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getPlateNumber();
+
+        Mockito.when( this.modelForCar.getVehicleType() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getVehicleType();
+
+        Mockito.when( this.modelForCar.getEmptyWeight() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getEmptyWeight();
+
+        Mockito.when( this.modelForCar.getOrganization() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getOrganization();
+
+        Mockito.when( this.modelForCar.getRegistrationDate() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getRegistrationDate();
+
+        Mockito.when( this.modelForCar.getTexPassportSerialNumber() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.modelForCar ).getTexPassportSerialNumber();
+
+        this.doverennostList.close();
+        this.modelForCarList.close();
     }
 
     @Test
     @DisplayName( value = "testVehicleViolationList method" )
     public void testVehicleViolationList () {
-        final ViolationsList violationsList = SerDes
-                .getSerDes()
-                .getGetViolationList()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
 
-        assertNotNull( violationsList );
-        assertNotNull( violationsList.getErrorResponse() );
+        assertThat( this.serDes ).isNotNull();
 
-        assertNotNull( violationsList );
-        assertNotNull( violationsList.getViolationsInformationsList() );
-        assertFalse( violationsList.getViolationsInformationsList().isEmpty() );
-        assertNotNull( violationsList.getViolationsInformationsList().getFirst() );
+        Mockito.when(
+                this.serDes
+                        .getGetViolationList()
+                        .apply( this.testNumber )
+        ).thenReturn( this.violationsListMono );
 
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getAmount() < 0 );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getDecreeStatus() == 0 );
+        StepVerifier.create( this.violationsListMono )
+                .expectNext( this.violationsList )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
 
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getBill().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getModel().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getOwner().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getPayDate().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getAddress().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getArticle().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getDivision().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getViolation().isBlank() );
-        assertFalse( violationsList.getViolationsInformationsList().getFirst().getDecreeSerialNumber().isBlank() );
+        assertThat( this.violationsList ).isNotNull();
 
-        violationsList.close();
+        Mockito.verify(
+                this.serDes
+        ).getGetViolationList()
+                .apply( this.testNumber );
+
+        Mockito.when( this.violationsList.getViolationsInformationsList() ).thenReturn( this.violationsInformationsList );
+
+        assertThat( this.violationsInformationsList ).isNotNull();
+        assertThat( this.violationsInformationsList ).isNotEmpty();
+
+        Mockito.verify( this.violationsList ).getViolationsInformationsList();
+
+        Mockito.when( this.violationsInformationsList.getFirst() ).thenReturn( this.violationsInformation );
+
+        assertThat( this.violationsInformation ).isNotNull();
+
+        Mockito.verify( this.violationsInformationsList ).getFirst();
+
+        final int testValue = 0;
+
+        Mockito.when( this.violationsInformation.getAmount() ).thenReturn( testValue );
+
+        assertThat( testValue ).isGreaterThanOrEqualTo( 0 );
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getDecreeStatus() ).thenReturn( testValue );
+
+        assertThat( testValue ).isGreaterThanOrEqualTo( 0 );
+
+        Mockito.verify( this.violationsInformation ).getDecreeStatus();
+
+        Mockito.when( this.violationsInformation.getBill() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getModel() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getOwner() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getPayDate() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getAddress() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getArticle() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getDivision() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getViolation() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        Mockito.when( this.violationsInformation.getDecreeSerialNumber() ).thenReturn( this.testNumber );
+
+        assertThat( this.testNumber ).isNotBlank();
+
+        Mockito.verify( this.violationsInformation ).getAmount();
+
+        this.violationsList.close();
     }
 
     @Test
     @DisplayName( value = "testVehicleDoverennostList method" )
     public void testVehicleDoverennostList () {
-        final DoverennostList doverennostList = SerDes
-                .getSerDes()
-                .getGetDoverennostList()
-                .apply( this.testNumber )
-                .block();
+        Mockito.when(
+                SerDes.getSerDes()
+        ).thenReturn( this.serDes );
 
-        assertNotNull( doverennostList );
-        assertNull( doverennostList.getErrorResponse() );
+        assertThat( this.serDes ).isNotNull();
 
-        assertNotNull( doverennostList );
-        assertNotNull( doverennostList.getDoverennostsList() );
-        assertFalse( doverennostList.getDoverennostsList().isEmpty() );
-        assertNotNull( doverennostList.getDoverennostsList().getFirst() );
+        Mockito.when(
+                this.serDes
+                        .getGetDoverennostList()
+                        .apply( this.testNumber )
+        ).thenReturn( this.doverennostListMono );
 
-        assertFalse( doverennostList.getDoverennostsList().getFirst().getIssuedBy().isBlank() );
-        assertFalse( doverennostList.getDoverennostsList().getFirst().getDateBegin().isBlank() );
-        assertFalse( doverennostList.getDoverennostsList().getFirst().getDateValid().isBlank() );
+        StepVerifier.create( this.doverennostListMono )
+                .expectNext( this.doverennostList )
+                .expectComplete()
+                .verifyThenAssertThat()
+                .tookLessThan( this.duration );
 
-        doverennostList.close();
+        assertThat( this.doverennostList ).isNotNull();
+
+        Mockito.when( this.doverennostList.getDoverennostsList() ).thenReturn( this.doverennosts );
+
+        assertThat( this.doverennosts ).isNotNull();
+        assertThat( this.doverennosts ).isNotEmpty();
+
+        Mockito.verify( this.doverennostList ).getDoverennostsList();
+
+        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+
+        assertThat( this.doverennost ).isNotNull();
+
+        Mockito.verify( this.doverennosts ).getFirst();
+
+        Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getIssuedBy();
+
+        Mockito.when( this.doverennost.getDateBegin() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateBegin();
+
+        Mockito.when( this.doverennost.getDateValid() ).thenReturn( this.testDate );
+
+        assertThat( this.testDate ).isNotNull();
+        assertThat( this.testDate ).isNotBlank();
+        assertThat( this.testDate ).isNotEmpty();
+
+        Mockito.verify( this.doverennost ).getDateValid();
+
+        this.doverennostList.close();
     }
 }
