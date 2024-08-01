@@ -1,21 +1,27 @@
 package com.ssd.mvd;
 
-import com.ssd.mvd.entityForLogging.IntegratedServiceApis;
 import com.ssd.mvd.entityForLogging.UserRequest;
+import com.ssd.mvd.inspectors.StringOperations;
 import com.ssd.mvd.entityForLogging.ErrorLog;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.kafka.KafkaDataControl;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.kafka.Notification;
-import com.ssd.mvd.controller.SerDes;
-import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.entity.Status;
+
+import com.google.gson.GsonBuilder;
+import com.google.gson.Gson;
+
 import junit.framework.TestCase;
 
 import java.util.Date;
 import java.util.UUID;
 
 public final class KafkaConnectionTest extends TestCase {
+    private final static Gson gson = new GsonBuilder()
+            .excludeFieldsWithoutExposeAnnotation()
+            .create();
+
     private final UUID uuid = UUID.randomUUID();
 
     @Override
@@ -40,58 +46,39 @@ public final class KafkaConnectionTest extends TestCase {
                 .getInstance()
                 .writeErrorLog
                 .accept(
-                        SerDes
-                                .getSerDes()
-                                .getGson()
-                                .toJson(
-                                        new Notification()
-                                                .setPinfl( this.uuid.toString() )
-                                                .setReason( this.uuid.toString() )
-                                                .setMethodName( this.uuid.toString() )
-                                                .setCallingTime( new Date() )
-                                )
+                        gson.toJson(
+                                new Notification()
+                                        .setPinfl( this.uuid.toString() )
+                                        .setReason( this.uuid.toString() )
+                                        .setMethodName( this.uuid.toString() )
+                                        .setCallingTime( new Date() )
+                        )
                 );
 
         KafkaDataControl
                 .getInstance()
                 .writeToKafkaErrorLog
-                .accept(
-                        SerDes
-                                .getSerDes()
-                                .getGson()
-                                .toJson(
-                                        ErrorLog
-                                                .builder()
-                                                .createdAt( new Date().getTime() )
-                                                .errorMessage( Errors.SERVICE_WORK_ERROR.getErrorMEssage( "" ) )
-                                                .integratedService( IntegratedServiceApis.OVIR.getName() )
-                                                .integratedServiceApiDescription( IntegratedServiceApis.OVIR.getDescription() )
-                                                .build()
-                                )
-                );
+                .accept( gson.toJson( new ErrorLog( StringOperations.EMPTY ) ) );
 
         KafkaDataControl
                 .getInstance()
                 .writeToKafkaServiceUsage
                 .accept(
-                        SerDes
-                                .getSerDes()
-                                .getGson()
-                                .toJson(
-                                        new UserRequest(
-                                                new PsychologyCard(),
-                                                ApiResponseModel
-                                                        .builder()
-                                                        .status(
-                                                                Status
-                                                                    .builder()
-                                                                    .code( 200L )
-                                                                    .message( "30096545789812" )
-                                                                    .build()
-                                                        ).success( true )
-                                                        .build()
-                                        )
+                        gson.toJson(
+                                new UserRequest(
+                                        new PsychologyCard(),
+                                        ApiResponseModel
+                                                .builder()
+                                                .status(
+                                                        Status
+                                                            .builder()
+                                                            .code( 200L )
+                                                            .message( "30096545789812" )
+                                                            .build()
+                                                ).success( true )
+                                                .build()
                                 )
+                        )
                 );
     }
 }

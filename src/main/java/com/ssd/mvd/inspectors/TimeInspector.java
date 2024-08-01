@@ -1,4 +1,4 @@
-package com.ssd.mvd.controller;
+package com.ssd.mvd.inspectors;
 
 import java.text.SimpleDateFormat;
 import java.text.ParseException;

@@ -2,7 +2,7 @@ package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.controller.ErrorController;
+import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Errors;
 
@@ -35,11 +35,25 @@ public final class CrossBoardInfo
     private List< Data > Data;
     private ErrorResponse errorResponse;
 
+    public CrossBoardInfo () {}
+
+    private CrossBoardInfo ( final ErrorResponse errorResponse ) {
+        this.setErrorResponse( errorResponse );
+    }
+
     public static CrossBoardInfo generate (
             final List< CrossBoard > crossBoards,
             final Person person
     ) {
         return new CrossBoardInfo( crossBoards, person );
+    }
+
+    private CrossBoardInfo (
+            final List< CrossBoard > crossBoards,
+            final Person person
+    ) {
+        this.setData( super.newList() );
+        this.getData().add( com.ssd.mvd.entity.boardCrossing.Data.generate( crossBoards, person ) );
     }
 
     @Override
@@ -62,19 +76,10 @@ public final class CrossBoardInfo
         return new CrossBoardInfo( errorResponse );
     }
 
-    private CrossBoardInfo (
-            final List< CrossBoard > crossBoards,
-            final Person person
-    ) {
-        this.setData( super.newList() );
-        this.getData().add( com.ssd.mvd.entity.boardCrossing.Data.generate( crossBoards, person ) );
+    @Override
+    public CrossBoardInfo generate () {
+        return new CrossBoardInfo();
     }
-
-    private CrossBoardInfo ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
-    public CrossBoardInfo () {}
 
     @Override
     public void close() {

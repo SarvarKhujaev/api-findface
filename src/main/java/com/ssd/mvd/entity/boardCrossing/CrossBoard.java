@@ -1,6 +1,6 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.controller.LogInspector;
+import com.ssd.mvd.inspectors.LogInspector;
 import java.util.Date;
 
 public final class CrossBoard extends LogInspector {

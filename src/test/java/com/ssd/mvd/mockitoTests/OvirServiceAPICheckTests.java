@@ -1,6 +1,6 @@
 package com.ssd.mvd.mockitoTests;
 
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.SerDes;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.entity.Status;

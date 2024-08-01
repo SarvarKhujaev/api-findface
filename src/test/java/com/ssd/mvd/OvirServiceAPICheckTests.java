@@ -6,7 +6,7 @@ import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.SerDes;
 import com.ssd.mvd.entity.Status;
 
 import junit.framework.TestCase;

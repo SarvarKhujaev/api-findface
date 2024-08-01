@@ -37,7 +37,7 @@ public enum Errors {
                     error
             );
         }
-    }, // used when GAI token is invalid,
+    },
     SERVICE_WORK_ERROR {
         @Override
         public String getErrorMEssage (
@@ -61,7 +61,7 @@ public enum Errors {
                     error
             );
         }
-    }, // used when service is unavailable after 3 retries
+    },
     EXTERNAL_SERVICE_500_ERROR {
         @Override
         public String getErrorMEssage (
@@ -73,7 +73,7 @@ public enum Errors {
                     error
             );
         }
-    }, // used when some service returns an error,
+    },
     RESPONSE_FROM_SERVICE_NOT_RECEIVED {
         @Override
         public String getErrorMEssage (

@@ -1,6 +1,6 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.controller.Archieve;
+import com.ssd.mvd.inspectors.Archieve;
 import com.ssd.mvd.constants.Errors;
 
 public final class Purpose extends Archieve {

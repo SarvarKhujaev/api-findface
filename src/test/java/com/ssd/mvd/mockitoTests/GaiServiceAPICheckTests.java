@@ -3,7 +3,7 @@ package com.ssd.mvd.mockitoTests;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.SerDes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

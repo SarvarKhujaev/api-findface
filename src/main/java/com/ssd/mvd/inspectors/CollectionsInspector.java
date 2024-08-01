@@ -1,4 +1,4 @@
-package com.ssd.mvd.controller;
+package com.ssd.mvd.inspectors;
 
 import java.util.function.Consumer;
 import java.util.*;
@@ -14,7 +14,7 @@ public class CollectionsInspector extends TimeInspector {
         return new ArrayList<>();
     }
 
-    protected final synchronized <T, V> Map<T, V> newMap () {
+    protected static synchronized <T, V> Map<T, V> newMap () {
         return new HashMap<>();
     }
 

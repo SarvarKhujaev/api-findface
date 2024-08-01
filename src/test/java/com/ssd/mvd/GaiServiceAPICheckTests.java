@@ -2,7 +2,8 @@ package com.ssd.mvd;
 
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.inspectors.SerDes;
 import junit.framework.TestCase;
 
 public final class GaiServiceAPICheckTests extends TestCase {
@@ -19,12 +20,7 @@ public final class GaiServiceAPICheckTests extends TestCase {
     }
 
     public void testGaiToken () {
-        assertFalse(
-                SerDes
-                        .getSerDes()
-                        .getTokenForGai()
-                        .isBlank()
-        );
+        assertFalse( Config.tokenForGai.isBlank() );
     }
 
     public void testInsurance () {

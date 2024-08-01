@@ -7,7 +7,7 @@ import com.ssd.mvd.entity.Results;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.FindFaceServiceApplication;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
-import com.ssd.mvd.controller.DataValidationInspector;
+import com.ssd.mvd.inspectors.DataValidationInspector;
 
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;

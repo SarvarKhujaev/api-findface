@@ -1,14 +1,13 @@
 package com.ssd.mvd.publisher;
 
 import com.ssd.mvd.interfaces.RequestCommonMethods;
-import com.ssd.mvd.controller.LogInspector;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.CustomSerializer;
 
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Publisher;
 
-public final class CustomPublisherForRequest extends LogInspector implements Publisher< String > {
+public final class CustomPublisherForRequest extends CustomSerializer implements Publisher< String > {
     private final String value;
 
     public static < T, U > CustomPublisherForRequest generate (
@@ -22,10 +21,7 @@ public final class CustomPublisherForRequest extends LogInspector implements Pub
             final U object,
             final RequestCommonMethods< T, U > request
     ) {
-        this.value = SerDes
-                .getSerDes()
-                .getGson()
-                .toJson( request.generate( object ) );
+        this.value = super.serialize( request.generate( object ) );
     }
 
     @Override

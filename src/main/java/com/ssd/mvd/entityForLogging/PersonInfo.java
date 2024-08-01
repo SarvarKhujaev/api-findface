@@ -1,8 +1,8 @@
 package com.ssd.mvd.entityForLogging;
 
-import com.ssd.mvd.controller.DataValidationInspector;
+import com.ssd.mvd.inspectors.DataValidationInspector;
 import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.SerDes;
 import com.ssd.mvd.constants.Errors;
 
 public final class PersonInfo extends DataValidationInspector {

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.controller.ErrorController;
+import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Errors;
 
@@ -37,6 +37,8 @@ public final class Data
     @JsonDeserialize
     private List< TemproaryRegistration > TemproaryRegistration;
 
+    public Data () {}
+
     @Override
     public Data generate(
             final String message,
@@ -54,14 +56,9 @@ public final class Data
     public Data generate (
             final ErrorResponse errorResponse
     ) {
-        return new Data( errorResponse );
-    }
-
-    private Data ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
+        return this;
     }
-
-    public Data () {}
 
     @Override
     public void close() {

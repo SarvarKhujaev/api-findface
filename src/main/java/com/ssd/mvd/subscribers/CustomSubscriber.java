@@ -1,6 +1,6 @@
 package com.ssd.mvd.subscribers;
 
-import com.ssd.mvd.controller.LogInspector;
+import com.ssd.mvd.inspectors.LogInspector;
 
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;

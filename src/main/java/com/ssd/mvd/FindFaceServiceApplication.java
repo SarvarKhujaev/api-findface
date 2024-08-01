@@ -1,6 +1,6 @@
 package com.ssd.mvd;
 
-import com.ssd.mvd.controller.SerDes;
+import com.ssd.mvd.inspectors.SerDes;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;

@@ -1,4 +1,4 @@
-package com.ssd.mvd.controller;
+package com.ssd.mvd.inspectors;
 
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -13,6 +13,8 @@ import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 
 public class DataValidationInspector extends CollectionsInspector {
+    protected DataValidationInspector () {}
+
     protected final synchronized <T> Mono< T > convert ( final T o ) {
         return this.objectIsNotNull( o ) ? Mono.just( o ) : Mono.empty();
     }

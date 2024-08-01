@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.function.Consumer;
 
-import com.ssd.mvd.controller.Config;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.publisher.CustomPublisher;
 import com.ssd.mvd.subscribers.CustomSubscriber;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;

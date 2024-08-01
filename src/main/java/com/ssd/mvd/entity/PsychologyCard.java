@@ -4,7 +4,7 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
-import com.ssd.mvd.controller.ErrorController;
+import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Errors;

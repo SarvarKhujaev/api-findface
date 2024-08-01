@@ -1,10 +1,18 @@
 package com.ssd.mvd.entityForLogging;
 
-@lombok.Data
-@lombok.Builder
-public class ErrorLog {
-    private Long createdAt;
+import com.ssd.mvd.inspectors.TimeInspector;
+
+public class ErrorLog extends TimeInspector {
+    private final long createdAt = super.newDate().getTime();
+
     private String errorMessage;
-    private String integratedService;
-    private String integratedServiceApiDescription;
+
+    private final String integratedService = IntegratedServiceApis.OVIR.getName();
+    private final String integratedServiceApiDescription = IntegratedServiceApis.OVIR.getDescription();
+
+    public ErrorLog (
+            final String errorMessage
+    ) {
+        this.errorMessage = errorMessage;
+    }
 }

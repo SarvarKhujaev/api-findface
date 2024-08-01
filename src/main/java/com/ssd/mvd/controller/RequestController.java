@@ -2,6 +2,9 @@ package com.ssd.mvd.controller;
 
 import java.util.List;
 
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.inspectors.LogInspector;
+import com.ssd.mvd.inspectors.SerDes;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -35,7 +38,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Request for: " + Methods.GET_TONIROVKA + " : " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetVehicleTonirovka()
@@ -63,7 +66,7 @@ public final class RequestController extends LogInspector {
 
     @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
     public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( final FIO fio ) {
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetPersonTotalDataByFIO()
@@ -94,7 +97,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? Mono.zip(
                         SerDes
                                 .getSerDes()
@@ -171,9 +174,7 @@ public final class RequestController extends LogInspector {
                 .getPapilonList
                 .apply( base64url )
                 .filter( results -> super.isCollectionNotEmpty( results.getResults() ) )
-                .flatMap( results -> SerDes
-                        .getSerDes()
-                        .getFlag()
+                .flatMap( results -> Config.flag
                         ? results
                         .getResults()
                         .get( 0 )
@@ -215,7 +216,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Cadaster value: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetCadaster()
@@ -271,7 +272,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForCarList()
@@ -325,7 +326,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? super.checkParam( apiResponseModel.getStatus().getMessage() )
                 ? SerDes
                 .getSerDes()
@@ -364,7 +365,7 @@ public final class RequestController extends LogInspector {
 
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForPassport()
@@ -400,7 +401,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetVehicleData()
@@ -434,7 +435,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "PINFL in GET_CAR_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForCarList()
@@ -467,7 +468,7 @@ public final class RequestController extends LogInspector {
     public Mono< ViolationsList > GET_PERSON_FINES_FOR_DRIVING (
             final ApiResponseModel apiResponseModel
     ) {
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetViolationList()
@@ -498,7 +499,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Request for: " + Methods.GET_PINPP + " : " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetPinpp()
@@ -525,7 +526,7 @@ public final class RequestController extends LogInspector {
     public Mono< List > GET_VIOLATION_LIST_BY_PINFL (
             final ApiResponseModel apiResponseModel
     ) {
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? super.checkParam( apiResponseModel.getStatus().getMessage() )
                 ? FindFaceComponent
                     .getInstance()
@@ -545,7 +546,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetCrossBoardInfo()
@@ -581,7 +582,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForAddress()
@@ -609,7 +610,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "Cadaster value in GET_PERSONALINITIAL_CADASTOR: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetCadaster()
@@ -683,9 +684,7 @@ public final class RequestController extends LogInspector {
                 .getPapilonList
                 .apply( base64url )
                 .filter( results -> super.isCollectionNotEmpty( results.getResults() ) )
-                .flatMap( results -> SerDes
-                        .getSerDes()
-                        .getFlag()
+                .flatMap( results -> Config.flag
                         ? results
                         .getResults()
                         .get( 0 )
@@ -725,7 +724,7 @@ public final class RequestController extends LogInspector {
     ) {
         super.logging( "PINFL in GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? super.checkParam( apiResponseModel.getStatus().getMessage() )
                 ? SerDes
                 .getSerDes()
@@ -766,7 +765,7 @@ public final class RequestController extends LogInspector {
 
         super.logging( "Passport: " + strings[0] + " : " + strings[1] );
 
-        return SerDes.getSerDes().getFlag()
+        return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForPassport()

@@ -4,8 +4,9 @@ import com.ssd.mvd.entity.modelForPassport.RequestGuid;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.PermanentRegistration;
-import com.ssd.mvd.controller.ErrorController;
+import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -39,6 +40,13 @@ public final class ModelForAddress
 
     private ErrorResponse errorResponse;
 
+    public ModelForAddress () {}
+
+    @Override
+    public Methods getMethodName () {
+        return Methods.GET_MODEL_FOR_ADDRESS;
+    }
+
     @Override
     public ModelForAddress generate(
             final String message,
@@ -56,14 +64,14 @@ public final class ModelForAddress
     public ModelForAddress generate (
             final ErrorResponse errorResponse
     ) {
-        return new ModelForAddress( errorResponse );
-    }
-
-    private ModelForAddress ( final ErrorResponse errorResponse ) {
         this.setErrorResponse( errorResponse );
+        return this;
     }
 
-    public ModelForAddress () {}
+    @Override
+    public ModelForAddress generate () {
+        return new ModelForAddress();
+    }
 
     @Override
     public void close() {

@@ -1,5 +1,6 @@
-package com.ssd.mvd.controller;
+package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.kafka.KafkaDataControl;
@@ -23,16 +24,15 @@ public class LogInspector extends ErrorController {
         this.getLOGGER().info( o.getClass().getName() + " was closed successfully at: " + super.newDate() );
     }
 
-    // log on error
-    protected void logging (
+    protected <T> void logging (
             final Throwable throwable,
-            final Methods method,
+            final EntityCommonMethods<T> entityCommonMethods,
             final String params
     ) {
-        this.getLOGGER().error( "Error in {}: {}", method, throwable );
+        this.getLOGGER().error( "Error in {}: {}", entityCommonMethods.getMethodName(), throwable );
 
         super.saveErrorLog(
-                method,
+                entityCommonMethods.getMethodName(),
                 params,
                 "Error: " + throwable.getMessage()
         );
@@ -84,10 +84,7 @@ public class LogInspector extends ErrorController {
                         .getInstance()
                         .writeToKafkaServiceUsage
                         .accept(
-                                SerDes
-                                    .getSerDes()
-                                    .getGson()
-                                    .toJson(
+                                super.serialize(
                                             new UserRequest(
                                                 psychologyCard,
                                                 apiResponseModel

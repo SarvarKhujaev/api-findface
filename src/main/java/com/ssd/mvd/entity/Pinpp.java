@@ -1,7 +1,7 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.controller.ErrorController;
+import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Errors;
 
