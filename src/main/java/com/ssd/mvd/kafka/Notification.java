@@ -1,8 +1,12 @@
 package com.ssd.mvd.kafka;
 
+import com.ssd.mvd.interfaces.KafkaCommonMethods;
+import com.ssd.mvd.inspectors.Config;
+
+import com.google.gson.annotations.Expose;
 import java.util.Date;
 
-public final class Notification {
+public final class Notification extends Config implements KafkaCommonMethods {
     public Notification setCallingTime( final Date callingTime ) {
         this.callingTime = callingTime;
         return this;
@@ -23,9 +27,42 @@ public final class Notification {
         return this;
     }
 
+    @Expose
     private Date callingTime;
 
+    @Expose
     private String pinfl;
+    @Expose
     private String reason;
+    @Expose
     private String methodName;
+
+    @Override
+    public String getTopicName() {
+        return super.getERROR_LOGS();
+    }
+
+    @Override
+    public String getSuccessMessage() {
+        return String.join(
+                " ",
+                "Kafka got error: ",
+                this.getTopicName(),
+                this.toString(),
+                " at: ",
+                super.newDate().toString()
+        );
+    }
+
+    @Override
+    public String getCompletedMessage() {
+        return String.join(
+                " ",
+                "Kafka got error: ",
+                super.getERROR_LOGS(),
+                this.toString(),
+                " at: ",
+                super.newDate().toString()
+        );
+    }
 }

@@ -4,7 +4,6 @@ import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entityForLogging.ErrorLog;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.kafka.KafkaDataControl;
-import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
@@ -14,12 +13,6 @@ import java.util.function.Supplier;
 import reactor.core.publisher.Mono;
 
 public class ErrorController extends CustomSerializer {
-    private final static Notification notification = new Notification();
-
-    private Notification getNotification() {
-        return notification;
-    }
-
     protected final Supplier< ErrorResponse > getErrorResponse = () -> {
             SerDes.getSerDes().getUpdateTokens().get();
             return this.error.apply( "", Errors.GAI_TOKEN_ERROR );
@@ -34,9 +27,8 @@ public class ErrorController extends CustomSerializer {
     // saves error from external service
     protected final BiFunction< String, Methods, Mono< ? > > saveErrorLog = ( errorMessage, methods ) -> {
         KafkaDataControl
-                .getInstance()
-                .writeToKafkaErrorLog
-                .accept( super.serialize( new ErrorLog ( errorMessage ) ) );
+                .getKafkaDataControl()
+                .sendMessage( new ErrorLog ( errorMessage ) );
 
         return super.convert(
                 methods.getEntityWithError(
@@ -56,16 +48,13 @@ public class ErrorController extends CustomSerializer {
             final String reason
     ) {
         KafkaDataControl
-                .getInstance()
-                .writeErrorLog
-                .accept(
-                        super.serialize(
-                                this.getNotification()
-                                        .setPinfl( params )
-                                        .setReason( reason )
-                                        .setMethodName( methodName.name() )
-                                        .setCallingTime( super.newDate() )
-                        )
+                .getKafkaDataControl()
+                .sendMessage(
+                        EntitiesInstances.NOTIFICATION
+                                .setPinfl( params )
+                                .setReason( reason )
+                                .setMethodName( methodName.name() )
+                                .setCallingTime( super.newDate() )
                 );
     }
 
@@ -74,9 +63,8 @@ public class ErrorController extends CustomSerializer {
             final String errorMessage
     ) {
         KafkaDataControl
-                .getInstance()
-                .writeToKafkaErrorLog
-                .accept( super.serialize( new ErrorLog( errorMessage ) ) );
+                .getKafkaDataControl()
+                .sendMessage( new ErrorLog ( errorMessage ) );
     }
 
     protected final synchronized <T extends StringOperations> T completeError (
@@ -85,6 +73,19 @@ public class ErrorController extends CustomSerializer {
         return entitiesInstances.generate(
                 Errors.SERVICE_WORK_ERROR.name(),
                 Errors.SERVICE_WORK_ERROR
+        );
+    }
+
+    protected final synchronized <U extends Exception> Mono< String > completeError (
+            final U exception,
+            final Errors errors
+    ) {
+        return super.convert(
+                String.join(
+                        " : ",
+                        errors.name(),
+                        exception.getMessage()
+                )
         );
     }
 

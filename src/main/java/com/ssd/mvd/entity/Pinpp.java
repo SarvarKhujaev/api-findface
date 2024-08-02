@@ -3,6 +3,7 @@ package com.ssd.mvd.entity;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 public final class Pinpp
@@ -44,8 +45,9 @@ public final class Pinpp
         return this.errorResponse;
     }
 
-    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+    public Pinpp setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     private String Name;
@@ -67,12 +69,14 @@ public final class Pinpp
 
     private ErrorResponse errorResponse;
 
+    public Pinpp () {}
+
     @Override
     public Pinpp generate(
             final String message,
             final Errors errors
     ) {
-        return new Pinpp().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -81,15 +85,26 @@ public final class Pinpp
     }
 
     @Override
+    public Pinpp generate() {
+        return new Pinpp();
+    }
+
+    @Override
     public Pinpp generate (
             final ErrorResponse errorResponse
     ) {
-        return new Pinpp( errorResponse );
+        return this.setErrorResponse( errorResponse );
     }
 
-    private Pinpp ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
+    @Override
+    public Pinpp generate (
+            final String response
+    ) {
+        return super.deserialize( response, this.getClass() );
     }
 
-    public Pinpp () {}
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_PINPP;
+    }
 }

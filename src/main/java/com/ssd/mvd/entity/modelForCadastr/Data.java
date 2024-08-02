@@ -6,6 +6,7 @@ import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
@@ -17,8 +18,9 @@ public final class Data
         return this.errorResponse;
     }
 
-    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+    public Data setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public List< Person > getPermanentRegistration() {
@@ -44,7 +46,7 @@ public final class Data
             final String message,
             final Errors errors
     ) {
-        return new Data().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -53,11 +55,30 @@ public final class Data
     }
 
     @Override
+    public Data generate() {
+        return new Data();
+    }
+
+    @Override
     public Data generate (
             final ErrorResponse errorResponse
     ) {
-        this.setErrorResponse( errorResponse );
-        return this;
+        return this.setErrorResponse( errorResponse );
+    }
+
+    @Override
+    public Data generate (
+            final String response
+    ) {
+        return super.deserialize(
+                response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
+                this.getClass()
+        );
+    }
+
+    @Override
+    public Methods getMethodName() {
+        return Methods.CADASTER;
     }
 
     @Override

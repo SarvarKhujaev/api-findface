@@ -2,40 +2,57 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class DoverennostList
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< DoverennostList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public DoverennostList setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public List< Doverennost > getDoverennostsList() {
         return this.doverennostsList;
     }
 
-    public void setDoverennostsList( final List< Doverennost > doverennostsList ) {
+    private DoverennostList setDoverennostsList( final List< Doverennost > doverennostsList ) {
         this.doverennostsList = doverennostsList;
+        return this;
     }
 
     private ErrorResponse errorResponse;
     private List< Doverennost > doverennostsList;
+
+    public DoverennostList () {}
+
+    @Override
+    public DoverennostList generate() {
+        return new DoverennostList();
+    }
+
+    @Override
+    public DoverennostList generate (
+            final ErrorResponse errorResponse
+    ) {
+        return this.setErrorResponse( errorResponse );
+    }
 
     @Override
     public DoverennostList generate(
             final String message,
             final Errors errors
     ) {
-        return new DoverennostList().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -44,27 +61,21 @@ public final class DoverennostList
     }
 
     @Override
-    public DoverennostList generate (
-            final ErrorResponse errorResponse
+    public Methods getMethodName() {
+        return Methods.GET_DOVERENNOST_LIST;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_DOVERENNOST_LIST();
+    }
+
+    @Override
+    public DoverennostList generate(
+            final String response
     ) {
-        return new DoverennostList( errorResponse );
+        return this.generate().setDoverennostsList( super.stringToArrayList( response, Doverennost[].class ) );
     }
-
-    public static DoverennostList generate (
-            final List< Doverennost > doverennostsList
-    ) {
-        return new DoverennostList( doverennostsList );
-    }
-
-    private DoverennostList ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
-    private DoverennostList ( final List< Doverennost > doverennostsList ) {
-        this.setDoverennostsList( doverennostsList );
-    }
-
-    public DoverennostList () {}
 
     @Override
     public void close() {

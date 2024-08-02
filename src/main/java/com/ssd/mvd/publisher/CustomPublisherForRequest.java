@@ -10,14 +10,7 @@ import org.reactivestreams.Publisher;
 public final class CustomPublisherForRequest extends CustomSerializer implements Publisher< String > {
     private final String value;
 
-    public static < T, U > CustomPublisherForRequest generate (
-            final U object,
-            final RequestCommonMethods< T, U > request
-    ) {
-        return new CustomPublisherForRequest( object, request );
-    }
-
-    private <T, U> CustomPublisherForRequest (
+    public <T, U> CustomPublisherForRequest (
             final U object,
             final RequestCommonMethods< T, U > request
     ) {

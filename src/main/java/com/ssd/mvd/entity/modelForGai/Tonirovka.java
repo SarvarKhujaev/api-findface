@@ -1,12 +1,13 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 public final class Tonirovka
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< Tonirovka > {
     public String getDateBegin() {
         return this.DateBegin;
@@ -56,16 +57,19 @@ public final class Tonirovka
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public Tonirovka setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
+
+    public Tonirovka () {}
 
     @Override
     public Tonirovka generate(
             final String message,
             final Errors errors
     ) {
-        return new Tonirovka().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -74,13 +78,29 @@ public final class Tonirovka
     }
 
     @Override
+    public Tonirovka generate() {
+        return new Tonirovka();
+    }
+
+    @Override
+    public Tonirovka generate(
+            final String response
+    ) {
+        return super.deserialize( response, this.getClass() );
+    }
+
+    @Override
     public Tonirovka generate ( final ErrorResponse errorResponse ) {
-        return new Tonirovka( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
-    private Tonirovka ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_TONIROVKA();
     }
 
-    public Tonirovka () {}
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_TONIROVKA;
+    }
 }

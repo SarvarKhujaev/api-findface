@@ -4,8 +4,8 @@ import com.ssd.mvd.entity.modelForPassport.RequestGuid;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.PermanentRegistration;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
@@ -15,14 +15,15 @@ import java.util.List;
 
 @Jacksonized
 public final class ModelForAddress
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
     public com.ssd.mvd.entity.PermanentRegistration getPermanentRegistration() {
         return this.PermanentRegistration;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public ModelForAddress setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public ErrorResponse getErrorResponse() {
@@ -48,11 +49,16 @@ public final class ModelForAddress
     }
 
     @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_MODEL_FOR_ADDRESS();
+    }
+
+    @Override
     public ModelForAddress generate(
             final String message,
             final Errors errors
     ) {
-        return new ModelForAddress().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -64,8 +70,17 @@ public final class ModelForAddress
     public ModelForAddress generate (
             final ErrorResponse errorResponse
     ) {
-        this.setErrorResponse( errorResponse );
-        return this;
+        return this.setErrorResponse( errorResponse );
+    }
+
+    @Override
+    public ModelForAddress generate (
+            final String response
+    ) {
+        return super.deserialize(
+                response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
+                ModelForAddress.class
+        );
     }
 
     @Override

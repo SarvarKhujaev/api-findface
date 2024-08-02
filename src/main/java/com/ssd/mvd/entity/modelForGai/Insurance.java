@@ -1,12 +1,13 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Errors;
 
 public final class Insurance
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< Insurance > {
     public String getDateBegin() {
         return this.DateBegin;
@@ -28,18 +29,21 @@ public final class Insurance
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public Insurance setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     private ErrorResponse errorResponse;
+
+    public Insurance () {}
 
     @Override
     public Insurance generate(
             final String message,
             final Errors errors
     ) {
-        return new Insurance().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -48,15 +52,33 @@ public final class Insurance
     }
 
     @Override
+    public Insurance generate() {
+        return new Insurance();
+    }
+
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_INSURANCE;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_FOR_INSURANCE();
+    }
+
+    @Override
+    public Insurance generate(
+            final String response
+    ) {
+        return !response.contains( "топилмади" )
+                ? super.deserialize( response, this.getClass() )
+                : this.generate().generate( response, Errors.DATA_NOT_FOUND );
+    }
+
+    @Override
     public Insurance generate (
             final ErrorResponse errorResponse
     ) {
-        return new Insurance( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
-
-    private Insurance ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
-    public Insurance () {}
 }

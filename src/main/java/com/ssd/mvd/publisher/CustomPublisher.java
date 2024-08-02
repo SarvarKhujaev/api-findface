@@ -1,18 +1,20 @@
 package com.ssd.mvd.publisher;
 
+import com.ssd.mvd.inspectors.CustomSerializer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import com.ssd.mvd.interfaces.KafkaCommonMethods;
+
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Publisher;
 
-public final class CustomPublisher implements Publisher< ProducerRecord< String, String > > {
+public final class CustomPublisher extends CustomSerializer implements Publisher< ProducerRecord< String, String > > {
     private final ProducerRecord< String, String > producerRecord;
 
     public CustomPublisher(
-            final String topic,
-            final String message
+            final KafkaCommonMethods kafkaCommonMethods
     ) {
-        this.producerRecord = new ProducerRecord<>( topic, message );
+        this.producerRecord = new ProducerRecord<>( kafkaCommonMethods.getTopicName(), super.serialize( kafkaCommonMethods ) );
     }
 
     @Override

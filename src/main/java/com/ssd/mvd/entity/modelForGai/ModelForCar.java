@@ -1,15 +1,16 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.constants.Methods;
+import com.ssd.mvd.inspectors.Config;
 import reactor.util.function.Tuple3;
 import com.ssd.mvd.constants.Errors;
 
 public final class ModelForCar
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< ModelForCar > {
     public String getPinpp() {
         return this.Pinpp;
@@ -47,8 +48,10 @@ public final class ModelForCar
         return this.errorResponse;
     }
 
-    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+    private ModelForCar setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+
+        return this;
     }
 
     public String getStir() {
@@ -181,19 +184,23 @@ public final class ModelForCar
                     Insurance,
                     Tonirovka,
                     DoverennostList > tuple3,
-            final ModelForCarList modelForCarList ) {
+            final ModelForCarList modelForCarList
+    ) {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
         this.setTonirovka( tuple3.getT2() );
+
         return modelForCarList;
     }
+
+    public ModelForCar () {}
 
     @Override
     public ModelForCar generate(
             final String message,
             final Errors errors
     ) {
-        return new ModelForCar().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -202,15 +209,31 @@ public final class ModelForCar
     }
 
     @Override
+    public ModelForCar generate() {
+        return new ModelForCar();
+    }
+
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_MODEL_FOR_CAR_LIST;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_VEHICLE_DATA();
+    }
+
+    @Override
+    public ModelForCar generate(
+            final String response
+    ) {
+        return super.deserialize( response, this.getClass() );
+    }
+
+    @Override
     public ModelForCar generate (
             final ErrorResponse errorResponse
     ) {
-        return new ModelForCar( errorResponse );
+        return this.setErrorResponse( errorResponse );
     }
-
-    private ModelForCar ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
-    public ModelForCar () {}
 }

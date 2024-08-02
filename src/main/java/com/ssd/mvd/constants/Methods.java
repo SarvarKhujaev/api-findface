@@ -40,10 +40,9 @@ public enum Methods {
     },
 
     GET_PSYCHOLOGY_CARD,
+    CAR_TOTAL_DATA,
 
     UPDATE_TOKENS,
-    BASE64_TO_LINK,
-    GET_DATA_BY_FIO,
     GET_VIOLATION_LIST {
         public EntityCommonMethods<?> getEntityWithError (
                 final ErrorResponse errorResponse
@@ -84,13 +83,7 @@ public enum Methods {
     GET_MODEL_FOR_CAR_LIST,
 
     // for RequestController
-    GET_CAR_TOTAL_DATA,
-    GET_PERSONAL_CADASTOR,
-    GET_PERSON_TOTAL_DATA,
-    GET_CAR_TOTAL_DATA_BY_PINFL,
     GET_PERSON_TOTAL_DATA_BY_FIO,
-    GET_PERSON_TOTAL_DATA_BY_PINFL,
-    GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE,
 
     // for Popilon service
     GET_FACE_CARD,

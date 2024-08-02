@@ -1,8 +1,13 @@
 package com.ssd.mvd.inspectors;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
-import com.ssd.mvd.constants.Errors;
 import java.util.Map;
+import io.netty.handler.logging.LogLevel;
+
+import com.ssd.mvd.constants.Errors;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
+
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 /*-
 хранит все конфигурационные данные и параметры
@@ -17,6 +22,16 @@ public class Config extends LogInspector implements ServiceCommonMethods {
     public static String tokenForFio;
 
     public static String tokenForPassport;
+
+    public static final HttpClient HTTP_CLIENT = reactor.netty.http.client.HttpClient
+            .create()
+            .responseTimeout( HttpClientDuration )
+            .headers( h -> h.add( "Content-Type", "application/json" ) )
+            .wiretap(
+                    "reactor.netty.http.client.HttpClient",
+                    LogLevel.TRACE,
+                    AdvancedByteBufFormat.TEXTUAL
+            );
 
     /*
         how many minutes to wait for Thread in SerDes class
@@ -229,5 +244,7 @@ public class Config extends LogInspector implements ServiceCommonMethods {
     public void close() {
         fields.clear();
         headers.clear();
+
+        this.clean();
     }
 }

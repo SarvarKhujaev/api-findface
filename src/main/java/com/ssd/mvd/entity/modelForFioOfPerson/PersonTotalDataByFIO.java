@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
@@ -50,6 +51,17 @@ public final class PersonTotalDataByFIO
 
     private ErrorResponse errorResponse;
 
+    public PersonTotalDataByFIO () {}
+
+    private PersonTotalDataByFIO ( final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+    }
+
+    @Override
+    public PersonTotalDataByFIO generate() {
+        return new PersonTotalDataByFIO();
+    }
+
     @Override
     public PersonTotalDataByFIO generate (
             final ErrorResponse errorResponse
@@ -70,13 +82,8 @@ public final class PersonTotalDataByFIO
         );
     }
 
-    public static PersonTotalDataByFIO generate () {
-        return new PersonTotalDataByFIO();
-    }
-
-    private PersonTotalDataByFIO () {}
-
-    private PersonTotalDataByFIO ( final ErrorResponse errorResponse ) {
-        this.errorResponse = errorResponse;
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_PERSON_TOTAL_DATA_BY_FIO;
     }
 }

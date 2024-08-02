@@ -4,6 +4,7 @@ import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
@@ -23,8 +24,9 @@ public final class CrossBoardInfo
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public CrossBoardInfo setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public String getResult() {
@@ -36,10 +38,6 @@ public final class CrossBoardInfo
     private ErrorResponse errorResponse;
 
     public CrossBoardInfo () {}
-
-    private CrossBoardInfo ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
 
     public static CrossBoardInfo generate (
             final List< CrossBoard > crossBoards,
@@ -61,7 +59,7 @@ public final class CrossBoardInfo
             final String message,
             final Errors errors
     ) {
-        return new CrossBoardInfo().generate(
+        return this.setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -73,12 +71,37 @@ public final class CrossBoardInfo
     public CrossBoardInfo generate (
             final ErrorResponse errorResponse
     ) {
-        return new CrossBoardInfo( errorResponse );
+        return this.setErrorResponse( errorResponse );
+    }
+
+    @Override
+    public CrossBoardInfo generate (
+            final String response
+    ) {
+        return new CrossBoardInfo(
+                response.contains( "[{\"card_id" )
+                        ? super.stringToArrayList(
+                                response.substring( response.indexOf( "[{\"card_id" ), response.length() - 3 ),
+                                CrossBoard[].class
+                        )
+                        : super.emptyList(),
+                response.contains( "transaction_id" )
+                        ? super.deserialize(
+                                response.substring( response.indexOf( "transaction_id" ) - 2, response.indexOf( "sex" ) + 9 ),
+                                Person.class
+                        )
+                        : new Person()
+        );
     }
 
     @Override
     public CrossBoardInfo generate () {
         return new CrossBoardInfo();
+    }
+
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_CROSS_BOARDING;
     }
 
     @Override

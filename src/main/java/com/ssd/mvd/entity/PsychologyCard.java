@@ -2,6 +2,7 @@ package com.ssd.mvd.entity;
 
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.inspectors.ErrorController;
@@ -9,7 +10,6 @@ import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Errors;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import reactor.util.function.*;
 import java.util.List;
 
@@ -91,8 +91,9 @@ public final class PsychologyCard
         return this.errorResponse;
     }
 
-    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+    public PsychologyCard setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public ModelForPassport getModelForPassport() {
@@ -134,18 +135,22 @@ public final class PsychologyCard
         return this;
     }
 
+    public PsychologyCard () {}
 
     public static PsychologyCard generate ( final Results results ) {
         return new PsychologyCard( results );
     }
 
-    public PsychologyCard () {}
+    @Override
+    public PsychologyCard generate() {
+        return new PsychologyCard();
+    }
 
     @Override
     public PsychologyCard generate (
             final ErrorResponse errorResponse
     ) {
-        return new PsychologyCard( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
@@ -153,7 +158,7 @@ public final class PsychologyCard
             final String message,
             final Errors errors
     ) {
-        return new PsychologyCard().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors

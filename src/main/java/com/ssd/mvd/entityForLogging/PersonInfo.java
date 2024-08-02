@@ -1,5 +1,7 @@
 package com.ssd.mvd.entityForLogging;
 
+import com.google.gson.annotations.Expose;
+
 import com.ssd.mvd.inspectors.DataValidationInspector;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.inspectors.SerDes;
@@ -34,12 +36,19 @@ public final class PersonInfo extends DataValidationInspector {
         this.passportNumber = passportNumber;
     }
 
+    @Expose
     private String pinfl;
+    @Expose
     private String photo;
+    @Expose
     private String address;
+    @Expose
     private String cadastre;
+    @Expose
     private String fullname;
+    @Expose
     private String birthDate;
+    @Expose
     private String passportNumber;
 
     public PersonInfo ( final PsychologyCard psychologyCard ) {
@@ -96,4 +105,18 @@ public final class PersonInfo extends DataValidationInspector {
                             .get( 0 )
                             .getPhoto() ) );
         } }
+
+    @Override
+    public String toString() {
+        return String.join(
+                " ",
+                super.checkString( this.pinfl ),
+                super.checkString( this.photo ),
+                super.checkString( this.address ),
+                super.checkString( this.cadastre ),
+                super.checkString( this.fullname ),
+                super.checkString( this.birthDate ),
+                super.checkString( this.passportNumber )
+        );
+    }
 }

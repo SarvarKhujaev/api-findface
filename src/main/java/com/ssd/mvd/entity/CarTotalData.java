@@ -54,10 +54,11 @@ public final class CarTotalData
         return this.errorResponse;
     }
 
-    public void setErrorResponse (
+    private CarTotalData setErrorResponse (
             final ErrorResponse errorResponse
     ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     private String gosNumber;
@@ -84,17 +85,17 @@ public final class CarTotalData
         return new CarTotalData( modelForCar );
     }
 
+    public CarTotalData () {}
+
     private CarTotalData( final ModelForCar modelForCar ) {
         this.setModelForCar( modelForCar );
     }
-
-    public CarTotalData () {}
 
     @Override
     public CarTotalData generate (
             final ErrorResponse errorResponse
     ) {
-        return new CarTotalData( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
@@ -102,7 +103,7 @@ public final class CarTotalData
             final String message,
             final Errors errors
     ) {
-        return new CarTotalData().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -110,8 +111,9 @@ public final class CarTotalData
         );
     }
 
-    private CarTotalData ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
+    @Override
+    public CarTotalData generate() {
+        return new CarTotalData();
     }
 
     public static CarTotalData generate (

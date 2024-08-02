@@ -47,7 +47,8 @@ public final class FindFaceComponent
 
     @Override
     public void close() {
-        component = null;
         this.getRequester().dispose();
+        component = null;
+        this.clean();
     }
 }

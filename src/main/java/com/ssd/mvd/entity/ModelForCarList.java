@@ -5,49 +5,48 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForGai.ModelForCar;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class ModelForCarList
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< ModelForCarList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
 
-    public void setErrorResponse ( final ErrorResponse errorResponse ) {
+    public ModelForCarList setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public List< ModelForCar > getModelForCarList() {
         return this.modelForCarList;
     }
 
-    public void setModelForCarList (
+    public ModelForCarList setModelForCarList (
             final List< ModelForCar > modelForCarList
     ) {
         this.modelForCarList = modelForCarList;
+        return this;
     }
 
     private ErrorResponse errorResponse;
     @JsonDeserialize
     private List< ModelForCar > modelForCarList;
 
-    public static ModelForCarList generate (
-            final List< ModelForCar > modelForCarList
-    ) {
-        return new ModelForCarList( modelForCarList );
-    }
+    public ModelForCarList () {}
 
     @Override
     public ModelForCarList generate(
             final String message,
             final Errors errors
     ) {
-        return new ModelForCarList().generate(
+        return this.generate(
                 super.error.apply(
                         message,
                         errors
@@ -59,27 +58,38 @@ public final class ModelForCarList
     public ModelForCarList generate (
             final ErrorResponse errorResponse
     ) {
-        return new ModelForCarList( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
-    private ModelForCarList ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
+    @Override
+    public ModelForCarList generate() {
+        return new ModelForCarList();
     }
 
-    private ModelForCarList (
-            final List< ModelForCar > modelForCarList
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_MODEL_FOR_CAR_LIST;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_MODEL_FOR_CAR_LIST();
+    }
+
+    @Override
+    public ModelForCarList generate(
+            final String response
     ) {
-        this.setModelForCarList( modelForCarList );
+        return this.generate().setModelForCarList( this.stringToArrayList( response, ModelForCar[].class ) );
     }
-
-    public ModelForCarList () {}
 
     @Override
     public void close() {
-        this.getModelForCarList().clear();
         super.analyze(
                 this.getModelForCarList(),
                 modelForCar -> modelForCar.getDoverennostList().getDoverennostsList().clear()
         );
+
+        this.getModelForCarList().clear();
     }
 }

@@ -3,12 +3,13 @@ package com.ssd.mvd.entity.modelForPassport;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.constants.Methods;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Errors;
 
 public final class ModelForPassport
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< ModelForPassport > {
     public com.ssd.mvd.entity.modelForPassport.Data getData () {
         return this.Data;
@@ -22,8 +23,9 @@ public final class ModelForPassport
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    public ModelForPassport setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public Integer getAnswereId() {
@@ -46,12 +48,14 @@ public final class ModelForPassport
 
     private ErrorResponse errorResponse;
 
+    public ModelForPassport () {}
+
     @Override
     public ModelForPassport generate(
             final String message,
             final Errors errors
     ) {
-        return new ModelForPassport().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -63,12 +67,28 @@ public final class ModelForPassport
     public ModelForPassport generate (
             final ErrorResponse errorResponse
     ) {
-        return new ModelForPassport( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
-    private ModelForPassport ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
+    @Override
+    public ModelForPassport generate() {
+        return new ModelForPassport();
     }
 
-    public ModelForPassport () {}
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_MODEL_FOR_PASSPORT;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_PASSPORT_MODEL();
+    }
+
+    @Override
+    public ModelForPassport generate(
+            final String response
+    ) {
+        return super.deserialize( response, this.getClass() );
+    }
 }

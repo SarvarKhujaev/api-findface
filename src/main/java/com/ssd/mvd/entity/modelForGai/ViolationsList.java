@@ -4,27 +4,30 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class ViolationsList
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< ViolationsList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    private ViolationsList setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
-    public void setViolationsInformationsList(
+    private ViolationsList setViolationsInformationsList(
             final List< ViolationsInformation > violationsInformationsList
     ) {
         this.violationsInformationsList = violationsInformationsList;
+        return this;
     }
 
     public List< ViolationsInformation > getViolationsInformationsList() {
@@ -36,16 +39,11 @@ public final class ViolationsList
     @JsonDeserialize
     private List< ViolationsInformation > violationsInformationsList;
 
-    public static ViolationsList generate (
-            final List< ViolationsInformation > violationsInformationsList
-    ) {
-        return new ViolationsList( violationsInformationsList );
-    }
+    public ViolationsList () {}
 
-    private ViolationsList (
-            final List< ViolationsInformation > violationsInformationsList
-    ) {
-        this.setViolationsInformationsList( violationsInformationsList );
+    @Override
+    public ViolationsList generate() {
+        return new ViolationsList();
     }
 
     @Override
@@ -53,7 +51,7 @@ public final class ViolationsList
             final String message,
             final Errors errors
     ) {
-        return new ViolationsList().generate(
+        return this.generate().setErrorResponse(
                 super.error.apply(
                         message,
                         errors
@@ -65,16 +63,25 @@ public final class ViolationsList
     public ViolationsList generate (
             final ErrorResponse errorResponse
     ) {
-        return new ViolationsList( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
-    private ViolationsList (
-            final ErrorResponse errorResponse
+    @Override
+    public ViolationsList generate(
+            final String response
     ) {
-        this.setErrorResponse( errorResponse );
+        return this.generate().setViolationsInformationsList( super.stringToArrayList( response, ViolationsInformation[].class ) );
     }
 
-    public ViolationsList () {}
+    @Override
+    public Methods getMethodName() {
+        return Methods.GET_VIOLATION_LIST;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_VIOLATION_LIST();
+    }
 
     @Override
     public void close() {
