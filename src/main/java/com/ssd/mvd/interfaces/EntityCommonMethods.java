@@ -23,7 +23,7 @@ public interface EntityCommonMethods<T> {
 
     default String getMethodApi() {
         return StringOperations.EMPTY;
-    };
+    }
 
     default T generate (
             final String response

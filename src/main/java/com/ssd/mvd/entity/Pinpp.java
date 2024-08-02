@@ -1,13 +1,13 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 public final class Pinpp
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< Pinpp > {
     public String getName() {
         return this.Name;
@@ -106,5 +106,10 @@ public final class Pinpp
     @Override
     public Methods getMethodName() {
         return Methods.GET_PINPP;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_PINPP();
     }
 }

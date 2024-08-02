@@ -2,15 +2,15 @@ package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class CrossBoardInfo
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< CrossBoardInfo >, ServiceCommonMethods {
     public List< com.ssd.mvd.entity.boardCrossing.Data > getData() {
         return this.Data;
@@ -102,6 +102,11 @@ public final class CrossBoardInfo
     @Override
     public Methods getMethodName() {
         return Methods.GET_CROSS_BOARDING;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_BOARD_CROSSING();
     }
 
     @Override

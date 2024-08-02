@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class Data
-        extends ErrorController
+        extends Config
         implements EntityCommonMethods< Data >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
@@ -79,6 +79,11 @@ public final class Data
     @Override
     public Methods getMethodName() {
         return Methods.CADASTER;
+    }
+
+    @Override
+    public String getMethodApi() {
+        return super.getAPI_FOR_CADASTR();
     }
 
     @Override

@@ -162,16 +162,17 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private final Function< String, Mono< CrossBoardInfo > > getCrossBoardInfo =
             SerialNumber -> this.getHttpClient()
                     .post()
-                    .uri( super.getAPI_FOR_BOARD_CROSSING() )
+                    .uri( EntitiesInstances.CROSS_BOARD_INFO.getMethodApi() )
                     .send( this.generate( SerialNumber, EntitiesInstances.REQUEST_FOR_BOARD_CROSSING ) )
-                    .responseSingle( ( res, content ) -> this.generate(
-                            SerialNumber,
-                            content,
-                            res,
-                            this.getUpdateTokens().get().getGetCrossBoardInfo(),
-                            EntitiesInstances.CROSS_BOARD_INFO
-                    ) )
-                    .retryWhen( super.retry( EntitiesInstances.CROSS_BOARD_INFO ) )
+                    .responseSingle(
+                            ( res, content ) -> this.generate(
+                                    SerialNumber,
+                                    content,
+                                    res,
+                                    this.getUpdateTokens().get().getGetCrossBoardInfo(),
+                                    EntitiesInstances.CROSS_BOARD_INFO
+                            )
+                    ).retryWhen( super.retry( EntitiesInstances.CROSS_BOARD_INFO ) )
                     .onErrorResume(
                             throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.CROSS_BOARD_INFO )
                     ).onErrorResume(
@@ -216,7 +217,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .get()
-            .uri( super.getAPI_FOR_PINPP() + pinfl )
+            .uri( EntitiesInstances.PINPP.getMethodApi() + pinfl )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             pinfl,
@@ -238,7 +239,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .post()
             .send( this.generate( cadaster, new RequestForCadaster() ) )
-            .uri( super.getAPI_FOR_CADASTR() )
+            .uri( EntitiesInstances.CADASTR.getMethodApi() )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             cadaster,
@@ -254,13 +255,13 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.CADASTR )
             ).doOnError( e -> super.logging( e, EntitiesInstances.CADASTR, cadaster ) )
             .doOnSuccess( value -> super.logging( Methods.CADASTER, value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_CADASTR() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.CADASTR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.CADASTR.generate() ) );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.PINPP.getMethodApi() + pinfl )
+            .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.getUpdateTokens().get().getGetImageByPinfl().apply( pinfl );
                 case 501 | 502 | 503 -> ( Mono< String > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_IMAGE_BY_PINFL );
@@ -280,7 +281,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
-            .headers( h -> h.add( "Authorization", "Bearer " + super.getAPI_FOR_MODEL_FOR_ADDRESS() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() ) )
             .post()
             .uri( EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() )
             .send( this.generate( pinfl, new RequestForModelOfAddress() ) )
@@ -299,7 +300,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_ADDRESS )
             ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_ADDRESS, pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_ADDRESS() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS ) );
 
     private final Function< String, Mono< ModelForPassport > > getModelForPassport =
@@ -323,7 +324,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                             throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_PASSPORT )
                     ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_PASSPORT, passportData ) )
                     .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
-                    .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PASSPORT_MODEL() ) )
+                    .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_PASSPORT.getMethodApi() ) )
                     .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_PASSPORT ) );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
@@ -345,8 +346,8 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.INSURANCE )
             ).doOnError( e -> super.logging( e, EntitiesInstances.INSURANCE, gosno ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.INSURANCE.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_FOR_INSURANCE() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.INSURANCE.generate() ) );
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.INSURANCE.getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.INSURANCE ) );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
@@ -367,7 +368,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_CAR )
             ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR, gosno ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VEHICLE_DATA() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR ) );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
@@ -389,13 +390,13 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.TONIROVKA )
             ).doOnError( e -> super.logging( e, EntitiesInstances.TONIROVKA, gosno ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.TONIROVKA.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_TONIROVKA() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA.generate() ) );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.VIOLATIONS_LIST + gosno )
+            .uri( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
@@ -411,7 +412,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.VIOLATIONS_LIST )
             ).doOnError( e -> super.logging( e, EntitiesInstances.VIOLATIONS_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_VIOLATION_LIST() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST.generate() ) );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
@@ -433,13 +434,13 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.DOVERENNOST_LIST )
             ).doOnError( e -> super.logging( e, EntitiesInstances.DOVERENNOST_LIST, gosno ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_DOVERENNOST_LIST() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.DOVERENNOST_LIST ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.MODEL_FOR_CAR_LIST + pinfl )
+            .uri( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodApi() + pinfl )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             pinfl,
@@ -455,7 +456,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_CAR_LIST )
             ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR_LIST, pinfl ) )
             .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_MODEL_FOR_CAR_LIST() ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR_LIST.generate() ) );
 
     private final Function< ModelForCarList, Mono< ModelForCarList > > findAllAboutCarList = modelForCarList ->
