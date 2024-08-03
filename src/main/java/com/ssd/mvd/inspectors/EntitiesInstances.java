@@ -6,6 +6,7 @@ import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.request.RequestForBoardCrossing;
 import com.ssd.mvd.entity.modelForCadastr.Data;
+import com.ssd.mvd.entity.boardCrossing.Person;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.entity.modelForGai.*;
@@ -21,6 +22,7 @@ import java.util.concurrent.Semaphore;
 public final class EntitiesInstances {
     public static final Data CADASTR = new Data();
     public static final Pinpp PINPP = new Pinpp();
+    public static final Person PERSON = new Person();
     public static final Insurance INSURANCE = new Insurance();
     public static final Tonirovka TONIROVKA = new Tonirovka();
     public static final Semaphore SEMAPHORE = new Semaphore( 1 );

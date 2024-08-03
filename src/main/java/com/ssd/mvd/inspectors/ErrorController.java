@@ -1,9 +1,12 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entityForLogging.ErrorLog;
 import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.kafka.KafkaDataControl;
+import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
 
@@ -105,4 +108,19 @@ public class ErrorController extends CustomSerializer {
                 )
         );
     }
+
+    // сохраняем логи о пользователе который отправил запрос на сервис
+    protected final BiFunction<PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
+            ( psychologyCard, apiResponseModel ) -> {
+                KafkaDataControl
+                        .getKafkaDataControl()
+                        .sendMessage(
+                                new UserRequest(
+                                        psychologyCard,
+                                        apiResponseModel
+                                )
+                        );
+
+                return psychologyCard;
+            };
 }

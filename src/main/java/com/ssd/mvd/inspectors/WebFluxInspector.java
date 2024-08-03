@@ -12,9 +12,8 @@ public class WebFluxInspector extends Config {
             final Collection< T > collection,
             final Function< T, U > customFunction
     ) {
-        return Flux.fromStream(
-                        collection.stream()
-                ).parallel( super.checkDifference( collection.size() ) )
+        return Flux.fromStream( collection.stream() )
+                .parallel( super.checkDifference( collection.size() ) )
                 .runOn( Schedulers.parallel() )
                 .map( customFunction )
                 .sequential()
@@ -25,9 +24,8 @@ public class WebFluxInspector extends Config {
             final Collection< T > collection,
             final Predicate< T > customPredicate
     ) {
-        return Flux.fromStream(
-                        collection.stream()
-                ).parallel( super.checkDifference( collection.size() ) )
+        return Flux.fromStream( collection.stream() )
+                .parallel( super.checkDifference( collection.size() ) )
                 .runOn( Schedulers.parallel() )
                 .filter( customPredicate )
                 .sequential()

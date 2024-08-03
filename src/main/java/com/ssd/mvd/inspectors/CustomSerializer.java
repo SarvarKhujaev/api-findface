@@ -20,7 +20,7 @@ public class CustomSerializer extends DataValidationInspector {
         return this.getGson().toJson( object );
     }
 
-    protected final synchronized <T> T deserialize (
+    protected final synchronized <T extends CustomSerializer> T deserialize (
             final String value,
             final Class<T> clazz
     ) {

@@ -2,6 +2,7 @@ package com.ssd.mvd.entity.boardCrossing;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.EntitiesInstances;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
@@ -39,13 +40,6 @@ public final class CrossBoardInfo
 
     public CrossBoardInfo () {}
 
-    public static CrossBoardInfo generate (
-            final List< CrossBoard > crossBoards,
-            final Person person
-    ) {
-        return new CrossBoardInfo( crossBoards, person );
-    }
-
     private CrossBoardInfo (
             final List< CrossBoard > crossBoards,
             final Person person
@@ -71,7 +65,7 @@ public final class CrossBoardInfo
     public CrossBoardInfo generate (
             final ErrorResponse errorResponse
     ) {
-        return this.setErrorResponse( errorResponse );
+        return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
@@ -86,11 +80,8 @@ public final class CrossBoardInfo
                         )
                         : super.emptyList(),
                 response.contains( "transaction_id" )
-                        ? super.deserialize(
-                                response.substring( response.indexOf( "transaction_id" ) - 2, response.indexOf( "sex" ) + 9 ),
-                                Person.class
-                        )
-                        : new Person()
+                        ? EntitiesInstances.PERSON.generate( response )
+                        : EntitiesInstances.PERSON
         );
     }
 
