@@ -25,20 +25,23 @@ public class ErrorController extends CustomSerializer {
             .build();
 
     // saves error from external service
-    protected final BiFunction< String, Methods, Mono< ? > > saveErrorLog = ( errorMessage, methods ) -> {
+    protected final synchronized <T extends StringOperations> Mono<T> saveErrorLog (
+            final String errorMessage,
+            final EntityCommonMethods<T> entityCommonMethods
+    ) {
         KafkaDataControl
                 .getKafkaDataControl()
                 .sendMessage( new ErrorLog ( errorMessage ) );
 
         return super.convert(
-                methods.getEntityWithError(
+                entityCommonMethods.generate().generate(
                         this.error.apply(
                                 errorMessage,
                                 Errors.EXTERNAL_SERVICE_500_ERROR
                         )
                 )
         );
-    };
+    }
 
 
     // логирует любые ошибки

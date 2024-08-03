@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
 
+import lombok.EqualsAndHashCode;
 import reactor.netty.ByteBufMono;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClientResponse;
@@ -41,6 +42,7 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
+@EqualsAndHashCode( callSuper = true, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY )
 public final class SerDes extends RetryInspector implements ServiceCommonMethods {
     private Thread thread;
 
@@ -141,7 +143,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     ) {
         return switch ( res.status().code() ) {
             case 401 -> customFunction.apply( searchedValue );
-            case 501 | 502 | 503 -> ( Mono< T > ) super.saveErrorLog.apply( res.status().toString(), entityCommonMethods.getMethodName() );
+            case 501 | 502 | 503 -> super.saveErrorLog( res.status().toString(), entityCommonMethods );
             default -> super.checkResponse( res, content )
                     ? content
                     .asString()
@@ -264,7 +266,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
                 case 401 -> this.getUpdateTokens().get().getGetImageByPinfl().apply( pinfl );
-                case 501 | 502 | 503 -> ( Mono< String > ) super.saveErrorLog.apply( res.status().toString(), Methods.GET_IMAGE_BY_PINFL );
+                case 501 | 502 | 503 -> super.convert( res.status().toString() );
                 default -> super.checkResponse( res, content )
                         ? content
                         .asString()
