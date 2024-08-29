@@ -6,8 +6,10 @@ public final class RequestForCadaster implements RequestCommonMethods< RequestFo
     private String Pcadastre;
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public RequestForCadaster generate (
-            final String pcadastre
+            @lombok.NonNull final String pcadastre
     ) {
         this.Pcadastre = pcadastre;
         return this;

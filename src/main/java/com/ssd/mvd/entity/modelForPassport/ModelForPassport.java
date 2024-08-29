@@ -23,7 +23,9 @@ public final class ModelForPassport
         return this.errorResponse;
     }
 
-    public ModelForPassport setErrorResponse( final ErrorResponse errorResponse ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public ModelForPassport setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }
@@ -51,9 +53,11 @@ public final class ModelForPassport
     public ModelForPassport () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public ModelForPassport generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -64,30 +68,37 @@ public final class ModelForPassport
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForPassport generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
     public ModelForPassport generate() {
         return new ModelForPassport();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_MODEL_FOR_PASSPORT;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_PASSPORT_MODEL();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForPassport generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize( response, this.getClass() );
     }

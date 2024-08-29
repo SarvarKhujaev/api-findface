@@ -48,6 +48,8 @@ public final class ModelForCar
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     private ModelForCar setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
 
@@ -166,12 +168,14 @@ public final class ModelForCar
 
     private ErrorResponse errorResponse;
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public PsychologyCard save (
-            final Tuple3<
+            @lombok.NonNull final Tuple3<
                 Insurance,
                 Tonirovka,
                 DoverennostList > tuple3,
-            PsychologyCard psychologyCard
+            @lombok.NonNull final PsychologyCard psychologyCard
     ) {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
@@ -179,12 +183,14 @@ public final class ModelForCar
         return psychologyCard;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public ModelForCarList save (
-            final Tuple3<
+            @lombok.NonNull final Tuple3<
                     Insurance,
                     Tonirovka,
                     DoverennostList > tuple3,
-            final ModelForCarList modelForCarList
+            @lombok.NonNull final ModelForCarList modelForCarList
     ) {
         this.setDoverennostList( tuple3.getT3() );
         this.setInsurance( tuple3.getT1() );
@@ -196,9 +202,11 @@ public final class ModelForCar
     public ModelForCar () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public ModelForCar generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -209,30 +217,37 @@ public final class ModelForCar
     }
 
     @Override
+    @lombok.NonNull
     public ModelForCar generate() {
         return new ModelForCar();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_MODEL_FOR_CAR_LIST;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_VEHICLE_DATA();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCar generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize( response, this.getClass() );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCar generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.setErrorResponse( errorResponse );
     }

@@ -42,9 +42,11 @@ public final class Data
     public Data () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public Data generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -55,20 +57,25 @@ public final class Data
     }
 
     @Override
+    @lombok.NonNull
     public Data generate() {
         return new Data();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public Data generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public Data generate (
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize(
                 response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
@@ -77,11 +84,13 @@ public final class Data
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.CADASTER;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_CADASTR();
     }

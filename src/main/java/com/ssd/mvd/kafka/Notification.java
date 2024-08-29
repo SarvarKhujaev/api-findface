@@ -7,21 +7,29 @@ import com.google.gson.annotations.Expose;
 import java.util.Date;
 
 public final class Notification extends Config implements KafkaCommonMethods {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Notification setCallingTime( final Date callingTime ) {
         this.callingTime = callingTime;
         return this;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Notification setPinfl( final String pinfl ) {
         this.pinfl = pinfl;
         return this;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Notification setReason( final String reason ) {
         this.reason = reason;
         return this;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Notification setMethodName( final String methodName ) {
         this.methodName = methodName;
         return this;
@@ -37,12 +45,14 @@ public final class Notification extends Config implements KafkaCommonMethods {
     @Expose
     private String methodName;
 
-    @Override
+
+    @lombok.NonNull
     public String getTopicName() {
         return super.getERROR_LOGS();
     }
 
-    @Override
+
+    @lombok.NonNull
     public String getSuccessMessage() {
         return String.join(
                 " ",
@@ -54,7 +64,8 @@ public final class Notification extends Config implements KafkaCommonMethods {
         );
     }
 
-    @Override
+
+    @lombok.NonNull
     public String getCompletedMessage() {
         return String.join(
                 " ",

@@ -22,6 +22,7 @@ public enum Methods {
 
     // for RequestController
     GET_PERSON_TOTAL_DATA_BY_FIO,
+    GET_PERSONAL_CADASTOR_INITIAL,
 
     // for Popilon service
     GET_FACE_CARD,

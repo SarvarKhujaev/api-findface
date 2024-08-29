@@ -58,21 +58,26 @@ public final class PersonTotalDataByFIO
     }
 
     @Override
+    @lombok.NonNull
     public PersonTotalDataByFIO generate() {
         return new PersonTotalDataByFIO();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public PersonTotalDataByFIO generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return new PersonTotalDataByFIO( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public PersonTotalDataByFIO generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return new PersonTotalDataByFIO(
                 super.error.apply(
@@ -83,6 +88,7 @@ public final class PersonTotalDataByFIO
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_PERSON_TOTAL_DATA_BY_FIO;
     }

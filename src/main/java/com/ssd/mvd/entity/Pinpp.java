@@ -45,6 +45,8 @@ public final class Pinpp
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Pinpp setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
@@ -72,9 +74,11 @@ public final class Pinpp
     public Pinpp () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public Pinpp generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -85,30 +89,37 @@ public final class Pinpp
     }
 
     @Override
+    @lombok.NonNull
     public Pinpp generate() {
         return new Pinpp();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Pinpp generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Pinpp generate (
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize( response, this.getClass() );
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_PINPP;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_PINPP();
     }

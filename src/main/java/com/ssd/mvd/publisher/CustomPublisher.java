@@ -1,8 +1,9 @@
 package com.ssd.mvd.publisher;
 
-import com.ssd.mvd.inspectors.CustomSerializer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+
 import com.ssd.mvd.interfaces.KafkaCommonMethods;
+import com.ssd.mvd.inspectors.CustomSerializer;
 
 import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
@@ -12,13 +13,13 @@ public final class CustomPublisher extends CustomSerializer implements Publisher
     private final ProducerRecord< String, String > producerRecord;
 
     public CustomPublisher(
-            final KafkaCommonMethods kafkaCommonMethods
+            @lombok.NonNull final KafkaCommonMethods kafkaCommonMethods
     ) {
         this.producerRecord = new ProducerRecord<>( kafkaCommonMethods.getTopicName(), super.serialize( kafkaCommonMethods ) );
     }
 
     @Override
-    public void subscribe( final Subscriber subscriber ) {
+    public void subscribe( @lombok.NonNull final Subscriber subscriber ) {
         subscriber.onSubscribe( new Subscription() {
                 @Override
                 public void request( final long l ) {

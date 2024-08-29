@@ -14,6 +14,7 @@ import lombok.extern.jackson.Jacksonized;
 import java.util.List;
 
 @Jacksonized
+@lombok.Builder
 public final class ModelForAddress
         extends Config
         implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
@@ -21,6 +22,8 @@ public final class ModelForAddress
         return this.PermanentRegistration;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForAddress setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
@@ -44,19 +47,22 @@ public final class ModelForAddress
     public ModelForAddress () {}
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName () {
         return Methods.GET_MODEL_FOR_ADDRESS;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_MODEL_FOR_ADDRESS();
     }
 
     @Override
+    @lombok.NonNull
     public ModelForAddress generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -67,23 +73,28 @@ public final class ModelForAddress
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForAddress generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForAddress generate (
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize(
                 response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
-                ModelForAddress.class
+                this.getClass()
         );
     }
 
     @Override
+    @lombok.NonNull
     public ModelForAddress generate () {
         return new ModelForAddress();
     }

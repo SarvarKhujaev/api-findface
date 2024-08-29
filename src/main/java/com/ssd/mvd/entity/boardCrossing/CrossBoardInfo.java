@@ -41,17 +41,19 @@ public final class CrossBoardInfo
     public CrossBoardInfo () {}
 
     private CrossBoardInfo (
-            final List< CrossBoard > crossBoards,
-            final Person person
+            @lombok.NonNull final List< CrossBoard > crossBoards,
+            @lombok.NonNull final Person person
     ) {
         this.setData( super.newList() );
         this.getData().add( com.ssd.mvd.entity.boardCrossing.Data.generate( crossBoards, person ) );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public CrossBoardInfo generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.setErrorResponse(
                 super.error.apply(
@@ -62,13 +64,17 @@ public final class CrossBoardInfo
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public CrossBoardInfo generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public CrossBoardInfo generate (
             final String response
     ) {
@@ -86,16 +92,19 @@ public final class CrossBoardInfo
     }
 
     @Override
+    @lombok.NonNull
     public CrossBoardInfo generate () {
         return new CrossBoardInfo();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_CROSS_BOARDING;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_BOARD_CROSSING();
     }

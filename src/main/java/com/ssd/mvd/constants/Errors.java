@@ -1,5 +1,7 @@
 package com.ssd.mvd.constants;
 
+import com.ssd.mvd.inspectors.StringOperations;
+
 public enum Errors {
     WRONG_PARAMS {
         @Override
@@ -7,7 +9,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "wrong params were received",
                     error
             );
@@ -19,7 +21,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "Data for: ",
                     error,
                     " was not found"
@@ -32,7 +34,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "GAI token is unavailable",
                     error
             );
@@ -44,7 +46,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "Service: ",
                     error,
                     " does not return response!!!"
@@ -57,7 +59,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     error
             );
         }
@@ -68,7 +70,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "Error in external service: ",
                     error
             );
@@ -80,7 +82,7 @@ public enum Errors {
                 final String error
         ) {
             return String.join(
-                    " ",
+                    StringOperations.SPACE,
                     "Service: ",
                     error,
                     " does not return response!!!"

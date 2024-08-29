@@ -5,8 +5,10 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 
 public class RetryInspector extends WebFluxInspector {
-    protected final synchronized <T> Retry retry (
-            final EntityCommonMethods<T> entityCommonMethods
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
+    protected final synchronized <T extends StringOperations> Retry retry (
+            @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods
     ) {
         return Retry.backoff( 2, Duration.ofSeconds( 1 ) )
                 .doBeforeRetry( retrySignal -> super.logging( retrySignal, entityCommonMethods.getMethodName() ) )

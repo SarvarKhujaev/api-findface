@@ -8,9 +8,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 public class WebFluxInspector extends Config {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     protected final synchronized <T, U> Flux< U > convertValuesToParallelFluxWithMap (
-            final Collection< T > collection,
-            final Function< T, U > customFunction
+            @lombok.NonNull final Collection< T > collection,
+            @lombok.NonNull final Function< T, U > customFunction
     ) {
         return Flux.fromStream( collection.stream() )
                 .parallel( super.checkDifference( collection.size() ) )
@@ -20,9 +22,11 @@ public class WebFluxInspector extends Config {
                 .publishOn( Schedulers.single() );
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     protected final synchronized <T> Flux< T > convertValuesToParallelFluxWithFilter(
-            final Collection< T > collection,
-            final Predicate< T > customPredicate
+            @lombok.NonNull final Collection< T > collection,
+            @lombok.NonNull final Predicate< T > customPredicate
     ) {
         return Flux.fromStream( collection.stream() )
                 .parallel( super.checkDifference( collection.size() ) )

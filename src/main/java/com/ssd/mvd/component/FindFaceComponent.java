@@ -18,6 +18,7 @@ public final class FindFaceComponent
     private final RSocketRequester requester;
     private static FindFaceComponent component = new FindFaceComponent();
 
+    @lombok.NonNull
     public static FindFaceComponent getInstance () {
         return component != null ? component : ( component = new FindFaceComponent() );
     }

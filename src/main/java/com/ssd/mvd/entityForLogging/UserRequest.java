@@ -37,8 +37,8 @@ public final class UserRequest extends Config implements KafkaCommonMethods {
     private final static String microserviceName = "api-findface";
 
     public UserRequest (
-            final PsychologyCard psychologyCard,
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final PsychologyCard psychologyCard,
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         this.setCreatedAt( super.newDate().getTime() );
         this.setPersonInfo( new PersonInfo( psychologyCard ) );
@@ -51,11 +51,13 @@ public final class UserRequest extends Config implements KafkaCommonMethods {
     }
 
     @Override
+    @lombok.NonNull
     public String getTopicName() {
         return super.getADMIN_PANEL();
     }
 
     @Override
+    @lombok.NonNull
     public String getSuccessMessage() {
         return String.join(
                 " ",
@@ -71,6 +73,7 @@ public final class UserRequest extends Config implements KafkaCommonMethods {
     }
 
     @Override
+    @lombok.NonNull
     public String getCompletedMessage() {
         return String.join(
                 " ",

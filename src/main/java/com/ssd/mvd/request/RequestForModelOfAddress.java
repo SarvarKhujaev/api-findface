@@ -6,8 +6,10 @@ public final class RequestForModelOfAddress implements RequestCommonMethods< Req
     private String Pcitizen;
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public RequestForModelOfAddress generate (
-            final String pcitizen
+            @lombok.NonNull final String pcitizen
     ) {
         return new RequestForModelOfAddress( pcitizen );
     }

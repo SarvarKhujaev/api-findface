@@ -19,6 +19,8 @@ public final class ModelForCarList
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCarList setErrorResponse ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
@@ -28,6 +30,8 @@ public final class ModelForCarList
         return this.modelForCarList;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCarList setModelForCarList (
             final List< ModelForCar > modelForCarList
     ) {
@@ -42,9 +46,11 @@ public final class ModelForCarList
     public ModelForCarList () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public ModelForCarList generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate(
                 super.error.apply(
@@ -55,30 +61,37 @@ public final class ModelForCarList
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCarList generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
     public ModelForCarList generate() {
         return new ModelForCarList();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_MODEL_FOR_CAR_LIST;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_MODEL_FOR_CAR_LIST();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCarList generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return this.generate().setModelForCarList( this.stringToArrayList( response, ModelForCar[].class ) );
     }

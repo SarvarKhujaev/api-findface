@@ -16,7 +16,7 @@ public class DataValidationInspector extends CollectionsInspector {
     protected DataValidationInspector () {}
 
     protected final synchronized <T> Mono< T > convert ( final T o ) {
-        return this.objectIsNotNull( o ) ? Mono.just( o ) : Mono.empty();
+        return Mono.justOrEmpty( o );
     }
 
     protected final synchronized boolean objectIsNotNull ( final Object o ) {

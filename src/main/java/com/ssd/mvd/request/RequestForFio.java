@@ -9,7 +9,9 @@ public final class RequestForFio implements RequestCommonMethods< RequestForFio,
     private String Surname;
     private String Patronym;
 
-    public RequestForFio generate ( final FIO fio ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public RequestForFio generate ( @lombok.NonNull final FIO fio ) {
         return new RequestForFio( fio );
     }
 

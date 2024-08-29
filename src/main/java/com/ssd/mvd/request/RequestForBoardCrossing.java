@@ -12,11 +12,13 @@ public final class RequestForBoardCrossing implements RequestCommonMethods< Requ
     private final char is_consent = 'Y';
 
     @Override
-    public RequestForBoardCrossing generate ( final String value ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public RequestForBoardCrossing generate ( @lombok.NonNull final String value ) {
         return new RequestForBoardCrossing( value );
     }
 
-    private RequestForBoardCrossing ( final String value ) {
+    private RequestForBoardCrossing ( @lombok.NonNull final String value ) {
         this.birth_date = value.split( "_" )[1];
         this.document = value.split( "_" )[0];
     }

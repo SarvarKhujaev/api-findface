@@ -29,6 +29,8 @@ public final class Insurance
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Insurance setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
@@ -39,9 +41,11 @@ public final class Insurance
     public Insurance () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public Insurance generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -52,23 +56,28 @@ public final class Insurance
     }
 
     @Override
+    @lombok.NonNull
     public Insurance generate() {
         return new Insurance();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_INSURANCE;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_FOR_INSURANCE();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Insurance generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return !response.contains( "топилмади" )
                 ? super.deserialize( response, this.getClass() )
@@ -76,8 +85,10 @@ public final class Insurance
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Insurance generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }

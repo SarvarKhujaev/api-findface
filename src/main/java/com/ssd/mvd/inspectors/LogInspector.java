@@ -6,12 +6,15 @@ import com.ssd.mvd.constants.Methods;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.springframework.scheduling.annotation.Async;
 import reactor.util.retry.Retry;
 
 public class LogInspector extends ErrorController {
     private final static Logger LOGGER = LogManager.getLogger( "LOGGER_WITH_JSON_LAYOUT" );
 
-    protected final synchronized void logging ( final Object o ) {
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging ( @lombok.NonNull final Object o ) {
         LOGGER.info(
                 String.join(
                         EMPTY,
@@ -22,10 +25,12 @@ public class LogInspector extends ErrorController {
         );
     }
 
-    protected final synchronized <T> void logging (
-            final Throwable throwable,
-            final EntityCommonMethods<T> entityCommonMethods,
-            final String params
+    @Async( value = " extends" )
+    @lombok.Synchronized
+    protected synchronized <T extends StringOperations> void logging (
+            @lombok.NonNull final Throwable throwable,
+            @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods,
+            @lombok.NonNull final String params
     ) {
         LOGGER.error(
                 String.join(
@@ -45,8 +50,10 @@ public class LogInspector extends ErrorController {
         super.saveErrorLog( throwable.getMessage() );
     }
 
-    protected final synchronized void logging (
-            final Class<?> clazz
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging (
+            @lombok.NonNull final Class<?> clazz
     ) {
         LOGGER.info(
                 String.join(
@@ -58,9 +65,11 @@ public class LogInspector extends ErrorController {
         );
     }
 
-    protected final synchronized void logging (
-            final Retry.RetrySignal retrySignal,
-            final Methods methods
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging (
+            @lombok.NonNull final Retry.RetrySignal retrySignal,
+            @lombok.NonNull final Methods methods
     ) {
         LOGGER.info(
                 String.join(
@@ -72,9 +81,11 @@ public class LogInspector extends ErrorController {
         );
     }
 
-    protected  final synchronized void logging (
-            final Methods methods,
-            final Retry.RetrySignal retrySignal
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging (
+            @lombok.NonNull final Methods methods,
+            @lombok.NonNull final Retry.RetrySignal retrySignal
     ) {
         LOGGER.info(
                 String.join(
@@ -87,9 +98,11 @@ public class LogInspector extends ErrorController {
     }
 
     // log on error
-    protected  final synchronized void logging (
-            final Methods method,
-            final Object o
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging (
+            @lombok.NonNull final Methods method,
+            @lombok.NonNull final Object o
     ) {
         LOGGER.info(
                 String.join(
@@ -102,7 +115,9 @@ public class LogInspector extends ErrorController {
     }
 
     // log on subscribe
-    protected  final synchronized void logging ( final Throwable error ) {
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging ( @lombok.NonNull final Throwable error ) {
         LOGGER.error(
                 String.join(
                         EMPTY,
@@ -112,7 +127,9 @@ public class LogInspector extends ErrorController {
         );
     }
 
-    protected  final synchronized void logging ( final String method ) {
+    @Async( value = "logging" )
+    @lombok.Synchronized
+    protected synchronized void logging ( @lombok.NonNull final String method ) {
         LOGGER.info(
                 String.join(
                         EMPTY,

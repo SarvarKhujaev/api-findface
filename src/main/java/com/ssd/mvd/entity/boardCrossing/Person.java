@@ -52,27 +52,34 @@ public final class Person extends CustomSerializer implements EntityCommonMethod
     public Person () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Person generate(
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
-        return null;
+        return this.generate();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public Person generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
-        return null;
+        return this.generate();
     }
 
     @Override
+    @lombok.NonNull
     public Person generate() {
         return new Person();
     }
 
     @Override
-    public Person generate( final String response ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public Person generate( @lombok.NonNull final String response ) {
         return super.deserialize(
                 response.substring( response.indexOf( "transaction_id" ) - 2, response.indexOf( "sex" ) + 9 ),
                 this.getClass()

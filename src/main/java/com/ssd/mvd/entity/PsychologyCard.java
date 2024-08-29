@@ -91,16 +91,11 @@ public final class PsychologyCard
         return this.errorResponse;
     }
 
-    public PsychologyCard setErrorResponse ( final ErrorResponse errorResponse ) {
-        this.errorResponse = errorResponse;
-        return this;
-    }
-
     public ModelForPassport getModelForPassport() {
         return this.modelForPassport;
     }
 
-    public void setModelForPassport ( final ModelForPassport modelForPassport ) {
+    public void setModelForPassport ( @lombok.NonNull final ModelForPassport modelForPassport ) {
         this.modelForPassport = modelForPassport;
     }
 
@@ -108,55 +103,77 @@ public final class PsychologyCard
         return this.modelForCadastr;
     }
 
-    public void setModelForCadastr ( final Data modelForCadastr ) {
+    public void setModelForCadastr ( @lombok.NonNull final Data modelForCadastr ) {
         this.modelForCadastr = modelForCadastr;
     }
 
-    public PsychologyCard save ( final Results results ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PsychologyCard setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+        return this;
+    }
+
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PsychologyCard save ( @lombok.NonNull final Results results ) {
         this.setViolationList( results.getViolationList() );
         this.setPapilonData( results.getResults() );
         return this;
     }
 
-    public PsychologyCard save ( final com.ssd.mvd.entity.modelForCadastr.Data data ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PsychologyCard save ( @lombok.NonNull final com.ssd.mvd.entity.modelForCadastr.Data data ) {
         this.setModelForCadastr( data );
         return this;
     }
 
-    public PsychologyCard save ( final Tuple2< ModelForAddress, ModelForPassport > tuple2 ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PsychologyCard save ( @lombok.NonNull final Tuple2< ModelForAddress, ModelForPassport > tuple2 ) {
         this.setModelForPassport( tuple2.getT2() );
         this.setModelForAddress( tuple2.getT1() );
         return this;
     }
 
     // for Passport request
-    public PsychologyCard save ( final ModelForPassport data ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PsychologyCard save ( @lombok.NonNull final ModelForPassport data ) {
         this.setModelForPassport( data );
         return this;
     }
 
     public PsychologyCard () {}
 
-    public static PsychologyCard generate ( final Results results ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> _" )
+    public static PsychologyCard generate ( @lombok.NonNull final Results results ) {
         return new PsychologyCard( results );
     }
 
     @Override
+    @lombok.NonNull
     public PsychologyCard generate() {
         return new PsychologyCard();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public PsychologyCard generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public PsychologyCard generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -166,16 +183,20 @@ public final class PsychologyCard
         );
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     public static PsychologyCard generate (
-            final Results results,
-            final Tuple2< Pinpp, String > tuple
+            @lombok.NonNull final Results results,
+            @lombok.NonNull final Tuple2< Pinpp, String > tuple
     ) {
         return new PsychologyCard( results, tuple );
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     public static PsychologyCard generate (
-            final ModelForPassport data,
-            final Tuple5<
+            @lombok.NonNull final ModelForPassport data,
+            @lombok.NonNull final Tuple5<
                     Pinpp,
                     String,
                     ModelForCarList,
@@ -186,8 +207,10 @@ public final class PsychologyCard
         return new PsychologyCard( data, tuple );
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> _" )
     public static PsychologyCard generate (
-            final Tuple4<
+            @lombok.NonNull final Tuple4<
                     Pinpp,
                     String,
                     ModelForCarList,
@@ -197,24 +220,22 @@ public final class PsychologyCard
         return new PsychologyCard( tuple );
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> _" )
     public static PsychologyCard generate (
-            final Tuple2< Pinpp, String > tuple
+            @lombok.NonNull final Tuple2< Pinpp, String > tuple
     ) {
         return new PsychologyCard( tuple );
     }
 
-    private PsychologyCard ( final Results results ) {
+    private PsychologyCard ( @lombok.NonNull final Results results ) {
         this.setPapilonData( results.getResults() );
         this.setViolationList( results.getViolationList() );
     }
 
-    private PsychologyCard ( final ErrorResponse errorResponse ) {
-        this.setErrorResponse( errorResponse );
-    }
-
     private PsychologyCard(
-            final Results results,
-            final Tuple2< Pinpp, String > tuple
+            @lombok.NonNull final Results results,
+            @lombok.NonNull final Tuple2< Pinpp, String > tuple
     ) {
         this.setViolationList( results.getViolationList() );
         this.setPapilonData( results.getResults() );
@@ -224,8 +245,8 @@ public final class PsychologyCard
 
     // for Passport request
     private PsychologyCard (
-            final ModelForPassport data,
-            final Tuple5<
+            @lombok.NonNull final ModelForPassport data,
+            @lombok.NonNull final Tuple5<
                     Pinpp,
                     String,
                     ModelForCarList,
@@ -244,7 +265,7 @@ public final class PsychologyCard
 
     // for PINFL request
     private PsychologyCard (
-            final Tuple4<
+            @lombok.NonNull final Tuple4<
                     Pinpp,
                     String,
                     ModelForCarList,
@@ -258,7 +279,7 @@ public final class PsychologyCard
     }
 
     // for PINFL request
-    private PsychologyCard ( final Tuple2< Pinpp, String > tuple ) {
+    private PsychologyCard ( @lombok.NonNull final Tuple2< Pinpp, String > tuple ) {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() );
     }

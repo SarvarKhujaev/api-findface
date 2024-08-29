@@ -7,7 +7,9 @@ public final class RequestForPassport implements RequestCommonMethods< RequestFo
     private String BirthDate;
 
     @Override
-    public RequestForPassport generate ( final String value ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public RequestForPassport generate ( @lombok.NonNull final String value ) {
         return new RequestForPassport( value );
     }
 

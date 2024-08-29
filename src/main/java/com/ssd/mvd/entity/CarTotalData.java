@@ -55,7 +55,7 @@ public final class CarTotalData
     }
 
     private CarTotalData setErrorResponse (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         this.errorResponse = errorResponse;
         return this;
@@ -74,13 +74,17 @@ public final class CarTotalData
 
     private ErrorResponse errorResponse;
 
-    public CarTotalData save ( final PsychologyCard psychologyCard ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
+    public CarTotalData save ( @lombok.NonNull final PsychologyCard psychologyCard ) {
         this.setPsychologyCard( psychologyCard );
         return this;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public static CarTotalData generate (
-            final ModelForCar modelForCar
+            @lombok.NonNull final ModelForCar modelForCar
     ) {
         return new CarTotalData( modelForCar );
     }
@@ -92,16 +96,20 @@ public final class CarTotalData
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public CarTotalData generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public CarTotalData generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -112,12 +120,15 @@ public final class CarTotalData
     }
 
     @Override
+    @lombok.NonNull
     public CarTotalData generate() {
         return new CarTotalData();
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public static CarTotalData generate (
-            final Tuple5<
+            @lombok.NonNull final Tuple5<
                     Tonirovka,
                     ModelForCar,
                     DoverennostList,
@@ -128,7 +139,7 @@ public final class CarTotalData
     }
 
     private CarTotalData (
-            final Tuple5<
+            @lombok.NonNull final Tuple5<
                 Tonirovka,
                 ModelForCar,
                 DoverennostList,

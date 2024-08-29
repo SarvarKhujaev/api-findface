@@ -10,21 +10,23 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
     private String errorMessage;
 
     @Expose
-    private final static String integratedService = IntegratedServiceApis.OVIR.getName();
+    private final static String INTEGRATED_SERVICE = IntegratedServiceApis.OVIR.getName();
 
     @Expose
-    private final static String integratedServiceApiDescription = IntegratedServiceApis.OVIR.getDescription();
+    private final static String INTEGRATED_SERVICE_API_DESCRIPTION = IntegratedServiceApis.OVIR.getDescription();
 
-    public ErrorLog ( final String errorMessage ) {
+    public ErrorLog ( @lombok.NonNull final String errorMessage ) {
         this.errorMessage = errorMessage;
     }
 
     @Override
+    @lombok.NonNull
     public String getTopicName() {
         return super.getADMIN_PANEL_ERROR_LOG();
     }
 
     @Override
+    @lombok.NonNull
     public String getSuccessMessage() {
         return String.join(
                 " ",
@@ -33,12 +35,13 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
                 this.errorMessage,
                 " at: ",
                 super.newDate().toString(),
-                integratedService,
-                integratedServiceApiDescription
+                INTEGRATED_SERVICE,
+                INTEGRATED_SERVICE_API_DESCRIPTION
         );
     }
 
     @Override
+    @lombok.NonNull
     public String getCompletedMessage() {
         return String.join(
                 " ",
@@ -47,8 +50,8 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
                 this.errorMessage,
                 " at: ",
                 super.newDate().toString(),
-                integratedService,
-                integratedServiceApiDescription
+                INTEGRATED_SERVICE,
+                INTEGRATED_SERVICE_API_DESCRIPTION
         );
     }
 }

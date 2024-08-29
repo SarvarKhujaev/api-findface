@@ -11,14 +11,14 @@ public final class CustomPublisherForRequest extends CustomSerializer implements
     private final String value;
 
     public <T, U> CustomPublisherForRequest (
-            final U object,
-            final RequestCommonMethods< T, U > request
+            @lombok.NonNull final U object,
+            @lombok.NonNull final RequestCommonMethods< T, U > request
     ) {
         this.value = super.serialize( request.generate( object ) );
     }
 
     @Override
-    public void subscribe( final Subscriber subscriber ) {
+    public void subscribe( @lombok.NonNull final Subscriber subscriber ) {
         subscriber.onSubscribe( new Subscription() {
                 @Override
                 public void request( final long l ) {

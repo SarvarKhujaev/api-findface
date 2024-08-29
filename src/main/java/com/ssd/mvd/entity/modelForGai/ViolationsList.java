@@ -18,11 +18,15 @@ public final class ViolationsList
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     private ViolationsList setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     private ViolationsList setViolationsInformationsList(
             final List< ViolationsInformation > violationsInformationsList
     ) {
@@ -42,14 +46,17 @@ public final class ViolationsList
     public ViolationsList () {}
 
     @Override
+    @lombok.NonNull
     public ViolationsList generate() {
         return new ViolationsList();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public ViolationsList generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -60,25 +67,31 @@ public final class ViolationsList
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ViolationsList generate (
-            final ErrorResponse errorResponse
+            @lombok.NonNull final ErrorResponse errorResponse
     ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ViolationsList generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return this.generate().setViolationsInformationsList( super.stringToArrayList( response, ViolationsInformation[].class ) );
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_VIOLATION_LIST;
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_VIOLATION_LIST();
     }

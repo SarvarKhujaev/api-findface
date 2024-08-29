@@ -681,7 +681,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     }
 
     @Override
-    public void close( final Throwable throwable ) {
+    public void close( @lombok.NonNull final Throwable throwable ) {
         super.logging( throwable );
         this.close();
     }

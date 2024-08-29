@@ -35,9 +35,9 @@ public final class RequestController extends LogInspector {
 
     @MessageMapping ( value = "GET_CAR_TONIROVKA" )
     public Mono< Tonirovka > getCarTonirovka (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
-        super.logging( "Request for: " + Methods.GET_TONIROVKA + " : " + apiResponseModel.getStatus().getMessage() );
+        super.logging( "Request for: " + Methods.GET_TONIROVKA + SPACE_WITH_DOUBLE_DOTS + apiResponseModel.getStatus().getMessage() );
 
         return Config.flag
                 ? SerDes
@@ -50,8 +50,11 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.TONIROVKA.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" ) // возвращает данные по ФИО человека
-    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( final FIO fio ) {
+    @SuppressWarnings(
+            value = "возвращает данные по ФИО человека"
+    )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_FIO" )
+    public Mono< PersonTotalDataByFIO > getPersonTotalDataByFIO ( @lombok.NonNull final FIO fio ) {
         return Config.flag
                 ? SerDes
                 .getSerDes()
@@ -67,9 +70,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_CAR_TOTAL_DATA" ) // возвращает данные по номеру машины
+    @SuppressWarnings( value = "возвращает данные по номеру машины" )
+    @MessageMapping ( value = "GET_CAR_TOTAL_DATA" )
     public Mono< CarTotalData > getCarTotalData (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
 
@@ -119,9 +123,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" ) // возвращает данные по фотографии
+    @SuppressWarnings( value = "возвращает данные по фотографии" )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA" )
     public Mono< PsychologyCard > getPersonTotalData (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
@@ -158,9 +163,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
     }
 
-    @MessageMapping ( value = "GET_PERSONAL_CADASTOR" ) // возвращает данные по номеру кадастра
+    @SuppressWarnings( value = "возвращает данные по номеру кадастра" )
+    @MessageMapping ( value = "GET_PERSONAL_CADASTOR" )
     public Flux< PsychologyCard > getPersonalCadastor (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "Cadaster value: " + apiResponseModel.getStatus().getMessage() );
 
@@ -196,10 +202,12 @@ public final class RequestController extends LogInspector {
                 : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
     }
 
-    // возвращает данные по номеру машины в слуцчае если у человека роль IMITATION
+    @SuppressWarnings(
+            value = "возвращает данные по номеру машины в слуцчае если у человека роль IMITATION"
+    )
     @MessageMapping ( value = "GET_CAR_TOTAL_DATA_BY_PINFL" )
     public Mono< CarTotalData > getCarTotalDataByPinfl (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
 
@@ -240,9 +248,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" ) // возвращает данные по Пинфл
+    @SuppressWarnings( value = "возвращает данные по Пинфл" )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL" )
     public Mono< PsychologyCard > getPersonTotalDataByPinfl (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "PINFL: " + apiResponseModel.getStatus().getMessage() );
 
@@ -260,9 +269,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" ) // возвращает данные по номеру паспорта
+    @SuppressWarnings( value = "возвращает данные по номеру паспорта" )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PASSPORT_AND_BIRTHDATE" )
     public Mono< PsychologyCard > getPersonDataByPassportSeriesAndBirthdate (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
             return super.convert( EntitiesInstances.PSYCHOLOGY_CARD );
@@ -290,10 +300,10 @@ public final class RequestController extends LogInspector {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // данные по авто
-
-    @MessageMapping ( value = "GET_CAR_DATA_BY_GOS_NUMBER_INITIAL" ) // используется при запросе по номеру машины
+    @SuppressWarnings( value = "используется при запросе по номеру машины" )
+    @MessageMapping ( value = "GET_CAR_DATA_BY_GOS_NUMBER_INITIAL" )
     public Mono< CarTotalData > GET_CAR_DATA_BY_GOS_NUMBER_INITIAL (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "Gos number: " + apiResponseModel.getStatus().getMessage() );
 
@@ -315,9 +325,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_MODEL_FOR_CAR_LIST_INITIAL" ) // используется при запросе по пинфл человека
+    @SuppressWarnings( value = "используется при запросе по пинфл человека" )
+    @MessageMapping ( value = "GET_MODEL_FOR_CAR_LIST_INITIAL" )
     public Mono< ModelForCarList > GET_MODEL_FOR_CAR_LIST_INITIAL (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "PINFL in GET_CAR_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
 
@@ -341,9 +352,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.MODEL_FOR_CAR_LIST.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_FINES_FOR_DRIVING" ) // возвращает все штрафы от гаи по номеру машины
+    @SuppressWarnings( value = "возвращает все штрафы от гаи по номеру машины" )
+    @MessageMapping ( value = "GET_PERSON_FINES_FOR_DRIVING" )
     public Mono< ViolationsList > GET_PERSON_FINES_FOR_DRIVING (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         return Config.flag
                 ? SerDes
@@ -353,8 +365,7 @@ public final class RequestController extends LogInspector {
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
                         throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.VIOLATIONS_LIST )
-                )
-                .onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST ) )
+                ).onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST ) )
                 : super.convert( EntitiesInstances.VIOLATIONS_LIST.generate( super.getErrorResponse.get() ) );
     }
 
@@ -362,9 +373,9 @@ public final class RequestController extends LogInspector {
 
     @MessageMapping ( value = "GET_PINPP" )
     public Mono< Pinpp > getPINPP (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
-        super.logging( "Request for: " + Methods.GET_PINPP + " : " + apiResponseModel.getStatus().getMessage() );
+        super.logging( "Request for: " + Methods.GET_PINPP + SPACE_WITH_DOUBLE_DOTS + apiResponseModel.getStatus().getMessage() );
 
         return Config.flag
                 ? SerDes
@@ -378,9 +389,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.PINPP.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" ) // возвращает список правонарушений гражданина
+    @SuppressWarnings( value = "возвращает список правонарушений гражданина" )
+    @MessageMapping ( value = "GET_VIOLATION_LIST_BY_PINFL" )
     public Mono< List > GET_VIOLATION_LIST_BY_PINFL (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         return Config.flag
                 ? super.checkParam( apiResponseModel.getStatus().getMessage() )
@@ -398,9 +410,9 @@ public final class RequestController extends LogInspector {
 
     @MessageMapping ( value = "GET_CROSS_BOARDING" )
     public Mono< CrossBoardInfo > GET_PERSON_BOARD_CROSSING (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
-        super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + " : " + apiResponseModel.getStatus().getMessage() );
+        super.logging( "Request for: " + Methods.GET_CROSS_BOARDING + SPACE_WITH_DOUBLE_DOTS + apiResponseModel.getStatus().getMessage() );
 
         return Config.flag
                 ? SerDes
@@ -422,9 +434,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.CROSS_BOARD_INFO.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" ) // возвращает временную или постоянную прописку человека
+    @SuppressWarnings( value = "возвращает временную или постоянную прописку человека" )
+    @MessageMapping ( value = "GET_TEMPORARY_OR_PERMANENT_REGISTRATION" )
     public Mono< ModelForAddress > GET_TEMPORARY_REGISTRATION (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "pCitizen value in GET_TEMPORARY_OR_PERMANENT_REGISTRATION: " + apiResponseModel.getStatus().getMessage() );
 
@@ -440,11 +453,12 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.MODEL_FOR_ADDRESS.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" ) // возвращает данные по номеру кадастра
+    @SuppressWarnings( value = "возвращает данные по номеру кадастра" )
+    @MessageMapping ( value = "GET_PERSONAL_CADASTOR_INITIAL" )
     public Flux< PsychologyCard > GET_PERSONAL_CADASTOR_INITIAL (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
-        super.logging( "Cadaster value in GET_PERSONALINITIAL_CADASTOR: " + apiResponseModel.getStatus().getMessage() );
+        super.logging( "Cadaster value in: : " + Methods.GET_PERSONAL_CADASTOR_INITIAL + apiResponseModel.getStatus().getMessage() );
 
         return Config.flag
                 ? SerDes
@@ -484,9 +498,10 @@ public final class RequestController extends LogInspector {
                 : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_INITIAL" ) // возвращает данные по фотографии
+    @SuppressWarnings( value = "возвращает данные по фотографии" )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_INITIAL" )
     public Mono< PsychologyCard > GET_PERSON_INITIAL_TOTAL_DATA (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         String base64url = apiResponseModel.getStatus().getMessage();
         token = base64url.split( "@" )[ 1 ];
@@ -517,9 +532,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL" ) // возвращает данные по Пинфл
+    @SuppressWarnings( value = "возвращает данные по Пинфл" )
+    @MessageMapping ( value = "GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL" )
     public Mono< PsychologyCard > GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         super.logging( "PINFL in GET_PERSON_TOTAL_DATA_BY_PINFL_INITIAL: " + apiResponseModel.getStatus().getMessage() );
 
@@ -537,9 +553,10 @@ public final class RequestController extends LogInspector {
                 : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
     }
 
-    @MessageMapping ( value = "GET_PERSON_DATA_BY_PASSPORT_AND_BIRTHDATE_INITIAL" ) // возвращает данные по номеру паспорта
+    @SuppressWarnings( value = "возвращает данные по номеру паспорта" )
+    @MessageMapping ( value = "GET_PERSON_DATA_BY_PASSPORT_AND_BIRTHDATE_INITIAL" )
     public Mono< PsychologyCard > GET_PERSON_INITIAL_DATA_BY_PASSPORT_AND_BIRTHDATE (
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
             return super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
@@ -547,7 +564,7 @@ public final class RequestController extends LogInspector {
 
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
 
-        super.logging( "Passport: " + strings[0] + " : " + strings[1] );
+        super.logging( "Passport: " + strings[0] + SPACE_WITH_DOUBLE_DOTS + strings[1] );
 
         return Config.flag
                 ? SerDes

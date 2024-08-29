@@ -38,7 +38,7 @@ public final class KafkaDataControl extends Config implements ServiceCommonMetho
     }
 
     public void sendMessage (
-            final KafkaCommonMethods kafkaCommonMethods
+            @lombok.NonNull final KafkaCommonMethods kafkaCommonMethods
     ) {
         this.kafkaSender
                 .createOutbound()

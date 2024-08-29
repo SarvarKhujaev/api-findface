@@ -57,6 +57,8 @@ public final class Tonirovka
         return this.errorResponse;
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Tonirovka setErrorResponse( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
@@ -65,9 +67,11 @@ public final class Tonirovka
     public Tonirovka () {}
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
     public Tonirovka generate(
-            final String message,
-            final Errors errors
+            @lombok.NonNull final String message,
+            @lombok.NonNull final Errors errors
     ) {
         return this.generate().setErrorResponse(
                 super.error.apply(
@@ -78,28 +82,35 @@ public final class Tonirovka
     }
 
     @Override
+    @lombok.NonNull
     public Tonirovka generate() {
         return new Tonirovka();
     }
 
     @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Tonirovka generate(
-            final String response
+            @lombok.NonNull final String response
     ) {
         return super.deserialize( response, this.getClass() );
     }
 
     @Override
-    public Tonirovka generate ( final ErrorResponse errorResponse ) {
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public Tonirovka generate ( @lombok.NonNull final ErrorResponse errorResponse ) {
         return this.generate().setErrorResponse( errorResponse );
     }
 
     @Override
+    @lombok.NonNull
     public String getMethodApi() {
         return super.getAPI_FOR_TONIROVKA();
     }
 
     @Override
+    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_TONIROVKA;
     }

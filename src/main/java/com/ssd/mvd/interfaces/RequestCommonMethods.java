@@ -1,7 +1,6 @@
 package com.ssd.mvd.interfaces;
 
 public interface RequestCommonMethods< T, U > {
-    T generate (
-            final U value
-    );
+    @lombok.NonNull
+    T generate ( @lombok.NonNull final U value );
 }
