@@ -19,6 +19,9 @@ public interface EntityCommonMethods<T extends StringOperations> {
     EntityCommonMethods<T> generate ();
 
     @lombok.NonNull
+    T setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse );
+
+    @lombok.NonNull
     default Methods getMethodName () {
         return Methods.CAR_TOTAL_DATA;
     }

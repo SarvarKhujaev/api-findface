@@ -51,8 +51,8 @@ public final class PersonInfo extends DataValidationInspector {
     @Expose
     private String passportNumber;
 
-    public PersonInfo ( final PsychologyCard psychologyCard ) {
-        if ( psychologyCard.getForeignerList() == null ) {
+    public PersonInfo ( @lombok.NonNull final PsychologyCard psychologyCard ) {
+        if ( !super.isCollectionNotEmpty( psychologyCard.getForeignerList() ) ) {
             if ( super.objectIsNotNull( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
                 this.setCadastre( psychologyCard.getPinpp().getCadastre() );
@@ -60,56 +60,71 @@ public final class PersonInfo extends DataValidationInspector {
                 this.setFullname( super.joinString( psychologyCard.getPinpp() ) );
             }
 
-            this.setPassportNumber( super.checkPassport( psychologyCard.getModelForPassport() )
-                    ? psychologyCard
-                    .getModelForPassport()
-                    .getData()
-                    .getDocument()
-                    .getSerialNumber()
-                    : Errors.DATA_NOT_FOUND.name() );
+            this.setPassportNumber(
+                    super.checkPassport( psychologyCard.getModelForPassport() )
+                            ? psychologyCard
+                            .getModelForPassport()
+                            .getData()
+                            .getDocument()
+                            .getSerialNumber()
+                            : Errors.DATA_NOT_FOUND.name()
+            );
 
-            this.setAddress( super.check( psychologyCard.getModelForAddress() )
-                    ? psychologyCard
-                    .getModelForAddress()
-                    .getPermanentRegistration()
-                    .getPAddress()
-                    : Errors.DATA_NOT_FOUND.name() );
+            this.setAddress(
+                    super.check( psychologyCard.getModelForAddress() )
+                            ? psychologyCard
+                                .getModelForAddress()
+                                .getPermanentRegistration()
+                                .getPAddress()
+                            : Errors.DATA_NOT_FOUND.name()
+            );
 
-            this.setPhoto( super.isCollectionNotEmpty( psychologyCard.getPapilonData() )
-                    ? SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() )
-                    : Errors.DATA_NOT_FOUND.name() );
+            this.setPhoto(
+                    super.isCollectionNotEmpty( psychologyCard.getPapilonData() )
+                            ? SerDes
+                            .getSerDes()
+                            .getBase64ToLink()
+                            .apply( psychologyCard
+                                    .getPapilonData()
+                                    .get( 0 )
+                                    .getPhoto() )
+                            : Errors.DATA_NOT_FOUND.name()
+            );
         }
 
         else {
-            this.setPassportNumber ( psychologyCard
-                    .getPapilonData()
-                    .get( 0 )
-                    .getPassport() );
+            this.setPassportNumber(
+                    psychologyCard
+                        .getPapilonData()
+                        .get( 0 )
+                        .getPassport()
+            );
 
-            this.setPinfl( psychologyCard
-                    .getPapilonData()
-                    .get( 0 )
-                    .getPersonal_code() );
+            this.setPinfl(
+                    psychologyCard
+                        .getPapilonData()
+                        .get( 0 )
+                        .getPersonal_code()
+            );
 
-            this.setPhoto( SerDes
-                    .getSerDes()
-                    .getBase64ToLink()
-                    .apply( psychologyCard
-                            .getPapilonData()
-                            .get( 0 )
-                            .getPhoto() ) );
+            this.setPhoto(
+                    SerDes
+                        .getSerDes()
+                        .getBase64ToLink()
+                        .apply(
+                                psychologyCard
+                                    .getPapilonData()
+                                    .get( 0 )
+                                    .getPhoto()
+                        )
+            );
         } }
 
     @Override
+    @lombok.NonNull
     public String toString() {
         return String.join(
-                " ",
+                SPACE,
                 super.checkString( this.pinfl ),
                 super.checkString( this.photo ),
                 super.checkString( this.address ),

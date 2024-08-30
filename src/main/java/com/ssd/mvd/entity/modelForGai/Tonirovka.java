@@ -57,9 +57,10 @@ public final class Tonirovka
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Tonirovka setErrorResponse( final ErrorResponse errorResponse ) {
+    public Tonirovka setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }

@@ -12,6 +12,7 @@ import com.ssd.mvd.inspectors.DataValidationInspector;
 import reactor.core.publisher.Mono;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class FindFaceComponent
         extends DataValidationInspector
         implements ServiceCommonMethods {

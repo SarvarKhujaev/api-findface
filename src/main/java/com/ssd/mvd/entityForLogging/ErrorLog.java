@@ -29,7 +29,7 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
     @lombok.NonNull
     public String getSuccessMessage() {
         return String.join(
-                " ",
+                SPACE,
                 "Kafka got error for : ",
                 super.getADMIN_PANEL_ERROR_LOG(),
                 this.errorMessage,
@@ -44,7 +44,7 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
     @lombok.NonNull
     public String getCompletedMessage() {
         return String.join(
-                " ",
+                SPACE,
                 "Kafka got error for : ",
                 super.getADMIN_PANEL_ERROR_LOG(),
                 this.errorMessage,

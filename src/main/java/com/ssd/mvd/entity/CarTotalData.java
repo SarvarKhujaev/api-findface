@@ -54,7 +54,10 @@ public final class CarTotalData
         return this.errorResponse;
     }
 
-    private CarTotalData setErrorResponse (
+    @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public CarTotalData setErrorResponse (
             @lombok.NonNull final ErrorResponse errorResponse
     ) {
         this.errorResponse = errorResponse;
@@ -62,7 +65,7 @@ public final class CarTotalData
     }
 
     private String gosNumber;
-    private String cameraImage; // image which was made by camera
+    private String cameraImage;
 
     private Tonirovka tonirovka;
     private Insurance insurance;

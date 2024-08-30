@@ -15,6 +15,7 @@ import java.util.List;
 
 @Jacksonized
 @lombok.Builder
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class ModelForAddress
         extends Config
         implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
@@ -22,9 +23,10 @@ public final class ModelForAddress
         return this.PermanentRegistration;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForAddress setErrorResponse( final ErrorResponse errorResponse ) {
+    public ModelForAddress setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }

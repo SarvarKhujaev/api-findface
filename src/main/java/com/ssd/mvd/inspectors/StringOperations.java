@@ -1,7 +1,9 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.entity.Pinpp;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class StringOperations {
     public final static String EMPTY = "";
     public final static String SPACE = " ";
@@ -26,5 +28,13 @@ public class StringOperations {
                 this.checkString( pinpp.getSurname() ),
                 this.checkString( pinpp.getPatronym() )
         );
+    }
+
+    @SuppressWarnings(
+            value = "Prevent modification of the object's state"
+    )
+    @Override
+    public Config clone() {
+        throw new UnsupportedOperationException( Errors.OBJECT_IS_IMMUTABLE.getErrorMEssage( this.getClass().getName() ) );
     }
 }

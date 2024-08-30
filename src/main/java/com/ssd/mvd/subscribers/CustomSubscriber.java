@@ -12,25 +12,25 @@ public final class CustomSubscriber<T> extends LogInspector implements Subscribe
     private Subscription subscription;
 
     public CustomSubscriber(
-            final Consumer< T > objectConsumer
+            @lombok.NonNull final Consumer< T > objectConsumer
     ) {
         this.objectConsumer = objectConsumer;
     }
 
     @Override
-    public void onSubscribe( final Subscription subscription ) {
+    public void onSubscribe( @lombok.NonNull final Subscription subscription ) {
         this.subscription = subscription;
         this.subscription.request( 1 );
     }
 
     @Override
-    public void onNext( final T o ) {
+    public void onNext( @lombok.NonNull final T o ) {
         this.objectConsumer.accept( o );
         this.subscription.request( 1 );
     }
 
     @Override
-    public void onError( final Throwable throwable ) {
+    public void onError( @lombok.NonNull final Throwable throwable ) {
         super.logging( throwable );
     }
 

@@ -16,8 +16,10 @@ public final class DoverennostList
         return this.errorResponse;
     }
 
+    @Override
+    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public DoverennostList setErrorResponse( final ErrorResponse errorResponse ) {
+    public DoverennostList setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }
@@ -26,6 +28,7 @@ public final class DoverennostList
         return this.doverennostsList;
     }
 
+    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     private DoverennostList setDoverennostsList( final List< Doverennost > doverennostsList ) {
         this.doverennostsList = doverennostsList;

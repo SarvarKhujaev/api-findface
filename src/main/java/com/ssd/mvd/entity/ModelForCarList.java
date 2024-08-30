@@ -19,9 +19,10 @@ public final class ModelForCarList
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForCarList setErrorResponse ( final ErrorResponse errorResponse ) {
+    public ModelForCarList setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }
@@ -32,7 +33,7 @@ public final class ModelForCarList
 
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForCarList setModelForCarList (
+    private ModelForCarList setModelForCarList (
             final List< ModelForCar > modelForCarList
     ) {
         this.modelForCarList = modelForCarList;

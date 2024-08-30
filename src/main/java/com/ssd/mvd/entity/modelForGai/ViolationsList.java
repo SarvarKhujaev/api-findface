@@ -18,9 +18,10 @@ public final class ViolationsList
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    private ViolationsList setErrorResponse( final ErrorResponse errorResponse ) {
+    public ViolationsList setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }
@@ -28,7 +29,7 @@ public final class ViolationsList
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     private ViolationsList setViolationsInformationsList(
-            final List< ViolationsInformation > violationsInformationsList
+            @lombok.NonNull final List< ViolationsInformation > violationsInformationsList
     ) {
         this.violationsInformationsList = violationsInformationsList;
         return this;

@@ -1,13 +1,17 @@
 package com.ssd.mvd.inspectors;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class WebFluxInspector extends Config {
+    protected static final int RESULT_COUNT = 1000;
+
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     protected final synchronized <T, U> Flux< U > convertValuesToParallelFluxWithMap (
@@ -34,5 +38,22 @@ public class WebFluxInspector extends Config {
                 .filter( customPredicate )
                 .sequential()
                 .publishOn( Schedulers.single() );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
+    protected static synchronized Flux< Integer > convertValuesToParallelFlux (
+            @lombok.NonNull final Consumer< Integer > customConsumer
+    ) {
+        return Flux.range( 0, RESULT_COUNT )
+                .parallel( 20 )
+                .runOn( Schedulers.parallel() )
+                .map( integer -> {
+                    customConsumer.accept( integer );
+                    return integer;
+                } )
+                .sequential()
+                .publishOn( Schedulers.parallel() );
     }
 }

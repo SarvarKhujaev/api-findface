@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import reactor.util.retry.Retry;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class LogInspector extends ErrorController {
     private final static Logger LOGGER = LogManager.getLogger( "LOGGER_WITH_JSON_LAYOUT" );
 

@@ -18,7 +18,10 @@ public final class Data
         return this.errorResponse;
     }
 
-    public Data setErrorResponse ( final ErrorResponse errorResponse ) {
+    @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public Data setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }

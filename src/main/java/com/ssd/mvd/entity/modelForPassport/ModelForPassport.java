@@ -15,14 +15,11 @@ public final class ModelForPassport
         return this.Data;
     }
 
-    public void setData( final com.ssd.mvd.entity.modelForPassport.Data data ) {
-        this.Data = data;
-    }
-
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForPassport setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
@@ -30,7 +27,7 @@ public final class ModelForPassport
         return this;
     }
 
-    public Integer getAnswereId() {
+    public int getAnswereId() {
         return this.AnswereId;
     }
 

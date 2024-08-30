@@ -7,6 +7,7 @@ import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Person extends CustomSerializer implements EntityCommonMethods< Person > {
     public int getNationalityid() {
         return this.nationalityid;

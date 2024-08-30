@@ -3,6 +3,7 @@ package com.ssd.mvd.entity.foreigner;
 @lombok.Data
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Foreigner {
     private boolean sex; // shows the gender of person TRUE for women. FALSE for men
 
@@ -20,4 +21,6 @@ public final class Foreigner {
     private String apartment;
     private String patronymic;
     private String input_date;
+
+    public Foreigner () {}
 }

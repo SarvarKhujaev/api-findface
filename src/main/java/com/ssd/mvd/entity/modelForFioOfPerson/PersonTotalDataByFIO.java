@@ -27,8 +27,12 @@ public final class PersonTotalDataByFIO
         return this.errorResponse;
     }
 
-    public void setErrorResponse( final ErrorResponse errorResponse ) {
+    @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public PersonTotalDataByFIO setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
+        return this;
     }
 
     public int getAnswereId() {

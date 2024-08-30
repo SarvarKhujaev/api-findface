@@ -3,20 +3,22 @@ package com.ssd.mvd.entity.boardCrossing;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import java.util.List;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Data implements ServiceCommonMethods {
     public Person getPerson() {
         return this.person;
-    }
-
-    public void setPerson( final Person person ) {
-        this.person = person;
     }
 
     public List< CrossBoard > getCrossBoardList() {
         return this.crossBoardList;
     }
 
-    public void setCrossBoardList( final List< CrossBoard > crossBoardList ) {
+    private Data setPerson( final Person person ) {
+        this.person = person;
+        return this;
+    }
+
+    private void setCrossBoardList( final List< CrossBoard > crossBoardList ) {
         this.crossBoardList = crossBoardList;
     }
 
@@ -24,8 +26,8 @@ public final class Data implements ServiceCommonMethods {
     private List< CrossBoard > crossBoardList;
 
     public static Data generate (
-            final List< CrossBoard > data,
-            final Person person
+            @lombok.NonNull final List< CrossBoard > data,
+            @lombok.NonNull final Person person
     ) {
         return new Data( data, person );
     }
@@ -34,8 +36,7 @@ public final class Data implements ServiceCommonMethods {
             final List< CrossBoard > data,
             final Person person
     ) {
-        this.setCrossBoardList( data );
-        this.setPerson( person );
+        this.setPerson( person ).setCrossBoardList( data );
     }
 
     @Override

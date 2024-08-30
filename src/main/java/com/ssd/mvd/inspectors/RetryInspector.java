@@ -4,6 +4,7 @@ import com.ssd.mvd.interfaces.EntityCommonMethods;
 import reactor.util.retry.Retry;
 import java.time.Duration;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class RetryInspector extends WebFluxInspector {
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )

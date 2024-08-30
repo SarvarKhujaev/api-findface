@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import org.springframework.scheduling.annotation.Async;
 import reactor.core.publisher.Mono;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class ErrorController extends CustomSerializer {
     protected final Supplier< ErrorResponse > getErrorResponse = () -> {
         SerDes.getSerDes().getUpdateTokens().get();
@@ -135,7 +136,7 @@ public class ErrorController extends CustomSerializer {
             value = "сохраняем логи о пользователе который отправил запрос на сервис"
     )
     @lombok.NonNull
-    protected final BiFunction<PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
+    protected final BiFunction< PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
             ( psychologyCard, apiResponseModel ) -> {
                 KafkaDataControl
                         .getKafkaDataControl()

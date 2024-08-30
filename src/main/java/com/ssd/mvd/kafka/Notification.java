@@ -55,7 +55,7 @@ public final class Notification extends Config implements KafkaCommonMethods {
     @lombok.NonNull
     public String getSuccessMessage() {
         return String.join(
-                " ",
+                SPACE,
                 "Kafka got error: ",
                 this.getTopicName(),
                 this.toString(),
@@ -68,7 +68,7 @@ public final class Notification extends Config implements KafkaCommonMethods {
     @lombok.NonNull
     public String getCompletedMessage() {
         return String.join(
-                " ",
+                SPACE,
                 "Kafka got error: ",
                 super.getERROR_LOGS(),
                 this.toString(),

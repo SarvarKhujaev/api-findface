@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class TimeInspector extends StringOperations {
     public final static Duration HttpClientDuration = Duration.ofSeconds( 20 );
 

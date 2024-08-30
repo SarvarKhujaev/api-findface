@@ -107,6 +107,7 @@ public final class PsychologyCard
         this.modelForCadastr = modelForCadastr;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public PsychologyCard setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
@@ -137,7 +138,6 @@ public final class PsychologyCard
         return this;
     }
 
-    // for Passport request
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public PsychologyCard save ( @lombok.NonNull final ModelForPassport data ) {

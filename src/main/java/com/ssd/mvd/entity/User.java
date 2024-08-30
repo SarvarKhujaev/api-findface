@@ -3,15 +3,8 @@ package com.ssd.mvd.entity;
 import java.util.List;
 import java.util.UUID;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class User {
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId( final UUID id ) {
-        this.id = id;
-    }
-
     public String getPassportNumber() {
         return this.passportNumber;
     }

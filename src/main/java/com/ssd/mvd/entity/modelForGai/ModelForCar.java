@@ -48,11 +48,11 @@ public final class ModelForCar
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    private ModelForCar setErrorResponse ( final ErrorResponse errorResponse ) {
+    public ModelForCar setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
-
         return this;
     }
 

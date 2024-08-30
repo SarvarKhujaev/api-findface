@@ -17,21 +17,26 @@ public final class CrossBoardInfo
         return this.Data;
     }
 
-    public void setData( final List< com.ssd.mvd.entity.boardCrossing.Data > data ) {
-        this.Data = data;
+    public String getResult() {
+        return this.Result;
     }
 
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
 
-    public CrossBoardInfo setErrorResponse( final ErrorResponse errorResponse ) {
-        this.errorResponse = errorResponse;
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    private CrossBoardInfo setData( final List< com.ssd.mvd.entity.boardCrossing.Data > data ) {
+        this.Data = data;
         return this;
     }
 
-    public String getResult() {
-        return this.Result;
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
+    public CrossBoardInfo setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+        return this;
     }
 
     private String Result;
@@ -44,8 +49,8 @@ public final class CrossBoardInfo
             @lombok.NonNull final List< CrossBoard > crossBoards,
             @lombok.NonNull final Person person
     ) {
-        this.setData( super.newList() );
-        this.getData().add( com.ssd.mvd.entity.boardCrossing.Data.generate( crossBoards, person ) );
+        this.setData( super.newList() )
+                .getData().add( com.ssd.mvd.entity.boardCrossing.Data.generate( crossBoards, person ) );
     }
 
     @Override
@@ -76,7 +81,7 @@ public final class CrossBoardInfo
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public CrossBoardInfo generate (
-            final String response
+            @lombok.NonNull final String response
     ) {
         return new CrossBoardInfo(
                 response.contains( "[{\"card_id" )

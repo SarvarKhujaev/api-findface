@@ -45,9 +45,10 @@ public final class Pinpp
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Pinpp setErrorResponse ( final ErrorResponse errorResponse ) {
+    public Pinpp setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }

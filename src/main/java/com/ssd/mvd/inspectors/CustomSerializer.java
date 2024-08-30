@@ -1,10 +1,13 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+
 import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 
 import java.util.List;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class CustomSerializer extends DataValidationInspector {
     private final static Gson gson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
@@ -25,7 +28,7 @@ public class CustomSerializer extends DataValidationInspector {
 
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    protected final synchronized <T extends CustomSerializer> T deserialize (
+    protected final synchronized <T extends EntityCommonMethods< ? extends StringOperations > > T deserialize (
             @lombok.NonNull final String value,
             @lombok.NonNull final Class<T> clazz
     ) {

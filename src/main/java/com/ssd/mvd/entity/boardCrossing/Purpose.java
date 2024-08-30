@@ -3,6 +3,7 @@ package com.ssd.mvd.entity.boardCrossing;
 import com.ssd.mvd.inspectors.Archieve;
 import com.ssd.mvd.constants.Errors;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Purpose extends Archieve {
     public void setPeriods ( final String periods ) {
         this.periods = periods;
@@ -60,12 +61,12 @@ public final class Purpose extends Archieve {
     private String transportCategory;
 
     public Purpose (
-            final CrossBoard crossBoard,
-            final Integer nationalityId
+            @lombok.NonNull final CrossBoard crossBoard,
+            @lombok.NonNull final Integer nationalityId
     ) {
         if ( super.objectIsNotNull( crossBoard.getTrip_purpose_code() ) ) {
             this.setTripPurpose(
-                    super.tripPurposes.getOrDefault(
+                    Archieve.tripPurposes.getOrDefault(
                             crossBoard.getTrip_purpose_code(),
                             Errors.DATA_NOT_FOUND.name()
                     )
@@ -74,7 +75,7 @@ public final class Purpose extends Archieve {
 
         if ( super.objectIsNotNull( crossBoard.getTrans_category_code() ) ) {
             this.setTransportCategory(
-                    super.transportCategory.getOrDefault(
+                    Archieve.transportCategory.getOrDefault(
                             crossBoard.getTrans_category_code(),
                             Errors.DATA_NOT_FOUND.name()
                     )
@@ -83,7 +84,7 @@ public final class Purpose extends Archieve {
 
         if ( super.objectIsNotNull( crossBoard.getPeriod_code() ) ) {
             this.setPeriods(
-                    super.periods.getOrDefault(
+                    Archieve.periods.getOrDefault(
                             crossBoard.getPeriod_code(),
                             Errors.DATA_NOT_FOUND.name()
                     )
@@ -92,7 +93,7 @@ public final class Purpose extends Archieve {
 
         if ( super.objectIsNotNull( crossBoard.getDocument_type_code() ) ) {
             this.setDocumentType(
-                    super.documentTypes.getOrDefault(
+                    Archieve.documentTypes.getOrDefault(
                             crossBoard.getDocument_type_code(),
                             Errors.DATA_NOT_FOUND.name()
                     )
@@ -101,7 +102,7 @@ public final class Purpose extends Archieve {
 
         if ( super.objectIsNotNull( crossBoard.getDirection_country() ) ) {
             this.setCountries(
-                    super.countries.getOrDefault(
+                    Archieve.countries.getOrDefault(
                             crossBoard.getDirection_country(),
                             Errors.DATA_NOT_FOUND.name()
                     )
@@ -109,7 +110,7 @@ public final class Purpose extends Archieve {
         }
 
         this.setNationalities(
-                super.nationalities.getOrDefault(
+                Archieve.nationalities.getOrDefault(
                         nationalityId,
                         Errors.DATA_NOT_FOUND.name()
                 )

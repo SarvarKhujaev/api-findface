@@ -53,6 +53,19 @@ public enum Errors {
             );
         }
     },
+    OBJECT_IS_IMMUTABLE {
+        @Override
+        public String getErrorMEssage (
+                final String error
+        ) {
+            return String.join(
+                    StringOperations.SPACE,
+                    "Entity: ",
+                    error,
+                    "is immutable"
+            );
+        }
+    },
     TOO_MANY_RETRIES_ERROR {
         @Override
         public String getErrorMEssage (

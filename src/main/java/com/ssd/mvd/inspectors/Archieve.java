@@ -12,7 +12,7 @@ public class Archieve extends DataValidationInspector {
     protected final static Map< String, String > transportCategory = CollectionsInspector.newMap();
 
     protected Archieve () {
-        int[] keys = new int[]{
+        int[] keys = new int[] {
                 28, 11, 13, 14, 16, 17, 46, 47, 29, 30, 31, 32, 33, 34, 35, 36, 18, 37, 38, 39, 40, 41, 42, 43, 44, 45,
                 15, 48, 10, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 21, 22, 23, 24, 25, 26, 27, 50, 49, 57, 54, 73, 65, 51,
                 63, 88, 70, 75, 76, 77, 78, 79, 74, 83, 81, 86, 80, 85, 84, 82, 87, 53, 56, 55, 61, 52, 62, 68, 58, 59,
@@ -119,7 +119,7 @@ public class Archieve extends DataValidationInspector {
 
         keys = new int[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, };
 
-        values = new String[]{
+        values = new String[] {
                 "до 1-го месяца",
                 "до 3-х месяцев",
                 "до 6-и месяцев",
@@ -136,7 +136,8 @@ public class Archieve extends DataValidationInspector {
             periods.put( keys[i], values[i] );
         }
 
-        keys = new int[]{ 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+        keys = new int[]{
+                0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
                 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
                 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
                 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 99, 100, 101, 102, 103, 104, 105, 106,
@@ -164,7 +165,7 @@ public class Archieve extends DataValidationInspector {
                 739002410, 739002411, 739002430, 739002431,
         };
 
-        values = new String[]{
+        values = new String[] {
                 "АБХАЗ/АБХАЗ/АБХАЗКА",
                 "АДИГЕЙ/АДЫГЕЕЦ/АДЫГЕЙКА",
                 "ОЛТОЙ/АЛТАЕЦ/АЛТАЙКА",
@@ -680,7 +681,7 @@ public class Archieve extends DataValidationInspector {
             nationalities.put( keys[i], values[i] );
         }
 
-        keys = new int[]{
+        keys = new int[] {
                 0,
                 1,
                 2,

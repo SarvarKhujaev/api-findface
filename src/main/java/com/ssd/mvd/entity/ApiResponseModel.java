@@ -7,7 +7,7 @@ public final class ApiResponseModel {
     private Status status;
     private User user;
 
-    public ApiResponseModel changeMessage ( final String message ) {
+    public ApiResponseModel changeMessage ( @lombok.NonNull final String message ) {
         this.getStatus().setMessage( message );
         return this;
     }

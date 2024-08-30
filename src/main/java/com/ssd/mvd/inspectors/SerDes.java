@@ -42,6 +42,7 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 @EqualsAndHashCode( callSuper = true, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY )
 public final class SerDes extends RetryInspector implements ServiceCommonMethods {
     private Thread thread;
@@ -49,6 +50,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private static SerDes serDes = new SerDes();
     private final HttpClient httpClient = Config.HTTP_CLIENT;
 
+    @lombok.NonNull
     public static SerDes getSerDes () {
         return serDes != null ? serDes : ( serDes = new SerDes() );
     }
@@ -58,7 +60,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
             @Override
-            public String writeValue( final Object o ) {
+            public String writeValue( @lombok.NonNull final Object o ) {
                 try {
                     return this.objectMapper.writeValueAsString( o );
                 } catch ( final JsonProcessingException e ) {
@@ -67,7 +69,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             }
 
             @Override
-            public <T> T readValue( final String s, final Class<T> aClass ) {
+            public <T> T readValue( @lombok.NonNull final String s, @lombok.NonNull final Class<T> aClass ) {
                 try {
                     return this.objectMapper.readValue( s, aClass );
                 } catch ( final JsonProcessingException e ) {
@@ -76,7 +78,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             }
         } );
 
-        Config.headers.put( "accept", "application/json" );
+        Config.getHeaders().put( "accept", "application/json" );
 
         this.setThread(
                 new Thread(
@@ -102,15 +104,15 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private final Supplier< SerDes > updateTokens = () -> {
             super.logging( "Updating tokens..." );
 
-            Config.fields.put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
-            Config.fields.put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
-            Config.fields.put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
+            Config.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
+            Config.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
+            Config.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
 
             try {
                 super.setTokenForGai(
                         String.valueOf(
                                 Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
-                                    .fields( Config.fields )
+                                    .fields( Config.getFields() )
                                     .asJson()
                                     .getBody()
                                     .getObject()
@@ -134,12 +136,14 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             return this;
     };
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _, _, _, _ -> !null" )
     private < T extends StringOperations > Mono<T> generate (
-            final String searchedValue,
-            final ByteBufMono content,
-            final HttpClientResponse res,
-            final Function< String, Mono< T > > customFunction,
-            final EntityCommonMethods< T > entityCommonMethods
+            @lombok.NonNull final String searchedValue,
+            @lombok.NonNull final ByteBufMono content,
+            @lombok.NonNull final HttpClientResponse res,
+            @lombok.NonNull final Function< String, Mono< T > > customFunction,
+            @lombok.NonNull final EntityCommonMethods< T > entityCommonMethods
     ) {
         return switch ( res.status().code() ) {
             case 401 -> customFunction.apply( searchedValue );
@@ -152,9 +156,11 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
         };
     }
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     private < T, U > ByteBufFlux generate (
-            final U object,
-            final RequestCommonMethods< T, U > request
+            @lombok.NonNull final U object,
+            @lombok.NonNull final RequestCommonMethods< T, U > request
     ) {
         return ByteBufFlux.fromString(
                 new CustomPublisherForRequest( object, request )
@@ -184,8 +190,8 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
 
     private final Function< String, String > base64ToLink = base64 -> {
             final HttpResponse< JsonNode > response;
-            Config.fields.put( "photo", base64 );
-            Config.fields.put( "serviceName", "psychologyCard" );
+            Config.getFields().put( "photo", base64 );
+            Config.getFields().put( "serviceName", "psychologyCard" );
 
             try {
                 super.logging( "Converting image to Link in: " + Methods.CONVERT_BASE64_TO_LINK );
@@ -525,13 +531,15 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     )
                     : super.convert( psychologyCard );
 
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_, _, _ -> !null" )
     public Mono< PsychologyCard > getPsychologyCard (
-            final String token,
-            final PsychologyCard psychologyCard,
-            final ApiResponseModel apiResponseModel
+            @lombok.NonNull final String token,
+            @lombok.NonNull final PsychologyCard psychologyCard,
+            @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         try {
-            Config.headers.put( "Authorization", "Bearer " + token );
+            Config.getHeaders().put( "Authorization", "Bearer " + token );
 
             psychologyCard.setForeignerList(
                     super.stringToArrayList(
@@ -541,7 +549,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                                             super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE(),
                                             psychologyCard.getPapilonData().get( 0 ).getPassport()
                                     )
-                            ).headers( Config.headers )
+                            ).headers( Config.getHeaders() )
                             .asJson()
                             .getBody()
                             .getObject()
@@ -578,7 +586,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                             .map( s -> {
                                 final PersonTotalDataByFIO person = super.deserialize( s, PersonTotalDataByFIO.class );
 
-                                if ( super.objectIsNotNull( person ) && super.isCollectionNotEmpty( person.getData() ) ) {
+                                if ( super.isCollectionNotEmpty( person.getData() ) ) {
                                     super.analyze(
                                             person.getData(),
                                             person1 -> this.getGetImageByPinfl()
@@ -587,7 +595,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                                     );
                                 }
 
-                                return super.objectIsNotNull( person ) ? person : EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.generate();
+                                return person;
                             } )
                             : super.convert( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO ) )
             )

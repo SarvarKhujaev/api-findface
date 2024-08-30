@@ -5,6 +5,7 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.request.RequestForBoardCrossing;
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.boardCrossing.Person;
 import com.ssd.mvd.entity.ModelForCarList;
@@ -14,7 +15,10 @@ import com.ssd.mvd.entity.CarTotalData;
 import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.entity.Pinpp;
 
+import org.apache.commons.collections4.list.UnmodifiableList;
+
 import java.util.concurrent.Semaphore;
+import java.util.List;
 
 /*
 хранит instance на все объекты
@@ -38,4 +42,24 @@ public final class EntitiesInstances {
     public static final ModelForPassport MODEL_FOR_PASSPORT = new ModelForPassport();
     public static final PersonTotalDataByFIO PERSON_TOTAL_DATA_BY_FIO = new PersonTotalDataByFIO();
     public static final RequestForBoardCrossing REQUEST_FOR_BOARD_CROSSING = new RequestForBoardCrossing();
+
+    public static final UnmodifiableList< ? extends EntityCommonMethods<? extends StringOperations> > instancesList = new UnmodifiableList<>(
+            List.of(
+                    CADASTR,
+                    PINPP,
+                    PERSON,
+                    INSURANCE,
+                    TONIROVKA,
+                    MODEL_FOR_CAR,
+                    CAR_TOTAL_DATA,
+                    PSYCHOLOGY_CARD,
+                    VIOLATIONS_LIST,
+                    CROSS_BOARD_INFO,
+                    DOVERENNOST_LIST,
+                    MODEL_FOR_ADDRESS,
+                    MODEL_FOR_CAR_LIST,
+                    MODEL_FOR_PASSPORT,
+                    PERSON_TOTAL_DATA_BY_FIO
+            )
+    );
 }

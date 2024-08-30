@@ -13,9 +13,11 @@ import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class KafkaDataControl extends Config implements ServiceCommonMethods {
     private final static KafkaDataControl KAFKA_DATA_CONTROL = new KafkaDataControl();
 
+    @lombok.NonNull
     public static KafkaDataControl getKafkaDataControl() {
         return KAFKA_DATA_CONTROL;
     }

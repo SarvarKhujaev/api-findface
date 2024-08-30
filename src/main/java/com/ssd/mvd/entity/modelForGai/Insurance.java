@@ -29,9 +29,10 @@ public final class Insurance
         return this.errorResponse;
     }
 
+    @Override
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Insurance setErrorResponse( final ErrorResponse errorResponse ) {
+    public Insurance setErrorResponse( @lombok.NonNull final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;
         return this;
     }

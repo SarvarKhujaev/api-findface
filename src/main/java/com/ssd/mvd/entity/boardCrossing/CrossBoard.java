@@ -3,6 +3,7 @@ package com.ssd.mvd.entity.boardCrossing;
 import com.ssd.mvd.inspectors.LogInspector;
 import java.util.Date;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class CrossBoard extends LogInspector {
     public Date getRegistrationDate() {
         return registrationDate;
@@ -140,4 +141,6 @@ public final class CrossBoard extends LogInspector {
         this.setPurpose( new Purpose( this, nationalityId ) );
         return this;
     }
+
+    public CrossBoard () {}
 }
