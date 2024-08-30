@@ -4,16 +4,12 @@ import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
 
-import lombok.EqualsAndHashCode;
 import reactor.netty.ByteBufMono;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClientResponse;
 
-import io.netty.channel.ConnectTimeoutException;
-
 import reactor.netty.ByteBufFlux;
-import reactor.netty.http.client.HttpClient;
-
+import io.netty.channel.ConnectTimeoutException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.mashape.unirest.http.Unirest;
@@ -43,12 +39,10 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 
 @lombok.Data
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-@EqualsAndHashCode( callSuper = true, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY )
+@lombok.EqualsAndHashCode( callSuper = true, cacheStrategy = lombok.EqualsAndHashCode.CacheStrategy.LAZY )
 public final class SerDes extends RetryInspector implements ServiceCommonMethods {
     private Thread thread;
-
     private static SerDes serDes = new SerDes();
-    private final HttpClient httpClient = Config.HTTP_CLIENT;
 
     @lombok.NonNull
     public static SerDes getSerDes () {
@@ -168,7 +162,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     }
 
     private final Function< String, Mono< CrossBoardInfo > > getCrossBoardInfo =
-            SerialNumber -> this.getHttpClient()
+            SerialNumber -> Config.HTTP_CLIENT
                     .post()
                     .uri( EntitiesInstances.CROSS_BOARD_INFO.getMethodApi() )
                     .send( this.generate( SerialNumber, EntitiesInstances.REQUEST_FOR_BOARD_CROSSING ) )
@@ -222,7 +216,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             }
     };
 
-    private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> this.getHttpClient()
+    private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .get()
             .uri( EntitiesInstances.PINPP.getMethodApi() + pinfl )
@@ -243,7 +237,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSuccess( value -> super.logging( Methods.GET_PINPP, value ) )
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PINPP() ) );
 
-    private final Function< String, Mono< Data > > getCadaster = cadaster -> this.getHttpClient()
+    private final Function< String, Mono< Data > > getCadaster = cadaster -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .post()
             .send( this.generate( cadaster, new RequestForCadaster() ) )
@@ -266,7 +260,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.CADASTR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.CADASTR.generate() ) );
 
-    private final Function< String, Mono< String > > getImageByPinfl = pinfl -> this.getHttpClient()
+    private final Function< String, Mono< String > > getImageByPinfl = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
@@ -288,7 +282,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
-    private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> this.getHttpClient()
+    private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() ) )
             .post()
             .uri( EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() )
@@ -312,7 +306,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS ) );
 
     private final Function< String, Mono< ModelForPassport > > getModelForPassport =
-            passportData -> this.getHttpClient()
+            passportData -> Config.HTTP_CLIENT
                     .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
                     .post()
                     .uri( EntitiesInstances.MODEL_FOR_PASSPORT.getMethodApi() )
@@ -335,7 +329,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_PASSPORT.getMethodApi() ) )
                     .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_PASSPORT ) );
 
-    private final Function< String, Mono< Insurance > > insurance = gosno -> this.getHttpClient()
+    private final Function< String, Mono< Insurance > > insurance = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.INSURANCE.getMethodApi() + gosno )
@@ -357,7 +351,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.INSURANCE.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.INSURANCE ) );
 
-    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> this.getHttpClient()
+    private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() + gosno )
@@ -379,7 +373,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR ) );
 
-    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> this.getHttpClient()
+    private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.TONIROVKA.getMethodApi() + gosno )
@@ -401,7 +395,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA.generate() ) );
 
-    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> this.getHttpClient()
+    private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() + gosno )
@@ -423,7 +417,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST.generate() ) );
 
-    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> this.getHttpClient()
+    private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.DOVERENNOST_LIST.getMethodApi() + gosno )
@@ -445,7 +439,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             .doOnSubscribe( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.getMethodApi() ) )
             .onErrorReturn( super.completeError( EntitiesInstances.DOVERENNOST_LIST ) );
 
-    private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> this.getHttpClient()
+    private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
             .uri( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodApi() + pinfl )
@@ -573,7 +567,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
         return super.convert( psychologyCard );
     }
 
-    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> this.getHttpClient()
+    private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForFio ) )
             .post()
             .uri( super.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
