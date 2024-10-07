@@ -3,9 +3,10 @@ package com.ssd.mvd.entityForLogging;
 import com.google.gson.annotations.Expose;
 
 import com.ssd.mvd.inspectors.Config;
+import com.ssd.mvd.inspectors.TimeInspector;
 import com.ssd.mvd.interfaces.KafkaCommonMethods;
 
-public class ErrorLog extends Config implements KafkaCommonMethods {
+public class ErrorLog extends TimeInspector implements KafkaCommonMethods {
     @Expose
     private String errorMessage;
 
@@ -22,7 +23,7 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
     @Override
     @lombok.NonNull
     public String getTopicName() {
-        return super.getADMIN_PANEL_ERROR_LOG();
+        return Config.getADMIN_PANEL_ERROR_LOG();
     }
 
     @Override
@@ -31,10 +32,10 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
         return String.join(
                 SPACE,
                 "Kafka got error for : ",
-                super.getADMIN_PANEL_ERROR_LOG(),
+                Config.getADMIN_PANEL_ERROR_LOG(),
                 this.errorMessage,
                 " at: ",
-                super.newDate().toString(),
+                super.newDate().get().toString(),
                 INTEGRATED_SERVICE,
                 INTEGRATED_SERVICE_API_DESCRIPTION
         );
@@ -46,7 +47,7 @@ public class ErrorLog extends Config implements KafkaCommonMethods {
         return String.join(
                 SPACE,
                 "Kafka got error for : ",
-                super.getADMIN_PANEL_ERROR_LOG(),
+                Config.getADMIN_PANEL_ERROR_LOG(),
                 this.errorMessage,
                 " at: ",
                 super.newDate().toString(),

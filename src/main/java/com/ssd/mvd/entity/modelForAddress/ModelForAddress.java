@@ -4,10 +4,9 @@ import com.ssd.mvd.entity.modelForPassport.RequestGuid;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.PermanentRegistration;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.extern.jackson.Jacksonized;
@@ -16,9 +15,7 @@ import java.util.List;
 @Jacksonized
 @lombok.Builder
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public final class ModelForAddress
-        extends Config
-        implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
+public final class ModelForAddress implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
     public com.ssd.mvd.entity.PermanentRegistration getPermanentRegistration() {
         return this.PermanentRegistration;
     }
@@ -56,40 +53,11 @@ public final class ModelForAddress
 
     @Override
     @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_MODEL_FOR_ADDRESS();
-    }
-
-    @Override
-    @lombok.NonNull
-    public ModelForAddress generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForAddress generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForAddress generate (
             @lombok.NonNull final String response
     ) {
-        return super.deserialize(
+        return CustomSerializer.deserialize(
                 response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
                 this.getClass()
         );

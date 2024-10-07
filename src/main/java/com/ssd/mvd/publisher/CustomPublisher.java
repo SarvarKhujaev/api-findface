@@ -9,13 +9,13 @@ import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Publisher;
 
-public final class CustomPublisher extends CustomSerializer implements Publisher< ProducerRecord< String, String > > {
+public final class CustomPublisher implements Publisher< ProducerRecord< String, String > > {
     private final ProducerRecord< String, String > producerRecord;
 
     public CustomPublisher(
             @lombok.NonNull final KafkaCommonMethods kafkaCommonMethods
     ) {
-        this.producerRecord = new ProducerRecord<>( kafkaCommonMethods.getTopicName(), super.serialize( kafkaCommonMethods ) );
+        this.producerRecord = new ProducerRecord<>( kafkaCommonMethods.getTopicName(), CustomSerializer.serialize( kafkaCommonMethods ) );
     }
 
     @Override

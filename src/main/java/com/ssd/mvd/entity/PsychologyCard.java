@@ -5,17 +5,13 @@ import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.constants.Errors;
 
 import reactor.util.function.*;
 import java.util.List;
 
-public final class PsychologyCard
-        extends ErrorController
-        implements EntityCommonMethods< PsychologyCard >, ServiceCommonMethods {
+public final class PsychologyCard implements EntityCommonMethods< PsychologyCard >, ServiceCommonMethods {
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
@@ -159,30 +155,6 @@ public final class PsychologyCard
         return new PsychologyCard();
     }
 
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public PsychologyCard generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.generate().setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public PsychologyCard generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     public static PsychologyCard generate (
@@ -243,7 +215,6 @@ public final class PsychologyCard
         this.setPinpp( tuple.getT1() );
     }
 
-    // for Passport request
     private PsychologyCard (
             @lombok.NonNull final ModelForPassport data,
             @lombok.NonNull final Tuple5<
@@ -263,7 +234,6 @@ public final class PsychologyCard
         this.setPinpp( tuple.getT1() );
     }
 
-    // for PINFL request
     private PsychologyCard (
             @lombok.NonNull final Tuple4<
                     Pinpp,
@@ -278,7 +248,6 @@ public final class PsychologyCard
         this.setPinpp( tuple.getT1() );
     }
 
-    // for PINFL request
     private PsychologyCard ( @lombok.NonNull final Tuple2< Pinpp, String > tuple ) {
         this.setPersonImage( tuple.getT2() );
         this.setPinpp( tuple.getT1() );

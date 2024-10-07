@@ -1,6 +1,6 @@
 package com.ssd.mvd.entity.modelForFioOfPerson;
 
-import com.ssd.mvd.entity.User;
+import com.ssd.mvd.entity.response.User;
 
 public final class FIO {
     public String getName() {

@@ -1,4 +1,4 @@
-package com.ssd.mvd.entity;
+package com.ssd.mvd.entity.response;
 
 import java.util.List;
 import java.util.UUID;

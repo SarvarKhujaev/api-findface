@@ -1,12 +1,11 @@
 package com.ssd.mvd;
 
-import com.ssd.mvd.entityForLogging.UserRequest;
+import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.inspectors.EntitiesInstances;
 import com.ssd.mvd.inspectors.StringOperations;
 import com.ssd.mvd.entityForLogging.ErrorLog;
-import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.kafka.KafkaDataControl;
-import com.ssd.mvd.entity.Status;
+import com.ssd.mvd.entity.response.Status;
 
 import junit.framework.TestCase;
 
@@ -37,7 +36,7 @@ public final class KafkaConnectionTest extends TestCase {
         KafkaDataControl
                 .getKafkaDataControl()
                 .sendMessage(
-                        EntitiesInstances.NOTIFICATION
+                        EntitiesInstances.NOTIFICATION.get()
                                 .setPinfl( this.uuid.toString() )
                                 .setReason( this.uuid.toString() )
                                 .setMethodName( this.uuid.toString() )
@@ -51,8 +50,8 @@ public final class KafkaConnectionTest extends TestCase {
         KafkaDataControl
                 .getKafkaDataControl()
                 .sendMessage(
-                        new UserRequest(
-                                EntitiesInstances.PSYCHOLOGY_CARD,
+                        EntitiesInstances.USER_REQUEST_ATOMIC_REFERENCE.get().update(
+                                EntitiesInstances.PSYCHOLOGY_CARD.get(),
                                 ApiResponseModel
                                         .builder()
                                         .status(
@@ -61,8 +60,7 @@ public final class KafkaConnectionTest extends TestCase {
                                                         .code( 200L )
                                                         .message( "30096545789812" )
                                                         .build()
-                                        ).success( true )
-                                        .build()
+                                        ).build()
                         )
                 );
     }

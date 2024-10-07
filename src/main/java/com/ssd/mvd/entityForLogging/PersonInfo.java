@@ -51,7 +51,12 @@ public final class PersonInfo extends DataValidationInspector {
     @Expose
     private String passportNumber;
 
-    public PersonInfo ( @lombok.NonNull final PsychologyCard psychologyCard ) {
+    public PersonInfo () {}
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
+    public synchronized PersonInfo update ( @lombok.NonNull final PsychologyCard psychologyCard ) {
         if ( !super.isCollectionNotEmpty( psychologyCard.getForeignerList() ) ) {
             if ( super.objectIsNotNull( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
@@ -118,7 +123,10 @@ public final class PersonInfo extends DataValidationInspector {
                                     .getPhoto()
                         )
             );
-        } }
+        }
+
+        return this;
+    }
 
     @Override
     @lombok.NonNull

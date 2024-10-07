@@ -16,31 +16,29 @@ public class CustomSerializer extends DataValidationInspector {
     protected CustomSerializer () {}
 
     @lombok.NonNull
-    private synchronized Gson getGson () {
-        return gson;
-    }
-
-    @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    protected final synchronized <T> String serialize ( @lombok.NonNull final T object ) {
-        return this.getGson().toJson( object );
+    public static synchronized <T> String serialize ( @lombok.NonNull final T object ) {
+        return gson.toJson( object );
     }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    protected final synchronized <T extends EntityCommonMethods< ? extends StringOperations > > T deserialize (
+    public static synchronized <T extends EntityCommonMethods< ? > > T deserialize (
             @lombok.NonNull final String value,
             @lombok.NonNull final Class<T> clazz
     ) {
-        return this.getGson().fromJson( value, clazz );
+        return gson.fromJson( value, clazz );
     }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    protected final synchronized <T> List<T> stringToArrayList (
+    public static synchronized <T> List<T> stringToArrayList (
             @lombok.NonNull final String object,
             @lombok.NonNull final Class< T[] > clazz
     ) {
-        return super.convertArrayToList( this.getGson().fromJson( object, clazz ) );
+        return convertArrayToList( gson.fromJson( object, clazz ) );
     }
 }

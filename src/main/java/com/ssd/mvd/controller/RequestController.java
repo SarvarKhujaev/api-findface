@@ -1,21 +1,20 @@
 package com.ssd.mvd.controller;
 
-import java.util.List;
-
+import com.ssd.mvd.inspectors.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.lang.ref.WeakReference;
 import io.netty.handler.timeout.ReadTimeoutException;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.inspectors.Config;
-import com.ssd.mvd.inspectors.SerDes;
-import com.ssd.mvd.inspectors.LogInspector;
 import com.ssd.mvd.component.FindFaceComponent;
-import com.ssd.mvd.inspectors.EntitiesInstances;
 import com.ssd.mvd.entity.modelForGai.Tonirovka;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
+import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.entity.modelForGai.ViolationsList;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -45,9 +44,12 @@ public final class RequestController extends LogInspector {
                 .getGetVehicleTonirovka()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .onErrorResume(
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.TONIROVKA )
-                ).onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA ) )
-                : super.convert( EntitiesInstances.TONIROVKA.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.TONIROVKA.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA.get() ) )
+                : super.convert( EntitiesInstances.TONIROVKA.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings(
@@ -63,11 +65,11 @@ public final class RequestController extends LogInspector {
                 .onErrorContinue(
                         ( error, object ) -> super.logging(
                                 error,
-                                EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO,
+                                EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get(),
                                 fio.toString()
                         )
-                ).onErrorReturn( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO ) )
-                : super.convert( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.generate( super.getErrorResponse.get() ) );
+                ).onErrorReturn( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get() ) )
+                : super.convert( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по номеру машины" )
@@ -105,22 +107,20 @@ public final class RequestController extends LogInspector {
                         .getSerDes()
                         .getGetPsychologyCardByPinfl()
                         .apply(
-                                ApiResponseModel
-                                        .builder()
-                                        .status(
-                                                Status
-                                                    .builder()
-                                                    .message( carTotalData.getModelForCar().getPinpp() )
-                                                    .build()
-                                        ).user( apiResponseModel.getUser() )
-                                        .build()
+                                EntitiesInstances.generateResponse(
+                                        carTotalData.getModelForCar().getPinpp(),
+                                        apiResponseModel.getUser()
+                                )
                         ).map( carTotalData::save )
                         .onErrorResume(
-                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.CAR_TOTAL_DATA )
+                                throwable -> super.completeError(
+                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                        EntitiesInstances.CAR_TOTAL_DATA.get()
+                                )
                         )
                         : super.convert( carTotalData )
-                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA ) )
-                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
+                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA.get() ) )
+                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по фотографии" )
@@ -149,7 +149,10 @@ public final class RequestController extends LogInspector {
                         .getGetPsychologyCardByImage()
                         .apply( results, apiResponseModel )
                         .onErrorResume(
-                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
+                                throwable -> super.completeError(
+                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                        EntitiesInstances.PSYCHOLOGY_CARD.get()
+                                )
                         )
                         : SerDes
                         .getSerDes()
@@ -158,9 +161,9 @@ public final class RequestController extends LogInspector {
                                 PsychologyCard.generate( results ),
                                 apiResponseModel
                         )
-                        : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) )
+                        : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) )
                 )
-                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по номеру кадастра" )
@@ -186,20 +189,26 @@ public final class RequestController extends LogInspector {
                                         .getGetPsychologyCardByData()
                                         .apply( data1, apiResponseModel )
                                         .onErrorResume(
-                                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
+                                                throwable -> super.completeError(
+                                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                                        EntitiesInstances.PSYCHOLOGY_CARD.get()
+                                                )
                                         )
                                 )
                         ).onErrorResume(
-                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
-                        ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
+                                throwable -> super.completeError(
+                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                        EntitiesInstances.PSYCHOLOGY_CARD.get()
+                                )
+                        ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
                         : Flux.just(
-                                EntitiesInstances.PSYCHOLOGY_CARD.generate(
+                                EntitiesInstances.PSYCHOLOGY_CARD.get().generate(
                                         apiResponseModel.getStatus().getMessage(),
                                         Errors.DATA_NOT_FOUND
                                 )
                         )
                 )
-                : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings(
@@ -219,33 +228,21 @@ public final class RequestController extends LogInspector {
                 .flatMap( modelForCarList -> super.objectIsNotNull( modelForCarList )
                         && super.isCollectionNotEmpty( modelForCarList.getModelForCarList() )
                                 ? this.getCarTotalData(
-                                        ApiResponseModel
-                                                .builder()
-                                                .status(
-                                                        Status
-                                                            .builder()
-                                                            .message(
-                                                                    modelForCarList
-                                                                        .getModelForCarList()
-                                                                        .get( 0 )
-                                                                        .getPlateNumber()
-                                                            ).build()
-                                                ).build()
+                                        EntitiesInstances.generateResponse(
+                                                modelForCarList
+                                                        .getModelForCarList()
+                                                        .get( 0 )
+                                                        .getPlateNumber()
+                                        )
                                 )
-                                : this.getCarTotalData(
-                                        ApiResponseModel
-                                            .builder()
-                                            .status(
-                                                    Status
-                                                        .builder()
-                                                        .message( "01Y456MA" )
-                                                        .build()
-                                            ).build()
-                                )
+                                : this.getCarTotalData( EntitiesInstances.generateResponse( "01Y456MA" ) )
                 ).onErrorResume(
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.CAR_TOTAL_DATA )
-                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA ) )
-                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.CAR_TOTAL_DATA.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA.get() ) )
+                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по Пинфл" )
@@ -263,10 +260,13 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PSYCHOLOGY_CARD.get()
+                        )
                 )
-                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
-                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
+                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по номеру паспорта" )
@@ -275,7 +275,7 @@ public final class RequestController extends LogInspector {
             @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
-            return super.convert( EntitiesInstances.PSYCHOLOGY_CARD );
+            return super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get() );
         }
 
         final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
@@ -292,14 +292,14 @@ public final class RequestController extends LogInspector {
                                 .apply( data, apiResponseModel )
                 ).onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
-                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
-                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PSYCHOLOGY_CARD.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
+                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // данные по авто
     @SuppressWarnings( value = "используется при запросе по номеру машины" )
     @MessageMapping ( value = "GET_CAR_DATA_BY_GOS_NUMBER_INITIAL" )
     public Mono< CarTotalData > GET_CAR_DATA_BY_GOS_NUMBER_INITIAL (
@@ -320,9 +320,12 @@ public final class RequestController extends LogInspector {
                         .map( carTotalData::save )
                 ).onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.CAR_TOTAL_DATA )
-                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA ) )
-                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.CAR_TOTAL_DATA.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.CAR_TOTAL_DATA.get() ) )
+                : super.convert( EntitiesInstances.CAR_TOTAL_DATA.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "используется при запросе по пинфл человека" )
@@ -347,9 +350,12 @@ public final class RequestController extends LogInspector {
                                 : super.convert( modelForCarList )
                 ).onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.MODEL_FOR_CAR_LIST )
-                ).onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR_LIST ) )
-                : super.convert( EntitiesInstances.MODEL_FOR_CAR_LIST.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.MODEL_FOR_CAR_LIST.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR_LIST.get() ) )
+                : super.convert( EntitiesInstances.MODEL_FOR_CAR_LIST.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает все штрафы от гаи по номеру машины" )
@@ -364,9 +370,12 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.VIOLATIONS_LIST )
-                ).onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST ) )
-                : super.convert( EntitiesInstances.VIOLATIONS_LIST.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.VIOLATIONS_LIST.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST.get() ) )
+                : super.convert( EntitiesInstances.VIOLATIONS_LIST.get().generate( super.getErrorResponse() ) );
     }
 
     // ---------------------------------------------------------------- дааные для человека
@@ -384,9 +393,12 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PINPP )
-                ).onErrorReturn( super.completeError( EntitiesInstances.PINPP ) )
-                : super.convert( EntitiesInstances.PINPP.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PINPP.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.PINPP.get() ) )
+                : super.convert( EntitiesInstances.PINPP.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает список правонарушений гражданина" )
@@ -429,9 +441,12 @@ public final class RequestController extends LogInspector {
                         : super.convert( crossBoardInfo )
                 ).onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.CROSS_BOARD_INFO )
-                ).onErrorReturn( super.completeError( EntitiesInstances.CROSS_BOARD_INFO ) )
-                : super.convert( EntitiesInstances.CROSS_BOARD_INFO.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.CROSS_BOARD_INFO.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.CROSS_BOARD_INFO.get() ) )
+                : super.convert( EntitiesInstances.CROSS_BOARD_INFO.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает временную или постоянную прописку человека" )
@@ -448,9 +463,12 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.MODEL_FOR_ADDRESS )
-                ).onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS ) )
-                : super.convert( EntitiesInstances.MODEL_FOR_ADDRESS.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.MODEL_FOR_ADDRESS.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS.get() ) )
+                : super.convert( EntitiesInstances.MODEL_FOR_ADDRESS.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по номеру кадастра" )
@@ -480,22 +498,28 @@ public final class RequestController extends LogInspector {
                                         .map( psychologyCard -> psychologyCard.save( data1 ) )
                                         .onErrorResume(
                                                 ReadTimeoutException.class,
-                                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
+                                                throwable -> super.completeError(
+                                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                                        EntitiesInstances.PSYCHOLOGY_CARD.get()
+                                                )
                                         )
-                                        : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
+                                        : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
                                 )
                         ).onErrorResume(
                                 ReadTimeoutException.class,
-                                throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
-                        ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
+                                throwable -> super.completeError(
+                                        EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                        EntitiesInstances.PSYCHOLOGY_CARD.get()
+                                )
+                        ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
                         : Flux.just(
-                                EntitiesInstances.PSYCHOLOGY_CARD.generate(
+                                EntitiesInstances.PSYCHOLOGY_CARD.get().generate(
                                         apiResponseModel.getStatus().getMessage(),
                                         Errors.DATA_NOT_FOUND
                                 )
                         )
                 )
-                : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                : Flux.just( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по фотографии" )
@@ -524,12 +548,15 @@ public final class RequestController extends LogInspector {
                         : SerDes
                         .getSerDes()
                         .getPsychologyCard( token, PsychologyCard.generate( results ), apiResponseModel )
-                        : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) ) )
+                        : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) ) )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
-                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
-                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PSYCHOLOGY_CARD.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
+                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по Пинфл" )
@@ -547,10 +574,13 @@ public final class RequestController extends LogInspector {
                 .apply( apiResponseModel )
                 .onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PSYCHOLOGY_CARD.get()
+                        )
                 )
-                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
-                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
+                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 
     @SuppressWarnings( value = "возвращает данные по номеру паспорта" )
@@ -559,27 +589,35 @@ public final class RequestController extends LogInspector {
             @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         if ( !super.checkParam( apiResponseModel.getStatus().getMessage() ) ) {
-            return super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+            return super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
         }
 
-        final String[] strings = apiResponseModel.getStatus().getMessage().split( "_" );
+        final WeakReference< String[] > strings = EntitiesInstances.generateWeakEntity(
+                apiResponseModel.getStatus().getMessage().split( "_" )
+        );
 
-        super.logging( "Passport: " + strings[0] + SPACE_WITH_DOUBLE_DOTS + strings[1] );
+        super.logging( "Passport: " + strings.get()[0] + SPACE_WITH_DOUBLE_DOTS + strings.get()[1] );
 
         return Config.flag
                 ? SerDes
                 .getSerDes()
                 .getGetModelForPassport()
-                .apply( strings[ 0 ] + strings[ 1 ] )
-                .flatMap( data -> SerDes
-                        .getSerDes()
-                        .getGetPsychologyCardByPinflInitial()
-                        .apply( apiResponseModel.changeMessage( data.getData().getPerson().getPinpp() ) )
-                        .map( psychologyCard -> psychologyCard.save( data ) )
+                .apply( strings.get()[ 0 ] + strings.get()[ 1 ] )
+                .flatMap( data -> {
+                        CustomServiceCleaner.clearReference( strings );
+                        return SerDes
+                                .getSerDes()
+                                .getGetPsychologyCardByPinflInitial()
+                                .apply( apiResponseModel.changeMessage( data.getData().getPerson().getPinpp() ) )
+                                .map( psychologyCard -> psychologyCard.save( data ) );
+                    }
                 ).onErrorResume(
                         io.netty.handler.timeout.ReadTimeoutException.class,
-                        throwable -> super.completeError( new ReadTimeoutException(), EntitiesInstances.PSYCHOLOGY_CARD )
-                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) )
-                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.generate( super.getErrorResponse.get() ) );
+                        throwable -> super.completeError(
+                                EntitiesInstances.READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(),
+                                EntitiesInstances.PSYCHOLOGY_CARD.get()
+                        )
+                ).onErrorReturn( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) )
+                : super.convert( EntitiesInstances.PSYCHOLOGY_CARD.get().generate( super.getErrorResponse() ) );
     }
 }

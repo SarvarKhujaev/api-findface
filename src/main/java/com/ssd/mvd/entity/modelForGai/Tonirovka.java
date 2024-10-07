@@ -1,14 +1,11 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
-public final class Tonirovka
-        extends Config
-        implements EntityCommonMethods< Tonirovka > {
+public final class Tonirovka implements EntityCommonMethods< Tonirovka > {
     public String getDateBegin() {
         return this.DateBegin;
     }
@@ -69,21 +66,6 @@ public final class Tonirovka
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public Tonirovka generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
     public Tonirovka generate() {
         return new Tonirovka();
     }
@@ -94,20 +76,7 @@ public final class Tonirovka
     public Tonirovka generate(
             @lombok.NonNull final String response
     ) {
-        return super.deserialize( response, this.getClass() );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Tonirovka generate ( @lombok.NonNull final ErrorResponse errorResponse ) {
-        return this.generate().setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_TONIROVKA();
+        return CustomSerializer.deserialize( response, this.getClass() );
     }
 
     @Override

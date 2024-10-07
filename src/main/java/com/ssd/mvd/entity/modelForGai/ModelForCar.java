@@ -1,17 +1,15 @@
 package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.inspectors.Config;
-import reactor.util.function.Tuple3;
-import com.ssd.mvd.constants.Errors;
 
-public final class ModelForCar
-        extends Config
-        implements EntityCommonMethods< ModelForCar > {
+import reactor.util.function.Tuple3;
+
+public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
     public String getPinpp() {
         return this.Pinpp;
     }
@@ -46,14 +44,6 @@ public final class ModelForCar
 
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForCar setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
-        this.errorResponse = errorResponse;
-        return this;
     }
 
     public String getStir() {
@@ -168,6 +158,14 @@ public final class ModelForCar
 
     private ErrorResponse errorResponse;
 
+    @Override
+    @lombok.NonNull
+    @org.jetbrains.annotations.Contract( value = "_ -> this" )
+    public ModelForCar setErrorResponse ( @lombok.NonNull final ErrorResponse errorResponse ) {
+        this.errorResponse = errorResponse;
+        return this;
+    }
+
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
     public PsychologyCard save (
@@ -203,21 +201,6 @@ public final class ModelForCar
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public ModelForCar generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
     public ModelForCar generate() {
         return new ModelForCar();
     }
@@ -230,17 +213,11 @@ public final class ModelForCar
 
     @Override
     @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_VEHICLE_DATA();
-    }
-
-    @Override
-    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCar generate(
             @lombok.NonNull final String response
     ) {
-        return super.deserialize( response, this.getClass() );
+        return CustomSerializer.deserialize( response, this.getClass() );
     }
 
     @Override

@@ -1,12 +1,13 @@
 package com.ssd.mvd.kafka;
 
 import com.ssd.mvd.interfaces.KafkaCommonMethods;
+import com.ssd.mvd.inspectors.TimeInspector;
 import com.ssd.mvd.inspectors.Config;
 
 import com.google.gson.annotations.Expose;
 import java.util.Date;
 
-public final class Notification extends Config implements KafkaCommonMethods {
+public final class Notification extends TimeInspector implements KafkaCommonMethods {
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Notification setCallingTime( final Date callingTime ) {
@@ -45,10 +46,11 @@ public final class Notification extends Config implements KafkaCommonMethods {
     @Expose
     private String methodName;
 
+    public Notification () {}
 
     @lombok.NonNull
     public String getTopicName() {
-        return super.getERROR_LOGS();
+        return Config.getERROR_LOGS();
     }
 
 
@@ -60,7 +62,7 @@ public final class Notification extends Config implements KafkaCommonMethods {
                 this.getTopicName(),
                 this.toString(),
                 " at: ",
-                super.newDate().toString()
+                super.newDate().get().toString()
         );
     }
 
@@ -70,10 +72,10 @@ public final class Notification extends Config implements KafkaCommonMethods {
         return String.join(
                 SPACE,
                 "Kafka got error: ",
-                super.getERROR_LOGS(),
+                Config.getERROR_LOGS(),
                 this.toString(),
                 " at: ",
-                super.newDate().toString()
+                super.newDate().get().toString()
         );
     }
 }

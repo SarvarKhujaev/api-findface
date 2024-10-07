@@ -1,13 +1,12 @@
 package com.ssd.mvd;
 
 import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
-import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
-import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
-import com.ssd.mvd.entity.ApiResponseModel;
+import com.ssd.mvd.inspectors.EntitiesInstances;
+import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.inspectors.SerDes;
-import com.ssd.mvd.entity.Status;
+import com.ssd.mvd.entity.response.Status;
 
 import junit.framework.TestCase;
 import java.util.Date;
@@ -21,8 +20,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                             .code( 200L )
                             .message( "30096545789812" )
                             .build()
-            ).success( true )
-            .build();
+            ).build();
 
     @Override
     public void setUp () {
@@ -35,25 +33,27 @@ public final class OvirServiceAPICheckTests extends TestCase {
     }
 
     public void testCrossBoardInfo () {
-        final CrossBoardInfo crossBoardInfo = SerDes
-                .getSerDes()
-                .getGetCrossBoardInfo()
-                .apply( this.apiResponseModel.getStatus().getMessage() )
-                .block();
+        EntitiesInstances.CROSS_BOARD_INFO.set(
+                SerDes
+                        .getSerDes()
+                        .getGetCrossBoardInfo()
+                        .apply( this.apiResponseModel.status().getMessage() )
+                        .block()
+        );
 
-        assertNotNull( crossBoardInfo );
-        assertNull( crossBoardInfo.getErrorResponse() );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get() );
+        assertNull( EntitiesInstances.CROSS_BOARD_INFO.get().getErrorResponse() );
 
-        assertFalse( crossBoardInfo.getResult().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getResult().isBlank() );
 
-        assertNotNull( crossBoardInfo.getData() );
-        assertFalse( crossBoardInfo.getData().isEmpty() );
-        assertNotNull( crossBoardInfo.getData().getFirst() );
-        assertFalse( crossBoardInfo.getData().getFirst().getCrossBoardList().isEmpty() );
-        assertNotNull( crossBoardInfo.getData().getFirst().getCrossBoardList().getFirst() );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get().getData() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().isEmpty() );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getCrossBoardList().isEmpty() );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getCrossBoardList().getFirst() );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -61,7 +61,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .getPeriod_code() == 0
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -69,7 +69,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .getTrip_purpose_code() == 0
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -78,7 +78,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -87,7 +87,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -96,7 +96,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -106,7 +106,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -115,7 +115,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -124,7 +124,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -133,7 +133,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -142,7 +142,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -151,7 +151,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -160,7 +160,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -169,7 +169,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -178,7 +178,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -187,7 +187,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -196,7 +196,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -205,7 +205,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -214,7 +214,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -223,7 +223,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -233,7 +233,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertNotNull(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -242,7 +242,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         );
 
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -252,7 +252,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -262,7 +262,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -272,7 +272,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -282,7 +282,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -292,7 +292,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
         assertFalse(
-                crossBoardInfo
+                EntitiesInstances.CROSS_BOARD_INFO.get()
                         .getData()
                         .getFirst()
                         .getCrossBoardList()
@@ -302,39 +302,41 @@ public final class OvirServiceAPICheckTests extends TestCase {
                         .isBlank()
         );
 
-        assertNotNull( crossBoardInfo.getData().getFirst().getPerson() );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson() );
 
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getSex() == 0 );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getLivestatus() == 0 );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getTransaction_id() == 0 );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getCitizenshipid() == 0 );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getBirthcountryid() == 0 );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getSex() == 0 );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getLivestatus() == 0 );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getTransaction_id() == 0 );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getCitizenshipid() == 0 );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getBirthcountryid() == 0 );
 
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getNamelat().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getEngname().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getSurnamelat().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getEngsurname().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getBirth_date().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getNationality().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getPatronymlat().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getCitizenship().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getBirthcountry().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getCurrent_pinpp().isBlank() );
-        assertFalse( crossBoardInfo.getData().getFirst().getPerson().getCurrent_document().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getNamelat().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getEngname().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getSurnamelat().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getEngsurname().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getBirth_date().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getNationality().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getPatronymlat().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getCitizenship().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getBirthcountry().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getCurrent_pinpp().isBlank() );
+        assertFalse( EntitiesInstances.CROSS_BOARD_INFO.get().getData().getFirst().getPerson().getCurrent_document().isBlank() );
 
-        crossBoardInfo.close();
+        EntitiesInstances.CROSS_BOARD_INFO.get().close();
     }
 
     public void testAnalyzeCrossData () {
-        final CrossBoardInfo crossBoardInfo = SerDes
-                .getSerDes()
-                .getAnalyzeCrossData()
-                .apply( new CrossBoardInfo() )
-                .block();
+        EntitiesInstances.CROSS_BOARD_INFO.set(
+                SerDes
+                        .getSerDes()
+                        .getAnalyzeCrossData()
+                        .apply( EntitiesInstances.CROSS_BOARD_INFO.get() )
+                        .block()
+        );
 
-        assertNotNull( crossBoardInfo );
+        assertNotNull( EntitiesInstances.CROSS_BOARD_INFO.get() );
 
-        crossBoardInfo.close();
+        EntitiesInstances.CROSS_BOARD_INFO.get().close();
     }
 
     public void testPersonTotalDataByFIO () {
@@ -418,7 +420,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         final PsychologyCard psychologyCard = SerDes
                 .getSerDes()
                 .getGetPsychologyCardByData()
-                .apply( new ModelForPassport(), this.apiResponseModel )
+                .apply( EntitiesInstances.MODEL_FOR_PASSPORT.get(), this.apiResponseModel )
                 .block();
 
         assertNotNull( psychologyCard );
@@ -478,26 +480,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );
@@ -675,26 +677,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );
@@ -872,26 +874,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );

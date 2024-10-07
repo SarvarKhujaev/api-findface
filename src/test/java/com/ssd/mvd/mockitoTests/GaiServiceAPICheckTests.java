@@ -18,15 +18,14 @@ import org.junit.jupiter.api.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.time.Duration;
 import java.util.Date;
-import java.util.List;
 
 @ExtendWith( value = MockitoExtension.class )
 @TestInstance( value = TestInstance.Lifecycle.PER_CLASS )
 public final class GaiServiceAPICheckTests {
     private final String testDate = new Date().toString();
-    private final String testToken = GaiServiceAPICheckTests.class.getName();
     private final String testNumber = "01D819CC";
 
     private SerDes serDes;
@@ -50,13 +49,13 @@ public final class GaiServiceAPICheckTests {
     private Mono< DoverennostList > doverennostListMono;
 
     @Mock
-    private List< Doverennost > doverennosts;
+    private CopyOnWriteArrayList< Doverennost > doverennosts;
 
     @Mock
-    private List< ModelForCar > modelForCars;
+    private CopyOnWriteArrayList< ModelForCar > modelForCars;
 
     @Mock
-    private List< ViolationsInformation > violationsInformationsList;
+    private CopyOnWriteArrayList< ViolationsInformation > violationsInformationsList;
 
     private final AutoCloseable autoCloseable = MockitoAnnotations.openMocks( this );
 
@@ -87,22 +86,6 @@ public final class GaiServiceAPICheckTests {
     public void endUp () throws Exception {
         SerDes.getSerDes().close();
         this.autoCloseable.close();
-    }
-
-    @Test
-    @DisplayName( value = "testGaiToken method" )
-    public void testGaiToken () {
-        Mockito.when(
-                SerDes.getSerDes()
-        ).thenReturn( this.serDes );
-
-        assertThat( this.serDes ).isNotNull();
-
-        Mockito.when( this.serDes.getTokenForGai() ).thenReturn( this.testToken );
-
-        assertThat( this.testToken ).isBlank();
-
-        Mockito.verify( this.serDes ).getTokenForGai();
     }
 
     @Test
@@ -299,11 +282,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.doverennostList ).getDoverennostsList();
 
-        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+        Mockito.when( this.doverennosts.get( 0 ) ).thenReturn( this.doverennost );
 
         assertThat( this.doverennost ).isNotNull();
 
-        Mockito.verify( this.doverennosts ).getFirst();
+        Mockito.verify( this.doverennosts ).get( 0 );
 
         Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
 
@@ -549,11 +532,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.modelForCarList ).getModelForCarList();
 
-        Mockito.when( this.modelForCars.getFirst() ).thenReturn( this.modelForCar );
+        Mockito.when( this.modelForCars.get( 0 ) ).thenReturn( this.modelForCar );
 
         assertThat( this.modelForCar ).isNotNull();
 
-        Mockito.verify( this.modelForCars ).getFirst();
+        Mockito.verify( this.modelForCars ).get( 0 );
 
         Mockito.when( this.modelForCar.getDoverennostList() ).thenReturn( this.doverennostList );
 
@@ -568,11 +551,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.doverennostList ).getDoverennostsList();
 
-        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+        Mockito.when( this.doverennosts.get( 0 ) ).thenReturn( this.doverennost );
 
         assertThat( this.doverennost ).isNotNull();
 
-        Mockito.verify( this.doverennosts ).getFirst();
+        Mockito.verify( this.doverennosts ).get( 0 );
 
         Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
 
@@ -819,11 +802,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.doverennostList ).getDoverennostsList();
 
-        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+        Mockito.when( this.doverennosts.get( 0 ) ).thenReturn( this.doverennost );
 
         assertThat( this.doverennost ).isNotNull();
 
-        Mockito.verify( this.doverennosts ).getFirst();
+        Mockito.verify( this.doverennosts ).get( 0 );
 
         Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
 
@@ -1064,11 +1047,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.violationsList ).getViolationsInformationsList();
 
-        Mockito.when( this.violationsInformationsList.getFirst() ).thenReturn( this.violationsInformation );
+        Mockito.when( this.violationsInformationsList.get( 0 ) ).thenReturn( this.violationsInformation );
 
         assertThat( this.violationsInformation ).isNotNull();
 
-        Mockito.verify( this.violationsInformationsList ).getFirst();
+        Mockito.verify( this.violationsInformationsList ).get( 0 );
 
         final int testValue = 0;
 
@@ -1171,11 +1154,11 @@ public final class GaiServiceAPICheckTests {
 
         Mockito.verify( this.doverennostList ).getDoverennostsList();
 
-        Mockito.when( this.doverennosts.getFirst() ).thenReturn( this.doverennost );
+        Mockito.when( this.doverennosts.get( 0 ) ).thenReturn( this.doverennost );
 
         assertThat( this.doverennost ).isNotNull();
 
-        Mockito.verify( this.doverennosts ).getFirst();
+        Mockito.verify( this.doverennosts ).get( 0 );
 
         Mockito.when( this.doverennost.getIssuedBy() ).thenReturn( this.testDate );
 

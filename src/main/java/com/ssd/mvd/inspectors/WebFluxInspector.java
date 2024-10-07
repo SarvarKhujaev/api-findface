@@ -13,6 +13,7 @@ public class WebFluxInspector extends Config {
     protected static final int RESULT_COUNT = 1000;
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     protected final synchronized <T, U> Flux< U > convertValuesToParallelFluxWithMap (
             @lombok.NonNull final Collection< T > collection,
@@ -27,6 +28,7 @@ public class WebFluxInspector extends Config {
     }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
     protected final synchronized <T> Flux< T > convertValuesToParallelFluxWithFilter(
             @lombok.NonNull final Collection< T > collection,

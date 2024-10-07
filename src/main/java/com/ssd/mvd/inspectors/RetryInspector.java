@@ -7,8 +7,9 @@ import java.time.Duration;
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class RetryInspector extends WebFluxInspector {
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    protected final synchronized <T extends StringOperations> Retry retry (
+    protected final synchronized <T> Retry retry (
             @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods
     ) {
         return Retry.backoff( 2, Duration.ofSeconds( 1 ) )

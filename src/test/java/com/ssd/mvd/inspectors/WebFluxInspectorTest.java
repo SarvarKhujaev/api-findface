@@ -15,10 +15,10 @@ public final class WebFluxInspectorTest extends WebFluxInspector {
                                 EntitiesInstances.instancesList,
                                 entity -> {
                                     assertNotNull( entity );
-                                    assertNotNull( entity.getMethodApi() );
+                                    assertNotNull( entity.getMethodName().getMethodApi() );
                                     assertNotNull( entity.getMethodName() );
 
-                                    assertTrue( super.checkString( entity.getMethodApi() ).isBlank() );
+                                    assertTrue( super.checkString( entity.getMethodName().getMethodApi() ).isBlank() );
                                     assertTrue( super.checkString( entity.getMethodName().name() ).isBlank() );
                                 }
                         )
@@ -32,10 +32,10 @@ public final class WebFluxInspectorTest extends WebFluxInspector {
                         EntitiesInstances.instancesList,
                         entity -> {
                                     assertNotNull( entity );
-                                    assertNotNull( entity.getMethodApi() );
+                                    assertNotNull( entity.getMethodName().getMethodApi() );
                                     assertNotNull( entity.getMethodName() );
 
-                                    assertTrue( super.checkString( entity.getMethodApi() ).isBlank() );
+                                    assertTrue( super.checkString( entity.getMethodName().getMethodApi() ).isBlank() );
                                     assertTrue( super.checkString( entity.getMethodName().name() ).isBlank() );
 
                                     return entity;
@@ -52,7 +52,7 @@ public final class WebFluxInspectorTest extends WebFluxInspector {
         StepVerifier.create(
                 super.convertValuesToParallelFluxWithFilter(
                         EntitiesInstances.instancesList,
-                        entity -> !super.checkString( entity.getMethodApi() ).isBlank()
+                        entity -> !super.checkString( entity.getMethodName().getMethodApi() ).isBlank()
                                 && !super.checkString( entity.getMethodName().name() ).isBlank()
                 )
         ).expectNextCount( WebFluxInspector.RESULT_COUNT)

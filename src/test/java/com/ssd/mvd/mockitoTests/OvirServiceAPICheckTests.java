@@ -1,15 +1,15 @@
 package com.ssd.mvd.mockitoTests;
 
-import com.ssd.mvd.inspectors.SerDes;
-import com.ssd.mvd.entity.ApiResponseModel;
-import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.entity.Status;
+import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
-import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
-import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
-import junit.framework.TestCase;
+import com.ssd.mvd.inspectors.EntitiesInstances;
+import com.ssd.mvd.entity.response.ApiResponseModel;
+import com.ssd.mvd.entity.PsychologyCard;
+import com.ssd.mvd.inspectors.SerDes;
+import com.ssd.mvd.entity.response.Status;
 
+import junit.framework.TestCase;
 import java.util.Date;
 
 public final class OvirServiceAPICheckTests extends TestCase {
@@ -21,8 +21,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
                             .code( 200L )
                             .message( "30096545789812" )
                             .build()
-            ).success( true )
-            .build();
+            ).build();
 
     @Override
     public void setUp () {
@@ -38,7 +37,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         final CrossBoardInfo crossBoardInfo = SerDes
                 .getSerDes()
                 .getGetCrossBoardInfo()
-                .apply( this.apiResponseModel.getStatus().getMessage() )
+                .apply( this.apiResponseModel.status().getMessage() )
                 .block();
 
         assertNotNull( crossBoardInfo );
@@ -418,7 +417,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         final PsychologyCard psychologyCard = SerDes
                 .getSerDes()
                 .getGetPsychologyCardByData()
-                .apply( new ModelForPassport(), this.apiResponseModel )
+                .apply( EntitiesInstances.MODEL_FOR_PASSPORT.get(), this.apiResponseModel )
                 .block();
 
         assertNotNull( psychologyCard );
@@ -478,26 +477,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );
@@ -675,26 +674,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );
@@ -872,26 +871,26 @@ public final class OvirServiceAPICheckTests extends TestCase {
 
         assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().isEmpty() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getPermanentRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPsp().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPPerson().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPCitizen().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPDateBirth().isBlank() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPRegistrationDate().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ) );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPsp().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPPerson().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPCitizen().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPDateBirth().isBlank() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPRegistrationDate().isBlank() );
 
-        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus() );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getId() == 0 );
-        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().getFirst().getPStatus().getValue().isBlank() );
+        assertNotNull( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus() );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getId() == 0 );
+        assertFalse( psychologyCard.getModelForCadastr().getTemproaryRegistration().get( 0 ).getPStatus().getValue().isBlank() );
 
         assertNotNull( psychologyCard.getPapilonData() );
         assertFalse( psychologyCard.getPapilonData().isEmpty() );

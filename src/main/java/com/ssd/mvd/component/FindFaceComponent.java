@@ -20,7 +20,8 @@ public final class FindFaceComponent
     private static FindFaceComponent component = new FindFaceComponent();
 
     @lombok.NonNull
-    public static FindFaceComponent getInstance () {
+    @lombok.Synchronized
+    public static synchronized FindFaceComponent getInstance () {
         return component != null ? component : ( component = new FindFaceComponent() );
     }
 

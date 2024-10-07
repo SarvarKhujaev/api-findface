@@ -1,40 +1,47 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.entityForLogging.ErrorLog;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.entity.ApiResponseModel;
 import com.ssd.mvd.kafka.KafkaDataControl;
 import com.ssd.mvd.entity.PsychologyCard;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
-
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import org.springframework.scheduling.annotation.Async;
 import reactor.core.publisher.Mono;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class ErrorController extends CustomSerializer {
-    protected final Supplier< ErrorResponse > getErrorResponse = () -> {
-        SerDes.getSerDes().getUpdateTokens().get();
-        return this.error.apply( SPACE, Errors.GAI_TOKEN_ERROR );
-    };
+    @lombok.NonNull
+    @lombok.Synchronized
+    protected final synchronized ErrorResponse getErrorResponse () {
+        SerDes.getSerDes().updateTokens();
+        return error( SPACE, Errors.GAI_TOKEN_ERROR );
+    }
 
-    protected final BiFunction< String, Errors, ErrorResponse > error = ( error, errors ) -> ErrorResponse
-            .builder()
-            .message( errors.getErrorMEssage( error ) )
-            .errors( errors )
-            .build();
+    @lombok.NonNull
+    @lombok.Synchronized
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
+    public static synchronized ErrorResponse error (
+            @lombok.NonNull final String error,
+            @lombok.NonNull final Errors errors
+    ) {
+        return ErrorResponse
+                .builder()
+                .message( errors.getErrorMEssage( error ) )
+                .errors( errors )
+                .build();
+    }
 
     @SuppressWarnings(
             value = "saves error from external service"
     )
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    protected final synchronized <T extends StringOperations> Mono<T> saveErrorLog (
+    protected final synchronized <T> Mono<T> saveErrorLog (
             @lombok.NonNull final String errorMessage,
             @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods
     ) {
@@ -44,7 +51,7 @@ public class ErrorController extends CustomSerializer {
 
         return super.convert(
                 entityCommonMethods.generate().generate(
-                        this.error.apply(
+                        error(
                                 errorMessage,
                                 Errors.EXTERNAL_SERVICE_500_ERROR
                         )
@@ -66,11 +73,11 @@ public class ErrorController extends CustomSerializer {
         KafkaDataControl
                 .getKafkaDataControl()
                 .sendMessage(
-                        EntitiesInstances.NOTIFICATION
+                        EntitiesInstances.NOTIFICATION.get()
                                 .setPinfl( params )
                                 .setReason( reason )
                                 .setMethodName( methodName.name() )
-                                .setCallingTime( super.newDate() )
+                                .setCallingTime( super.newDate().get() )
                 );
     }
 
@@ -90,7 +97,7 @@ public class ErrorController extends CustomSerializer {
     @lombok.NonNull
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    protected final synchronized <T extends StringOperations> T completeError (
+    protected final synchronized <T> T completeError (
             @lombok.NonNull final EntityCommonMethods<T> entitiesInstances
     ) {
         return entitiesInstances.generate(
@@ -118,7 +125,7 @@ public class ErrorController extends CustomSerializer {
     @lombok.NonNull
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    protected final synchronized <T extends StringOperations, U extends Exception> Mono< T > completeError (
+    protected final synchronized <T, U extends Exception> Mono< T > completeError (
             @lombok.NonNull final U exception,
             @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods
     ) {
@@ -136,17 +143,21 @@ public class ErrorController extends CustomSerializer {
             value = "сохраняем логи о пользователе который отправил запрос на сервис"
     )
     @lombok.NonNull
-    protected final BiFunction< PsychologyCard, ApiResponseModel, PsychologyCard > saveUserUsageLog =
-            ( psychologyCard, apiResponseModel ) -> {
-                KafkaDataControl
-                        .getKafkaDataControl()
-                        .sendMessage(
-                                new UserRequest(
-                                        psychologyCard,
-                                        apiResponseModel
-                                )
-                        );
+    @lombok.Synchronized
+    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
+    protected final synchronized PsychologyCard saveUserUsageLog (
+            @lombok.NonNull final PsychologyCard psychologyCard,
+            @lombok.NonNull final ApiResponseModel apiResponseModel
+    ) {
+        KafkaDataControl
+                .getKafkaDataControl()
+                .sendMessage(
+                        EntitiesInstances.USER_REQUEST_ATOMIC_REFERENCE.get().update(
+                                psychologyCard,
+                                apiResponseModel
+                        )
+                );
 
-                return psychologyCard;
-            };
+        return psychologyCard;
+    }
 }

@@ -1,15 +1,15 @@
 package com.ssd.mvd.inspectors;
 
-import java.util.Map;
+import java.util.WeakHashMap;
 
-public class Archieve extends DataValidationInspector {
-    protected final static Map< Integer, String > periods = CollectionsInspector.newMap();
-    protected final static Map< Integer, String > countries = CollectionsInspector.newMap();
-    protected final static Map< Integer, String > tripPurposes = CollectionsInspector.newMap();
-    protected final static Map< Integer, String > nationalities = CollectionsInspector.newMap();
+public class Archieve {
+    protected final static WeakHashMap< Integer, String > periods = CollectionsInspector.newMap();
+    protected final static WeakHashMap< Integer, String > countries = CollectionsInspector.newMap();
+    protected final static WeakHashMap< Integer, String > tripPurposes = CollectionsInspector.newMap();
+    protected final static WeakHashMap< Integer, String > nationalities = CollectionsInspector.newMap();
 
-    protected final static Map< String, String > documentTypes = CollectionsInspector.newMap();
-    protected final static Map< String, String > transportCategory = CollectionsInspector.newMap();
+    protected final static WeakHashMap< String, String > documentTypes = CollectionsInspector.newMap();
+    protected final static WeakHashMap< String, String > transportCategory = CollectionsInspector.newMap();
 
     protected Archieve () {
         int[] keys = new int[] {
@@ -1264,5 +1264,14 @@ public class Archieve extends DataValidationInspector {
         for ( int i = 0; i < strings.length; i++ ) {
             transportCategory.put( strings[i], values[i] );
         }
+    }
+
+    public static void close() {
+        periods.clear();
+        countries.clear();
+        tripPurposes.clear();
+        nationalities.clear();
+        documentTypes.clear();
+        transportCategory.clear();
     }
 }

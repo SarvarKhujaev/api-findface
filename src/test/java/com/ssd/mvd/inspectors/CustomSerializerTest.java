@@ -15,10 +15,10 @@ public final class CustomSerializerTest extends CustomSerializer {
                                 EntitiesInstances.instancesList,
                                 entity -> {
                                     assertNotNull( entity );
-                                    assertNotNull( entity.getMethodApi() );
+                                    assertNotNull( entity.getMethodName().getMethodApi() );
                                     assertNotNull( entity.getMethodName() );
 
-                                    assertTrue( super.checkString( entity.getMethodApi() ).isBlank() );
+                                    assertTrue( super.checkString( entity.getMethodName().getMethodApi() ).isBlank() );
                                     assertTrue( super.checkString( entity.getMethodName().name() ).isBlank() );
                                 }
                         )
@@ -32,8 +32,8 @@ public final class CustomSerializerTest extends CustomSerializer {
                         integer -> super.analyze(
                                 EntitiesInstances.instancesList,
                                 entity -> {
-                                    assertNotNull( super.serialize( entity ) );
-                                    assertFalse( super.serialize( entity ).isBlank() );
+                                    assertNotNull( serialize( entity ) );
+                                    assertFalse( serialize( entity ).isBlank() );
                                 }
                         )
                 )
@@ -50,12 +50,12 @@ public final class CustomSerializerTest extends CustomSerializer {
                         integer -> super.analyze(
                                 EntitiesInstances.instancesList,
                                 entity -> {
-                                    final String temp = super.serialize( entity );
+                                    final String temp = serialize( entity );
 
                                     assertNotNull( temp );
                                     assertFalse( temp.isBlank() );
 
-                                    final Object object = super.deserialize( temp, entity.getClass() );
+                                    final Object object = deserialize( temp, entity.getClass() );
 
                                     assertNotNull( object );
                                     assertEquals( entity, object );

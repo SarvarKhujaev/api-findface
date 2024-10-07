@@ -7,14 +7,15 @@ import org.reactivestreams.Subscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Publisher;
 
-public final class CustomPublisherForRequest extends CustomSerializer implements Publisher< String > {
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
+public final class CustomPublisherForRequest implements Publisher< String > {
     private final String value;
 
     public <T, U> CustomPublisherForRequest (
             @lombok.NonNull final U object,
             @lombok.NonNull final RequestCommonMethods< T, U > request
     ) {
-        this.value = super.serialize( request.generate( object ) );
+        this.value = CustomSerializer.serialize( request.generate( object ) );
     }
 
     @Override

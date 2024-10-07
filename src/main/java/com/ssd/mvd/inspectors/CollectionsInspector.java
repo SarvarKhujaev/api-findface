@@ -1,5 +1,8 @@
 package com.ssd.mvd.inspectors;
 
+import org.apache.commons.collections4.list.UnmodifiableList;
+
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.*;
 
@@ -10,19 +13,19 @@ public class CollectionsInspector extends TimeInspector {
     @lombok.NonNull
     @lombok.Synchronized
     protected final synchronized <T> List<T> emptyList () {
-        return Collections.emptyList();
+        return new UnmodifiableList<>( Collections.emptyList() );
     }
 
     @lombok.NonNull
     @lombok.Synchronized
-    protected final synchronized <T> ArrayList<T> newList () {
-        return new ArrayList<>();
+    protected final synchronized <T> List<T> newList () {
+        return new CopyOnWriteArrayList<>();
     }
 
     @lombok.NonNull
     @lombok.Synchronized
-    protected static synchronized <T, V> Map<T, V> newMap () {
-        return new HashMap<>();
+    protected static synchronized <T, V> WeakHashMap<T, V> newMap () {
+        return new WeakHashMap<>();
     }
 
     @lombok.Synchronized
@@ -35,11 +38,11 @@ public class CollectionsInspector extends TimeInspector {
 
     @lombok.NonNull
     @lombok.Synchronized
-    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    protected final synchronized <T> List<T> convertArrayToList (
+    @org.jetbrains.annotations.Contract( value = "_ -> _" )
+    protected static synchronized <T> List<T> convertArrayToList (
             @lombok.NonNull final T[] objects
     ) {
-        return Arrays.asList( objects );
+        return UnmodifiableList.unmodifiableList( Arrays.asList( objects ) );
     }
 
     @lombok.Synchronized

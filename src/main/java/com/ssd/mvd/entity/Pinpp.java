@@ -1,14 +1,11 @@
 package com.ssd.mvd.entity;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
-public final class Pinpp
-        extends Config
-        implements EntityCommonMethods< Pinpp > {
+public final class Pinpp implements EntityCommonMethods< Pinpp > {
     public String getName() {
         return this.Name;
     }
@@ -76,21 +73,6 @@ public final class Pinpp
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public Pinpp generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
     public Pinpp generate() {
         return new Pinpp();
     }
@@ -99,29 +81,14 @@ public final class Pinpp
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Pinpp generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Pinpp generate (
             @lombok.NonNull final String response
     ) {
-        return super.deserialize( response, this.getClass() );
+        return CustomSerializer.deserialize( response, this.getClass() );
     }
 
     @Override
     @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_PINPP;
-    }
-
-    @Override
-    @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_PINPP();
     }
 }

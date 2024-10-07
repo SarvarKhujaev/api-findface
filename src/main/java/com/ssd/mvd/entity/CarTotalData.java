@@ -2,15 +2,12 @@ package com.ssd.mvd.entity;
 
 import reactor.util.function.Tuple5;
 
-import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.ErrorController;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 
 public final class CarTotalData
-        extends ErrorController
         implements EntityCommonMethods< CarTotalData >, ServiceCommonMethods {
     public void setTonirovka ( final Tonirovka tonirovka ) {
         this.tonirovka = tonirovka;
@@ -96,30 +93,6 @@ public final class CarTotalData
 
     private CarTotalData( final ModelForCar modelForCar ) {
         this.setModelForCar( modelForCar );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    public CarTotalData generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.generate().setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    public CarTotalData generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
     }
 
     @Override

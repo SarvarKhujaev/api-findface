@@ -21,14 +21,14 @@ public class LogInspector extends ErrorController {
                         EMPTY,
                         o.getClass().getName(),
                         " was closed successfully at: ",
-                        super.newDate().toString()
+                        super.newDate().get().toString()
                 )
         );
     }
 
     @Async( value = " extends" )
     @lombok.Synchronized
-    protected synchronized <T extends StringOperations> void logging (
+    protected synchronized <T> void logging (
             @lombok.NonNull final Throwable throwable,
             @lombok.NonNull final EntityCommonMethods<T> entityCommonMethods,
             @lombok.NonNull final String params
@@ -61,7 +61,7 @@ public class LogInspector extends ErrorController {
                         EMPTY,
                         clazz.getName(),
                         " was created at: ",
-                        super.newDate().toString()
+                        super.newDate().get().toString()
                 )
         );
     }

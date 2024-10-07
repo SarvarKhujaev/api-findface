@@ -2,15 +2,14 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class DoverennostList
-        extends Config
+        extends CustomSerializer
         implements EntityCommonMethods< DoverennostList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
@@ -48,38 +47,8 @@ public final class DoverennostList
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public DoverennostList generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public DoverennostList generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_DOVERENNOST_LIST;
-    }
-
-    @Override
-    @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_DOVERENNOST_LIST();
     }
 
     @Override
@@ -88,7 +57,7 @@ public final class DoverennostList
     public DoverennostList generate(
             @lombok.NonNull final String response
     ) {
-        return this.generate().setDoverennostsList( super.stringToArrayList( response, Doverennost[].class ) );
+        return this.generate().setDoverennostsList( CustomSerializer.stringToArrayList( response, Doverennost[].class ) );
     }
 
     @Override

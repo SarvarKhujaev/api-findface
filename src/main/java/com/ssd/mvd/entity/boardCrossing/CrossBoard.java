@@ -1,10 +1,10 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.inspectors.LogInspector;
+import com.ssd.mvd.inspectors.TimeInspector;
 import java.util.Date;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public final class CrossBoard extends LogInspector {
+public final class CrossBoard {
     public Date getRegistrationDate() {
         return registrationDate;
     }
@@ -131,13 +131,8 @@ public final class CrossBoard extends LogInspector {
     private Purpose purpose;
 
     public CrossBoard save ( final int nationalityId ) {
-        try {
-            this.setRegistrationDate( super.parseStringIntoDate( this.getReg_date() ) );
-        } catch ( final Exception e ) {
-            super.logging( e );
-        }
-
         this.setDirection_type_code( this.getDirection_type_code().equals( "P" ) ? "въезд" : "выезд" );
+        this.setRegistrationDate( TimeInspector.parseStringIntoDate( this.getReg_date() ) );
         this.setPurpose( new Purpose( this, nationalityId ) );
         return this;
     }

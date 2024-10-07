@@ -1,5 +1,6 @@
 package com.ssd.mvd.inspectors;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.time.Duration;
@@ -10,15 +11,21 @@ public class TimeInspector extends StringOperations {
     public final static Duration HttpClientDuration = Duration.ofSeconds( 20 );
 
     @lombok.NonNull
-    protected final synchronized Date newDate () {
-        return new Date();
+    @lombok.Synchronized
+    protected final synchronized WeakReference< Date > newDate () {
+        return EntitiesInstances.generateWeakEntity( new Date() );
     }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
-    protected final synchronized Date parseStringIntoDate (
+    public static synchronized Date parseStringIntoDate (
             @lombok.NonNull final String value
-    ) throws ParseException {
-        return new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( value );
+    ) {
+        try {
+            return new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ).parse( value );
+        } catch ( final ParseException e ) {
+            throw new RuntimeException(e);
+        }
     }
 }

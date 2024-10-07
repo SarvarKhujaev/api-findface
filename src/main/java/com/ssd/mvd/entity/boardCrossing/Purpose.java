@@ -64,50 +64,40 @@ public final class Purpose extends Archieve {
             @lombok.NonNull final CrossBoard crossBoard,
             @lombok.NonNull final Integer nationalityId
     ) {
-        if ( super.objectIsNotNull( crossBoard.getTrip_purpose_code() ) ) {
-            this.setTripPurpose(
-                    Archieve.tripPurposes.getOrDefault(
-                            crossBoard.getTrip_purpose_code(),
-                            Errors.DATA_NOT_FOUND.name()
-                    )
-            );
-        }
+        this.setTripPurpose(
+                Archieve.tripPurposes.getOrDefault(
+                        crossBoard.getTrip_purpose_code(),
+                        Errors.DATA_NOT_FOUND.name()
+                )
+        );
 
-        if ( super.objectIsNotNull( crossBoard.getTrans_category_code() ) ) {
-            this.setTransportCategory(
-                    Archieve.transportCategory.getOrDefault(
-                            crossBoard.getTrans_category_code(),
-                            Errors.DATA_NOT_FOUND.name()
-                    )
-            );
-        }
+        this.setTransportCategory(
+                Archieve.transportCategory.getOrDefault(
+                        crossBoard.getTrans_category_code(),
+                        Errors.DATA_NOT_FOUND.name()
+                )
+        );
 
-        if ( super.objectIsNotNull( crossBoard.getPeriod_code() ) ) {
-            this.setPeriods(
-                    Archieve.periods.getOrDefault(
-                            crossBoard.getPeriod_code(),
-                            Errors.DATA_NOT_FOUND.name()
-                    )
-            );
-        }
+        this.setPeriods(
+                Archieve.periods.getOrDefault(
+                        crossBoard.getPeriod_code(),
+                        Errors.DATA_NOT_FOUND.name()
+                )
+        );
 
-        if ( super.objectIsNotNull( crossBoard.getDocument_type_code() ) ) {
-            this.setDocumentType(
-                    Archieve.documentTypes.getOrDefault(
-                            crossBoard.getDocument_type_code(),
-                            Errors.DATA_NOT_FOUND.name()
-                    )
-            );
-        }
+        this.setDocumentType(
+                Archieve.documentTypes.getOrDefault(
+                        crossBoard.getDocument_type_code(),
+                        Errors.DATA_NOT_FOUND.name()
+                )
+        );
 
-        if ( super.objectIsNotNull( crossBoard.getDirection_country() ) ) {
-            this.setCountries(
-                    Archieve.countries.getOrDefault(
-                            crossBoard.getDirection_country(),
-                            Errors.DATA_NOT_FOUND.name()
-                    )
-            );
-        }
+        this.setCountries(
+                Archieve.countries.getOrDefault(
+                        crossBoard.getDirection_country(),
+                        Errors.DATA_NOT_FOUND.name()
+                )
+        );
 
         this.setNationalities(
                 Archieve.nationalities.getOrDefault(

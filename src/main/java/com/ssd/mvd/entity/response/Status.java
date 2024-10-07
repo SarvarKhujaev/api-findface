@@ -1,4 +1,4 @@
-package com.ssd.mvd.entity;
+package com.ssd.mvd.entity.response;
 
 @lombok.Data
 @lombok.Builder

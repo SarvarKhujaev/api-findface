@@ -4,16 +4,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+
+import com.ssd.mvd.inspectors.CollectionsInspector;
 import com.ssd.mvd.entity.modelForGai.ModelForCar;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class ModelForCarList
-        extends Config
+        extends CollectionsInspector
         implements EntityCommonMethods< ModelForCarList >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
@@ -48,30 +49,6 @@ public final class ModelForCarList
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public ModelForCarList generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public ModelForCarList generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.generate().setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
     public ModelForCarList generate() {
         return new ModelForCarList();
     }
@@ -84,17 +61,11 @@ public final class ModelForCarList
 
     @Override
     @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_MODEL_FOR_CAR_LIST();
-    }
-
-    @Override
-    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public ModelForCarList generate(
             @lombok.NonNull final String response
     ) {
-        return this.generate().setModelForCarList( this.stringToArrayList( response, ModelForCar[].class ) );
+        return this.generate().setModelForCarList( CustomSerializer.stringToArrayList( response, ModelForCar[].class ) );
     }
 
     @Override

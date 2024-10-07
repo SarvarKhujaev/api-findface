@@ -1,19 +1,16 @@
 package com.ssd.mvd.entity.modelForCadastr;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
-import java.util.List;
-
-public final class Data
-        extends Config
-        implements EntityCommonMethods< Data >, ServiceCommonMethods {
+public final class Data implements EntityCommonMethods< Data >, ServiceCommonMethods {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -26,38 +23,23 @@ public final class Data
         return this;
     }
 
-    public List< Person > getPermanentRegistration() {
+    public CopyOnWriteArrayList< Person > getPermanentRegistration() {
         return this.PermanentRegistration;
     }
 
-    public List< com.ssd.mvd.entity.modelForCadastr.TemproaryRegistration > getTemproaryRegistration() {
+    public CopyOnWriteArrayList< com.ssd.mvd.entity.modelForCadastr.TemproaryRegistration > getTemproaryRegistration() {
         return this.TemproaryRegistration;
     }
 
     private ErrorResponse errorResponse;
 
     @JsonDeserialize
-    private List< Person > PermanentRegistration;
+    private CopyOnWriteArrayList< Person > PermanentRegistration;
 
     @JsonDeserialize
-    private List< TemproaryRegistration > TemproaryRegistration;
+    private CopyOnWriteArrayList< TemproaryRegistration > TemproaryRegistration;
 
     public Data () {}
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    public Data generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate().setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
 
     @Override
     @lombok.NonNull
@@ -69,18 +51,9 @@ public final class Data
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public Data generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    public Data generate (
             @lombok.NonNull final String response
     ) {
-        return super.deserialize(
+        return CustomSerializer.deserialize(
                 response.substring( response.indexOf( "Data" ) + 6, response.indexOf( ",\"AnswereId" ) ),
                 this.getClass()
         );
@@ -90,12 +63,6 @@ public final class Data
     @lombok.NonNull
     public Methods getMethodName() {
         return Methods.CADASTER;
-    }
-
-    @Override
-    @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_CADASTR();
     }
 
     @Override

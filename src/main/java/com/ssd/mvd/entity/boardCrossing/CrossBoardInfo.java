@@ -1,17 +1,17 @@
 package com.ssd.mvd.entity.boardCrossing;
 
+import com.ssd.mvd.inspectors.CollectionsInspector;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.EntitiesInstances;
+import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Methods;
-import com.ssd.mvd.constants.Errors;
 
 import java.util.List;
 
 public final class CrossBoardInfo
-        extends Config
+        extends CollectionsInspector
         implements EntityCommonMethods< CrossBoardInfo >, ServiceCommonMethods {
     public List< com.ssd.mvd.entity.boardCrossing.Data > getData() {
         return this.Data;
@@ -55,44 +55,20 @@ public final class CrossBoardInfo
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    public CrossBoardInfo generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.setErrorResponse(
-                super.error.apply(
-                        message,
-                        errors
-                )
-        );
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> !null" )
-    public CrossBoardInfo generate (
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.generate().setErrorResponse( errorResponse );
-    }
-
-    @Override
-    @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public CrossBoardInfo generate (
             @lombok.NonNull final String response
     ) {
         return new CrossBoardInfo(
                 response.contains( "[{\"card_id" )
-                        ? super.stringToArrayList(
+                        ? CustomSerializer.stringToArrayList(
                                 response.substring( response.indexOf( "[{\"card_id" ), response.length() - 3 ),
                                 CrossBoard[].class
                         )
                         : super.emptyList(),
                 response.contains( "transaction_id" )
-                        ? EntitiesInstances.PERSON.generate( response )
-                        : EntitiesInstances.PERSON
+                        ? EntitiesInstances.PERSON.get().generate( response )
+                        : EntitiesInstances.PERSON.get()
         );
     }
 
@@ -106,12 +82,6 @@ public final class CrossBoardInfo
     @lombok.NonNull
     public Methods getMethodName() {
         return Methods.GET_CROSS_BOARDING;
-    }
-
-    @Override
-    @lombok.NonNull
-    public String getMethodApi() {
-        return super.getAPI_FOR_BOARD_CROSSING();
     }
 
     @Override

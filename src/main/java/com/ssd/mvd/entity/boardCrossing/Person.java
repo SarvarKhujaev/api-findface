@@ -2,13 +2,12 @@ package com.ssd.mvd.entity.boardCrossing;
 
 import com.google.gson.annotations.Expose;
 
-import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public final class Person extends CustomSerializer implements EntityCommonMethods< Person > {
+public final class Person implements EntityCommonMethods< Person > {
     public int getNationalityid() {
         return this.nationalityid;
     }
@@ -118,25 +117,6 @@ public final class Person extends CustomSerializer implements EntityCommonMethod
 
     @Override
     @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_ -> this" )
-    public Person generate(
-            @lombok.NonNull final ErrorResponse errorResponse
-    ) {
-        return this.generate();
-    }
-
-    @Override
-    @lombok.NonNull
-    @org.jetbrains.annotations.Contract( value = "_, _ -> this" )
-    public Person generate(
-            @lombok.NonNull final String message,
-            @lombok.NonNull final Errors errors
-    ) {
-        return this.generate();
-    }
-
-    @Override
-    @lombok.NonNull
     public Person generate() {
         return new Person();
     }
@@ -150,7 +130,7 @@ public final class Person extends CustomSerializer implements EntityCommonMethod
     @lombok.NonNull
     @org.jetbrains.annotations.Contract( value = "_ -> this" )
     public Person generate( @lombok.NonNull final String response ) {
-        return super.deserialize(
+        return CustomSerializer.deserialize(
                 response.substring( response.indexOf( "transaction_id" ) - 2, response.indexOf( "sex" ) + 9 ),
                 this.getClass()
         );

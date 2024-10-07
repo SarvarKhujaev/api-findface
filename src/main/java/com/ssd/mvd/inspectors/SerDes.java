@@ -4,12 +4,14 @@ import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.TimeUnit;
 
+import java.lang.ref.WeakReference;
+import java.util.concurrent.atomic.AtomicReference;
+
 import reactor.netty.ByteBufMono;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClientResponse;
 
 import reactor.netty.ByteBufFlux;
-import io.netty.channel.ConnectTimeoutException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.mashape.unirest.http.Unirest;
@@ -18,19 +20,22 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import com.ssd.mvd.entity.*;
-import com.ssd.mvd.request.*;
 import com.ssd.mvd.constants.Errors;
 import com.ssd.mvd.constants.Methods;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.interfaces.RequestCommonMethods;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
+
+import com.ssd.mvd.entity.*;
+import com.ssd.mvd.request.*;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.entity.foreigner.Foreigner;
 import com.ssd.mvd.component.FindFaceComponent;
 import com.ssd.mvd.entity.modelForCadastr.Data;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForFioOfPerson.FIO;
 import com.ssd.mvd.entity.boardCrossing.CrossBoard;
-import com.ssd.mvd.interfaces.RequestCommonMethods;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.publisher.CustomPublisherForRequest;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
@@ -41,11 +46,12 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 @lombok.EqualsAndHashCode( callSuper = true, cacheStrategy = lombok.EqualsAndHashCode.CacheStrategy.LAZY )
 public final class SerDes extends RetryInspector implements ServiceCommonMethods {
-    private Thread thread;
+    private static AtomicReference< Thread > thread;
     private static SerDes serDes = new SerDes();
 
     @lombok.NonNull
-    public static SerDes getSerDes () {
+    @lombok.Synchronized
+    public static synchronized SerDes getSerDes () {
         return serDes != null ? serDes : ( serDes = new SerDes() );
     }
 
@@ -72,16 +78,16 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             }
         } );
 
-        Config.getHeaders().put( "accept", "application/json" );
+        Config.getHeaders().get().put( "accept", "application/json" );
 
-        this.setThread(
+        thread = EntitiesInstances.generateAtomicEntity(
                 new Thread(
                         () -> {
-                            while ( this.getThread().isAlive() ) {
-                                this.getUpdateTokens().get();
+                            while ( thread.get().isAlive() ) {
+                                this.updateTokens();
                                 try {
                                     TimeUnit.MINUTES.sleep( Config.waitingMins );
-                                    EntitiesInstances.SEMAPHORE.release();
+                                    EntitiesInstances.SEMAPHORE.get().release();
                                 }
                                 catch ( final InterruptedException e ) {
                                     this.close( e );
@@ -90,49 +96,53 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                         }
                 )
         );
-        this.getThread().setName( this.getClass().getName() );
-        this.getThread().start();
-        this.updateTokens.get();
+        thread.get().setName( this.getClass().getName() );
+        thread.get().start();
+        this.updateTokens();
     }
 
-    private final Supplier< SerDes > updateTokens = () -> {
-            super.logging( "Updating tokens..." );
+    @lombok.NonNull
+    @lombok.Synchronized
+    public synchronized SerDes updateTokens () {
+        super.logging( Methods.UPDATE_TOKENS );
 
-            Config.getFields().put( "Login", super.getLOGIN_FOR_GAI_TOKEN() );
-            Config.getFields().put( "Password" , super.getPASSWORD_FOR_GAI_TOKEN() );
-            Config.getFields().put( "CurrentSystem", super.getCURRENT_SYSTEM_FOR_GAI() );
+        Config.getFields().get().put( "Login", Config.getLOGIN_FOR_GAI_TOKEN() );
+        Config.getFields().get().put( "Password" , Config.getPASSWORD_FOR_GAI_TOKEN() );
+        Config.getFields().get().put( "CurrentSystem", Config.getCURRENT_SYSTEM_FOR_GAI() );
 
-            try {
-                super.setTokenForGai(
-                        String.valueOf(
-                                Unirest.post( super.getAPI_FOR_GAI_TOKEN() )
-                                    .fields( Config.getFields() )
+        try {
+            this.clean();
+            super.setTokenForGai(
+                    String.valueOf(
+                            Unirest.post( Config.getAPI_FOR_GAI_TOKEN() )
+                                    .fields( Config.getFields().get() )
                                     .asJson()
                                     .getBody()
                                     .getObject()
                                     .get( "access_token" )
-                        )
-                );
-                super.setTokenForPassport( Config.tokenForGai );
-                super.setWaitingMins( 180 );
-                super.setFlag( true );
-                return this;
-            }
-            catch ( final Exception e ) {
-                super.setFlag( false );
-                super.setWaitingMins( 3 );
-                super.saveErrorLog( e.getMessage() );
-                super.saveErrorLog( Methods.UPDATE_TOKENS, "access_token", "Error: " + e.getMessage() );
-            } finally {
-                super.close();
-            }
-
+                    )
+            );
+            super.setTokenForPassport( Config.tokenForGai );
+            super.setWaitingMins( 180 );
+            super.setFlag( true );
             return this;
-    };
+        }
+        catch ( final Exception e ) {
+            super.setFlag( false );
+            super.setWaitingMins( 3 );
+            super.saveErrorLog( e.getMessage() );
+            super.saveErrorLog( Methods.UPDATE_TOKENS, "access_token", "Error: " + e.getMessage() );
+        } finally {
+            super.close();
+        }
+
+        return this;
+    }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _, _, _, _ -> !null" )
-    private < T extends StringOperations > Mono<T> generate (
+    private synchronized <T> Mono<T> generate (
             @lombok.NonNull final String searchedValue,
             @lombok.NonNull final ByteBufMono content,
             @lombok.NonNull final HttpClientResponse res,
@@ -151,52 +161,57 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     }
 
     @lombok.NonNull
+    @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> !null" )
-    private < T, U > ByteBufFlux generate (
+    private synchronized < T, U > WeakReference< ByteBufFlux > generate (
             @lombok.NonNull final U object,
             @lombok.NonNull final RequestCommonMethods< T, U > request
     ) {
-        return ByteBufFlux.fromString(
-                new CustomPublisherForRequest( object, request )
+        return EntitiesInstances.generateWeakEntity(
+                ByteBufFlux.fromString(
+                        new CustomPublisherForRequest( object, request )
+                )
         );
     }
 
     private final Function< String, Mono< CrossBoardInfo > > getCrossBoardInfo =
             SerialNumber -> Config.HTTP_CLIENT
                     .post()
-                    .uri( EntitiesInstances.CROSS_BOARD_INFO.getMethodApi() )
-                    .send( this.generate( SerialNumber, EntitiesInstances.REQUEST_FOR_BOARD_CROSSING ) )
+                    .uri( EntitiesInstances.CROSS_BOARD_INFO.get().getMethodName().getMethodApi() )
+                    .send( this.generate( SerialNumber, EntitiesInstances.REQUEST_FOR_BOARD_CROSSING.get() ).get() )
                     .responseSingle(
                             ( res, content ) -> this.generate(
                                     SerialNumber,
                                     content,
                                     res,
-                                    this.getUpdateTokens().get().getGetCrossBoardInfo(),
-                                    EntitiesInstances.CROSS_BOARD_INFO
+                                    this.updateTokens().getGetCrossBoardInfo(),
+                                    EntitiesInstances.CROSS_BOARD_INFO.get()
                             )
-                    ).retryWhen( super.retry( EntitiesInstances.CROSS_BOARD_INFO ) )
+                    ).retryWhen( super.retry( EntitiesInstances.CROSS_BOARD_INFO.get() ) )
                     .onErrorResume(
-                            throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.CROSS_BOARD_INFO )
+                            throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.CROSS_BOARD_INFO.get() )
                     ).onErrorResume(
-                            throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.CROSS_BOARD_INFO )
-                    ).doOnError( e -> super.logging( e, EntitiesInstances.CROSS_BOARD_INFO, SerialNumber ) )
-                    .onErrorReturn( super.completeError( EntitiesInstances.CROSS_BOARD_INFO ) );
+                            throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.CROSS_BOARD_INFO.get() )
+                    ).doOnError( e -> super.logging( e, EntitiesInstances.CROSS_BOARD_INFO.get(), SerialNumber ) )
+                    .onErrorReturn( super.completeError( EntitiesInstances.CROSS_BOARD_INFO.get() ) );
 
     private final Function< String, String > base64ToLink = base64 -> {
-            final HttpResponse< JsonNode > response;
-            Config.getFields().put( "photo", base64 );
-            Config.getFields().put( "serviceName", "psychologyCard" );
+            final WeakReference< HttpResponse< JsonNode > > response;
+            Config.getFields().get().put( "photo", base64 );
+            Config.getFields().get().put( "serviceName", "psychologyCard" );
 
             try {
                 super.logging( "Converting image to Link in: " + Methods.CONVERT_BASE64_TO_LINK );
 
-                response = Unirest.post( super.getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
-                        .header("Content-Type", "application/json")
-                        .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
-                        .asJson();
+                response = EntitiesInstances.generateWeakEntity(
+                        Unirest.post( Config.getBASE64_IMAGE_TO_LINK_CONVERTER_API() )
+                                .header("Content-Type", "application/json")
+                                .body( "{\r\n    \"serviceName\" : \"psychologyCard\",\r\n    \"photo\" : \"" + base64 + "\"\r\n}" )
+                                .asJson()
+                );
 
-                return response.getStatus() == 200
-                        ? response
+                return response.get().getStatus() == 200
+                        ? response.get()
                         .getBody()
                         .getObject()
                         .get( "data" )
@@ -212,6 +227,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
 
                 return Errors.SERVICE_WORK_ERROR.name();
             } finally {
+                Config.getFields().get().clear();
                 super.close();
             }
     };
@@ -219,53 +235,53 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private final Function< String, Mono< Pinpp > > getPinpp = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .get()
-            .uri( EntitiesInstances.PINPP.getMethodApi() + pinfl )
+            .uri( EntitiesInstances.PINPP.get().getMethodName().getMethodApi() + pinfl )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             pinfl,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetPinpp(),
-                            EntitiesInstances.PINPP
+                            this.updateTokens().getGetPinpp(),
+                            EntitiesInstances.PINPP.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.PINPP ) )
+            ).retryWhen( super.retry( EntitiesInstances.PINPP.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.PINPP )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.PINPP.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.PINPP )
-            ).doOnError( throwable -> super.logging( throwable, EntitiesInstances.PINPP, pinfl ) )
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.PINPP.get() )
+            ).doOnError( throwable -> super.logging( throwable, EntitiesInstances.PINPP.get(), pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_PINPP, value ) )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PINPP() ) );
+            .doOnSubscribe( value -> super.logging( Config.getAPI_FOR_PINPP() ) );
 
     private final Function< String, Mono< Data > > getCadaster = cadaster -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
             .post()
-            .send( this.generate( cadaster, new RequestForCadaster() ) )
-            .uri( EntitiesInstances.CADASTR.getMethodApi() )
+            .send( this.generate( cadaster, new RequestForCadaster() ).get() )
+            .uri( EntitiesInstances.CADASTR.get().getMethodName().getMethodApi() )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             cadaster,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetCadaster(),
-                            EntitiesInstances.CADASTR
+                            this.updateTokens().getGetCadaster(),
+                            EntitiesInstances.CADASTR.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.CADASTR ) )
+            ).retryWhen( super.retry( EntitiesInstances.CADASTR.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.CADASTR )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.CADASTR.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.CADASTR )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.CADASTR, cadaster ) )
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.CADASTR.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.CADASTR.get(), cadaster ) )
             .doOnSuccess( value -> super.logging( Methods.CADASTER, value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.CADASTR.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.CADASTR.generate() ) );
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.CADASTR.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.CADASTR.get().generate() ) );
 
     private final Function< String, Mono< String > > getImageByPinfl = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( super.getAPI_FOR_PERSON_IMAGE() + pinfl )
+            .uri( Config.getAPI_FOR_PERSON_IMAGE() + pinfl )
             .responseSingle( ( res, content ) -> switch ( res.status().code() ) {
-                case 401 -> this.getUpdateTokens().get().getGetImageByPinfl().apply( pinfl );
+                case 401 -> this.updateTokens().getGetImageByPinfl().apply( pinfl );
                 case 501 | 502 | 503 -> super.convert( res.status().toString() );
                 default -> super.checkResponse( res, content )
                         ? content
@@ -273,193 +289,193 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                         .map( s -> s.substring( s.indexOf( "Data" ) + 7, s.indexOf( ",\"AnswereId" ) - 1 ) )
                         : super.convert( Errors.DATA_NOT_FOUND.name() );
             } )
-            .retryWhen( super.retry( EntitiesInstances.PINPP ) )
+            .retryWhen( super.retry( EntitiesInstances.PINPP.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), Errors.RESPONSE_FROM_SERVICE_NOT_RECEIVED )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), Errors.TOO_MANY_RETRIES_ERROR )
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), Errors.TOO_MANY_RETRIES_ERROR )
             ).doOnError( super::logging )
-            .doOnSubscribe( value -> super.logging( super.getAPI_FOR_PERSON_IMAGE() ) )
+            .doOnSubscribe( value -> super.logging( Config.getAPI_FOR_PERSON_IMAGE() ) )
             .onErrorReturn( Errors.DATA_NOT_FOUND.name() );
 
     private final Function< String, Mono< ModelForAddress > > getModelForAddress = pinfl -> Config.HTTP_CLIENT
-            .headers( h -> h.add( "Authorization", "Bearer " + EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() ) )
+            .headers( h -> h.add( "Authorization", "Bearer " + EntitiesInstances.MODEL_FOR_ADDRESS.get().getMethodName().getMethodApi() ) )
             .post()
-            .uri( EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() )
-            .send( this.generate( pinfl, new RequestForModelOfAddress() ) )
+            .uri( EntitiesInstances.MODEL_FOR_ADDRESS.get().getMethodName().getMethodApi() )
+            .send( this.generate( pinfl, new RequestForModelOfAddress() ).get() )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             pinfl,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetModelForAddress(),
-                            EntitiesInstances.MODEL_FOR_ADDRESS
+                            this.updateTokens().getGetModelForAddress(),
+                            EntitiesInstances.MODEL_FOR_ADDRESS.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_ADDRESS ) )
+            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_ADDRESS.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_ADDRESS )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_ADDRESS.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_ADDRESS )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_ADDRESS, pinfl ) )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_ADDRESS.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_ADDRESS.get(), pinfl ) )
             .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_ADDRESS, value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_ADDRESS.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS ) );
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_ADDRESS.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_ADDRESS.get() ) );
 
     private final Function< String, Mono< ModelForPassport > > getModelForPassport =
             passportData -> Config.HTTP_CLIENT
                     .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForPassport ) )
                     .post()
-                    .uri( EntitiesInstances.MODEL_FOR_PASSPORT.getMethodApi() )
-                    .send( this.generate( passportData, new RequestForPassport() ) )
+                    .uri( EntitiesInstances.MODEL_FOR_PASSPORT.get().getMethodName().getMethodApi() )
+                    .send( this.generate( passportData, new RequestForPassport() ).get() )
                     .responseSingle(
                             ( res, content ) -> this.generate(
                                     passportData,
                                     content,
                                     res,
-                                    this.getUpdateTokens().get().getGetModelForPassport(),
-                                    EntitiesInstances.MODEL_FOR_PASSPORT
+                                    this.updateTokens().getGetModelForPassport(),
+                                    EntitiesInstances.MODEL_FOR_PASSPORT.get()
                             )
-                    ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_PASSPORT ) )
+                    ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_PASSPORT.get() ) )
                     .onErrorResume(
-                            throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_PASSPORT )
+                            throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_PASSPORT.get() )
                     ).onErrorResume(
-                            throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_PASSPORT )
-                    ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_PASSPORT, passportData ) )
+                            throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_PASSPORT.get() )
+                    ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_PASSPORT.get(), passportData ) )
                     .doOnSuccess( value -> super.logging( Methods.GET_MODEL_FOR_PASSPORT, value ) )
-                    .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_PASSPORT.getMethodApi() ) )
-                    .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_PASSPORT ) );
+                    .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_PASSPORT.get().getMethodName().getMethodApi() ) )
+                    .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_PASSPORT.get() ) );
 
     private final Function< String, Mono< Insurance > > insurance = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.INSURANCE.getMethodApi() + gosno )
+            .uri( EntitiesInstances.INSURANCE.get().getMethodName().getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
                             content,
                             res,
-                            this.getUpdateTokens().get().getInsurance(),
-                            EntitiesInstances.INSURANCE
+                            this.updateTokens().getInsurance(),
+                            EntitiesInstances.INSURANCE.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.INSURANCE ) )
+            ).retryWhen( super.retry( EntitiesInstances.INSURANCE.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.INSURANCE )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.INSURANCE.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.INSURANCE )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.INSURANCE, gosno ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.INSURANCE.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.INSURANCE.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.INSURANCE ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.INSURANCE.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.INSURANCE.get(), gosno ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.INSURANCE.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.INSURANCE.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.INSURANCE.get() ) );
 
     private final Function< String, Mono< ModelForCar > > getVehicleData = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() + gosno )
+            .uri( EntitiesInstances.MODEL_FOR_CAR.get().getMethodName().getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetVehicleData(),
-                            EntitiesInstances.MODEL_FOR_CAR
+                            this.updateTokens().getGetVehicleData(),
+                            EntitiesInstances.MODEL_FOR_CAR.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_CAR ) )
+            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_CAR.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_CAR )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_CAR.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_CAR )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR, gosno ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_CAR.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR.get(), gosno ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR.get() ) );
 
     private final Function< String, Mono< Tonirovka > > getVehicleTonirovka = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.TONIROVKA.getMethodApi() + gosno )
+            .uri( EntitiesInstances.TONIROVKA.get().getMethodName().getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetVehicleTonirovka(),
-                            EntitiesInstances.TONIROVKA
+                            this.updateTokens().getGetVehicleTonirovka(),
+                            EntitiesInstances.TONIROVKA.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.TONIROVKA ) )
+            ).retryWhen( super.retry( EntitiesInstances.TONIROVKA.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.TONIROVKA )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.TONIROVKA.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.TONIROVKA )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.TONIROVKA, gosno ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.TONIROVKA.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA.generate() ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.TONIROVKA.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.TONIROVKA.get(), gosno ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.TONIROVKA.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.TONIROVKA.get().generate() ) );
 
     private final Function< String, Mono< ViolationsList > > getViolationList = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() + gosno )
+            .uri( EntitiesInstances.VIOLATIONS_LIST.get().getMethodName().getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetViolationList(),
-                            EntitiesInstances.VIOLATIONS_LIST
+                            this.updateTokens().getGetViolationList(),
+                            EntitiesInstances.VIOLATIONS_LIST.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.VIOLATIONS_LIST ) )
+            ).retryWhen( super.retry( EntitiesInstances.VIOLATIONS_LIST.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.VIOLATIONS_LIST )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.VIOLATIONS_LIST.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.VIOLATIONS_LIST )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.VIOLATIONS_LIST, gosno ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST.generate() ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.VIOLATIONS_LIST.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.VIOLATIONS_LIST.get(), gosno ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.VIOLATIONS_LIST.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.VIOLATIONS_LIST.get().generate() ) );
 
     private final Function< String, Mono< DoverennostList > > getDoverennostList = gosno -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.DOVERENNOST_LIST.getMethodApi() + gosno )
+            .uri( EntitiesInstances.DOVERENNOST_LIST.get().getMethodName().getMethodApi() + gosno )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             gosno,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetDoverennostList(),
-                            EntitiesInstances.DOVERENNOST_LIST
+                            this.updateTokens().getGetDoverennostList(),
+                            EntitiesInstances.DOVERENNOST_LIST.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.DOVERENNOST_LIST ) )
+            ).retryWhen( super.retry( EntitiesInstances.DOVERENNOST_LIST.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.DOVERENNOST_LIST )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.DOVERENNOST_LIST.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.DOVERENNOST_LIST )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.DOVERENNOST_LIST, gosno ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.DOVERENNOST_LIST ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.DOVERENNOST_LIST.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.DOVERENNOST_LIST.get(), gosno ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.DOVERENNOST_LIST.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.DOVERENNOST_LIST.get() ) );
 
     private final Function< String, Mono< ModelForCarList > > getModelForCarList = pinfl -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForGai ) )
             .get()
-            .uri( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodApi() + pinfl )
+            .uri( EntitiesInstances.MODEL_FOR_CAR_LIST.get().getMethodName().getMethodApi() + pinfl )
             .responseSingle(
                     ( res, content ) -> this.generate(
                             pinfl,
                             content,
                             res,
-                            this.getUpdateTokens().get().getGetModelForCarList(),
-                            EntitiesInstances.MODEL_FOR_CAR_LIST
+                            this.updateTokens().getGetModelForCarList(),
+                            EntitiesInstances.MODEL_FOR_CAR_LIST.get()
                     )
-            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_CAR_LIST ) )
+            ).retryWhen( super.retry( EntitiesInstances.MODEL_FOR_CAR_LIST.get() ) )
             .onErrorResume(
-                    throwable -> super.completeError( new ConnectTimeoutException(), EntitiesInstances.MODEL_FOR_CAR_LIST )
+                    throwable -> super.completeError( EntitiesInstances.CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_CAR_LIST.get() )
             ).onErrorResume(
-                    throwable -> super.completeError( new IllegalArgumentException(), EntitiesInstances.MODEL_FOR_CAR_LIST )
-            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR_LIST, pinfl ) )
-            .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodName(), value ) )
-            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.getMethodApi() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR_LIST.generate() ) );
+                    throwable -> super.completeError( EntitiesInstances.ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE.get(), EntitiesInstances.MODEL_FOR_CAR_LIST.get() )
+            ).doOnError( e -> super.logging( e, EntitiesInstances.MODEL_FOR_CAR_LIST.get(), pinfl ) )
+            .doOnSuccess( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.get().getMethodName(), value ) )
+            .doOnSubscribe( value -> super.logging( EntitiesInstances.MODEL_FOR_CAR_LIST.get().getMethodName().getMethodApi() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.MODEL_FOR_CAR_LIST.get().generate() ) );
 
     private final Function< ModelForCarList, Mono< ModelForCarList > > findAllAboutCarList = modelForCarList ->
             super.convertValuesToParallelFluxWithMap(
@@ -515,7 +531,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                             ).map( psychologyCard::save )
                             .onErrorResume(
                                     throwable -> super.convert(
-                                            EntitiesInstances.PSYCHOLOGY_CARD.generate(
+                                            EntitiesInstances.PSYCHOLOGY_CARD.get().generate(
                                                     throwable.getMessage(),
                                                     Errors.SERVICE_WORK_ERROR
                                             )
@@ -533,17 +549,17 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
             @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         try {
-            Config.getHeaders().put( "Authorization", "Bearer " + token );
+            Config.getHeaders().get().put( "Authorization", "Bearer " + token );
 
             psychologyCard.setForeignerList(
-                    super.stringToArrayList(
+                    Config.stringToArrayList(
                             Unirest.get(
                                     String.join(
-                                            "",
-                                            super.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE(),
+                                            EMPTY,
+                                            Config.getAPI_FOR_TRAIN_TICKET_CONSUMER_SERVICE(),
                                             psychologyCard.getPapilonData().get( 0 ).getPassport()
                                     )
-                            ).headers( Config.getHeaders() )
+                            ).headers( Config.getHeaders().get() )
                             .asJson()
                             .getBody()
                             .getObject()
@@ -553,7 +569,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     )
             );
 
-            super.saveUserUsageLog.apply( psychologyCard, apiResponseModel );
+            super.saveUserUsageLog( psychologyCard, apiResponseModel );
         } catch ( final Exception e ) {
             super.saveErrorLog(
                     Methods.GET_PSYCHOLOGY_CARD,
@@ -561,6 +577,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     Errors.DATA_NOT_FOUND.name()
             );
         } finally {
+            Config.getHeaders().get().clear();
             super.close();
         }
 
@@ -570,31 +587,31 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     private final Function< FIO, Mono< PersonTotalDataByFIO > > getPersonTotalDataByFIO = fio -> Config.HTTP_CLIENT
             .headers( h -> h.add( "Authorization", "Bearer " + Config.tokenForFio ) )
             .post()
-            .uri( super.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
-            .send( this.generate( fio, new RequestForFio() ) )
+            .uri( Config.getAPI_FOR_PERSON_DATA_FROM_ZAKS() )
+            .send( this.generate( fio, new RequestForFio() ).get() )
             .responseSingle( ( res, content ) -> res.status().code() == 401
-                    ? this.getUpdateTokens().get().getGetPersonTotalDataByFIO().apply( fio )
+                    ? this.updateTokens().getGetPersonTotalDataByFIO().apply( fio )
                     : super.checkResponse( res, content )
                             ? content
                             .asString()
-                            .map( s -> {
-                                final PersonTotalDataByFIO person = super.deserialize( s, PersonTotalDataByFIO.class );
+                            .mapNotNull( s -> {
+                                final WeakReference< PersonTotalDataByFIO > person = EntitiesInstances.generateWeakEntity( deserialize( s, PersonTotalDataByFIO.class ) );
 
-                                if ( super.isCollectionNotEmpty( person.getData() ) ) {
+                                if ( super.objectIsNotNull( person.get() ) && super.isCollectionNotEmpty( person.get().getData() ) ) {
                                     super.analyze(
-                                            person.getData(),
+                                            person.get().getData(),
                                             person1 -> this.getGetImageByPinfl()
                                                     .apply( person1.getPinpp() )
                                                     .subscribe( person1::setPersonImage )
                                     );
                                 }
 
-                                return person;
+                                return person.get();
                             } )
-                            : super.convert( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO ) )
+                            : super.convert( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get() ) )
             )
-            .doOnError( e -> super.logging( e, EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO, fio.getName() ) )
-            .onErrorReturn( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO ) );
+            .doOnError( e -> super.logging( e, EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get(), fio.getName() ) )
+            .onErrorReturn( super.completeError( EntitiesInstances.PERSON_TOTAL_DATA_BY_FIO.get() ) );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinfl =
             apiResponseModel -> this.checkParam( apiResponseModel.getStatus().getMessage() )
@@ -611,17 +628,17 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard )
-                            ).map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                            ).map( tuple1 -> super.saveUserUsageLog( psychologyCard, apiResponseModel ) )
                     )
-                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
 
     private final Function< ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByPinflInitial =
             apiResponseModel -> this.checkParam( apiResponseModel.getStatus().getMessage() )
                     ? Mono.zip(
                             this.getGetPinpp().apply( apiResponseModel.getStatus().getMessage() ),
                             this.getGetImageByPinfl().apply( apiResponseModel.getStatus().getMessage() )
-                    ).map( tuple -> super.saveUserUsageLog.apply( PsychologyCard.generate( tuple ), apiResponseModel ) )
-                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+                    ).map( tuple -> super.saveUserUsageLog( PsychologyCard.generate( tuple ), apiResponseModel ) )
+                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
 
     private final BiFunction< Results, ApiResponseModel, Mono< PsychologyCard > > getPsychologyCardByImage =
             ( results, apiResponseModel ) -> Mono.zip(
@@ -632,7 +649,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     .flatMap( psychologyCard -> Mono.zip(
                                     this.getFindAllDataAboutCar().apply( psychologyCard ),
                                     this.getSetPersonPrivateDataAsync().apply( psychologyCard )
-                            ).map( tuple1 -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                            ).map( tuple1 -> super.saveUserUsageLog( psychologyCard, apiResponseModel ) )
                     );
 
     private final BiFunction< ModelForPassport, ApiResponseModel, Mono< PsychologyCard > >
@@ -650,9 +667,9 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                     ).flatMap(
                             tuple -> this.getFindAllDataAboutCar()
                                     .apply( PsychologyCard.generate( data, tuple ) )
-                                    .map( psychologyCard -> super.saveUserUsageLog.apply( psychologyCard, apiResponseModel ) )
+                                    .map( psychologyCard -> super.saveUserUsageLog( psychologyCard, apiResponseModel ) )
                     )
-                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD ) );
+                    : super.convert( super.completeError( EntitiesInstances.PSYCHOLOGY_CARD.get() ) );
 
     private final Function< CrossBoardInfo, Mono< CrossBoardInfo > > analyzeCrossData = crossBoardInfo ->
             super.convertValuesToParallelFluxWithMap(
@@ -662,7 +679,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                             .getCrossBoardList(),
                     crossBoard -> crossBoard.save( crossBoardInfo.getData().get( 0 ).getPerson().getNationalityid() )
             ).collectList()
-            .map( crossBoards -> {
+            .mapNotNull( crossBoards -> {
                 crossBoardInfo
                         .getData()
                         .get( 0 )
@@ -676,9 +693,11 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     public void close() {
         serDes = null;
         this.setFlag( false );
-        this.getThread().interrupt();
-        EntitiesInstances.SEMAPHORE.release();
+        thread.get().interrupt();
+        EntitiesInstances.close();
+        Archieve.close();
 
+        super.close();
         this.clean();
     }
 

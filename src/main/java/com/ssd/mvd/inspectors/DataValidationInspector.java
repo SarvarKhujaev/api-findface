@@ -138,7 +138,7 @@ public class DataValidationInspector extends CollectionsInspector {
     @lombok.NonNull
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_, _ -> _" )
-    public final synchronized String checkContextOrReturnDefaultValue (
+    public static synchronized String checkContextOrReturnDefaultValue (
             @lombok.NonNull final String paramName,
             @lombok.NonNull final String defaultValue
     ) {
@@ -152,9 +152,9 @@ public class DataValidationInspector extends CollectionsInspector {
     }
 
     @lombok.Synchronized
-    protected final synchronized int checkContextOrReturnDefaultValue () {
-        return this.objectIsNotNull( FindFaceServiceApplication.context )
-                && this.objectIsNotNull(
+    protected static synchronized int checkContextOrReturnDefaultValue () {
+        return Objects.nonNull( FindFaceServiceApplication.context )
+                && Objects.nonNull(
                         FindFaceServiceApplication
                                 .context
                                 .getEnvironment()
