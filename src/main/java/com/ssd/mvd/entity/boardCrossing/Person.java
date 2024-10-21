@@ -4,7 +4,9 @@ import com.google.gson.annotations.Expose;
 
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.inspectors.CustomSerializer;
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Person implements EntityCommonMethods< Person > {
@@ -113,7 +115,13 @@ public final class Person implements EntityCommonMethods< Person > {
     @Expose
     private String current_document;
 
-    public Person () {}
+    @EntityConstructorAnnotation
+    public <T> Person ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Person.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Person.class );
+    }
+
+    private Person () {}
 
     @Override
     @lombok.NonNull

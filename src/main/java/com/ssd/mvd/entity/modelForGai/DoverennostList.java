@@ -1,8 +1,14 @@
 package com.ssd.mvd.entity.modelForGai;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.CollectionsInspector;
+import com.ssd.mvd.inspectors.AnnotationInspector;
+
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -10,7 +16,7 @@ import java.util.List;
 
 public final class DoverennostList
         extends CustomSerializer
-        implements EntityCommonMethods< DoverennostList >, ServiceCommonMethods {
+        implements EntityCommonMethods< DoverennostList > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -34,10 +40,18 @@ public final class DoverennostList
         return this;
     }
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
+    @WeakReferenceAnnotation( name = "doverennostsList" )
     private List< Doverennost > doverennostsList;
 
-    public DoverennostList () {}
+    @EntityConstructorAnnotation
+    public <T> DoverennostList ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, DoverennostList.class );
+        AnnotationInspector.checkAnnotationIsImmutable( DoverennostList.class );
+    }
+
+    private DoverennostList () {}
 
     @Override
     @lombok.NonNull
@@ -62,6 +76,6 @@ public final class DoverennostList
 
     @Override
     public void close() {
-        this.getDoverennostsList().clear();
+        CollectionsInspector.checkAndClear( this.getDoverennostsList() );
     }
 }

@@ -25,7 +25,6 @@ import com.ssd.mvd.constants.Methods;
 
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.interfaces.RequestCommonMethods;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
 
 import com.ssd.mvd.entity.*;
 import com.ssd.mvd.request.*;
@@ -45,7 +44,7 @@ import com.ssd.mvd.entity.modelForFioOfPerson.PersonTotalDataByFIO;
 @lombok.Data
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 @lombok.EqualsAndHashCode( callSuper = true, cacheStrategy = lombok.EqualsAndHashCode.CacheStrategy.LAZY )
-public final class SerDes extends RetryInspector implements ServiceCommonMethods {
+public final class SerDes extends RetryInspector {
     private static AtomicReference< Thread > thread;
     private static SerDes serDes = new SerDes();
 
@@ -56,6 +55,8 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
     }
 
     private SerDes () {
+        super( SerDes.class );
+
         Unirest.setObjectMapper( new ObjectMapper() {
             private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
@@ -597,7 +598,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
                             .mapNotNull( s -> {
                                 final WeakReference< PersonTotalDataByFIO > person = EntitiesInstances.generateWeakEntity( deserialize( s, PersonTotalDataByFIO.class ) );
 
-                                if ( super.objectIsNotNull( person.get() ) && super.isCollectionNotEmpty( person.get().getData() ) ) {
+                                if ( objectIsNotNull( person.get() ) && isCollectionNotEmpty( person.get().getData() ) ) {
                                     super.analyze(
                                             person.get().getData(),
                                             person1 -> this.getGetImageByPinfl()
@@ -694,8 +695,7 @@ public final class SerDes extends RetryInspector implements ServiceCommonMethods
         serDes = null;
         this.setFlag( false );
         thread.get().interrupt();
-        EntitiesInstances.close();
-        Archieve.close();
+        super.clearAllEntities();
 
         super.close();
         this.clean();

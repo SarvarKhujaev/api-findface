@@ -1,8 +1,12 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.entity.boardCrossing.Purpose;
+
 import java.util.WeakHashMap;
 
-public class Archieve {
+public class Archieve implements ServiceCommonMethods {
     protected final static WeakHashMap< Integer, String > periods = CollectionsInspector.newMap();
     protected final static WeakHashMap< Integer, String > countries = CollectionsInspector.newMap();
     protected final static WeakHashMap< Integer, String > tripPurposes = CollectionsInspector.newMap();
@@ -11,7 +15,11 @@ public class Archieve {
     protected final static WeakHashMap< String, String > documentTypes = CollectionsInspector.newMap();
     protected final static WeakHashMap< String, String > transportCategory = CollectionsInspector.newMap();
 
-    protected Archieve () {
+    @EntityConstructorAnnotation ( permission = Purpose.class )
+    protected <T extends Archieve> Archieve ( @lombok.NonNull final Class< T > instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Archieve.class );
+        AnnotationInspector.checkAnnotationIsNotImmutable( Archieve.class );
+
         int[] keys = new int[] {
                 28, 11, 13, 14, 16, 17, 46, 47, 29, 30, 31, 32, 33, 34, 35, 36, 18, 37, 38, 39, 40, 41, 42, 43, 44, 45,
                 15, 48, 10, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 21, 22, 23, 24, 25, 26, 27, 50, 49, 57, 54, 73, 65, 51,
@@ -1266,12 +1274,13 @@ public class Archieve {
         }
     }
 
-    public static void close() {
-        periods.clear();
-        countries.clear();
-        tripPurposes.clear();
-        nationalities.clear();
-        documentTypes.clear();
-        transportCategory.clear();
+    @Override
+    public void close() {
+        CollectionsInspector.checkAndClear( periods );
+        CollectionsInspector.checkAndClear( countries );
+        CollectionsInspector.checkAndClear( tripPurposes );
+        CollectionsInspector.checkAndClear( nationalities );
+        CollectionsInspector.checkAndClear( documentTypes );
+        CollectionsInspector.checkAndClear( transportCategory );
     }
 }

@@ -1,5 +1,8 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
@@ -152,10 +155,14 @@ public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
     private String RegistrationDate;
     private String TexPassportSerialNumber;
 
+    @WeakReferenceAnnotation( name = "tonirovka", isCollection = false )
     private Tonirovka tonirovka;
+    @WeakReferenceAnnotation( name = "insurance", isCollection = false )
     private Insurance insurance;
+    @WeakReferenceAnnotation( name = "doverennostList", isCollection = false )
     private DoverennostList doverennostList;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
     @Override
@@ -197,7 +204,13 @@ public final class ModelForCar implements EntityCommonMethods< ModelForCar > {
         return modelForCarList;
     }
 
-    public ModelForCar () {}
+    @EntityConstructorAnnotation
+    public <T> ModelForCar ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, ModelForCar.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ModelForCar.class );
+    }
+
+    private ModelForCar () {}
 
     @Override
     @lombok.NonNull

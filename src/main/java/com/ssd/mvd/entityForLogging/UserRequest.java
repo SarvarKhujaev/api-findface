@@ -1,14 +1,21 @@
 package com.ssd.mvd.entityForLogging;
 
-import com.ssd.mvd.inspectors.DataValidationInspector;
-import com.ssd.mvd.entity.response.ApiResponseModel;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+import com.ssd.mvd.annotations.AvroMethodAnnotation;
+import com.ssd.mvd.annotations.AvroFieldAnnotation;
+
 import com.ssd.mvd.interfaces.KafkaCommonMethods;
-import com.ssd.mvd.inspectors.EntitiesInstances;
-import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.constants.Errors;
 
-import com.google.gson.annotations.Expose;
+import com.ssd.mvd.inspectors.DataValidationInspector;
+import com.ssd.mvd.inspectors.AnnotationInspector;
+import com.ssd.mvd.inspectors.EntitiesInstances;
+import com.ssd.mvd.inspectors.Config;
+
+import com.ssd.mvd.entity.response.ApiResponseModel;
+import com.ssd.mvd.entity.PsychologyCard;
+import org.apache.avro.Schema;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class UserRequest extends DataValidationInspector implements KafkaCommonMethods {
@@ -24,22 +31,45 @@ public final class UserRequest extends DataValidationInspector implements KafkaC
         this.userPassportNumber = userPassportNumber;
     }
 
-    @Expose
+    @AvroMethodAnnotation( name = "createdAt" )
+    public long getCreatedAt() {
+        return this.createdAt;
+    }
+
+    @AvroMethodAnnotation( name = "microserviceName" )
+    public String getMicroserviceName() {
+        return this.microserviceName;
+    }
+
+    @AvroMethodAnnotation( name = "userPassportNumber" )
+    public String getUserPassportNumber() {
+        return this.userPassportNumber;
+    }
+
+    @AvroMethodAnnotation( name = "integratedServiceName" )
+    public String getIntegratedServiceName() {
+        return this.integratedServiceName;
+    }
+
+    @AvroFieldAnnotation( name = "createdAt", schemaType = Schema.Type.LONG )
     private long createdAt;
 
-    @Expose
+    @WeakReferenceAnnotation( name = "personInfo", isCollection = false )
     private PersonInfo personInfo;
 
-    @Expose
+    @AvroFieldAnnotation( name = "userPassportNumber" )
     private String userPassportNumber;
 
-    @Expose
-    private final static String integratedServiceName = "OVIR";
+    @AvroFieldAnnotation( name = "microserviceName" )
+    private final String microserviceName = "api-findface";
+    @AvroFieldAnnotation( name = "integratedServiceName" )
+    private final String integratedServiceName = "OVIR";
 
-    @Expose
-    private final static String microserviceName = "api-findface";
-
-    public UserRequest () {}
+    @EntityConstructorAnnotation
+    public <T> UserRequest ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, UserRequest.class );
+        AnnotationInspector.checkAnnotationIsImmutable( UserRequest.class );
+    }
 
     @lombok.NonNull
     @lombok.Synchronized
@@ -49,13 +79,14 @@ public final class UserRequest extends DataValidationInspector implements KafkaC
             @lombok.NonNull final ApiResponseModel apiResponseModel
     ) {
         this.setCreatedAt( super.newDate().get().getTime() );
+
         EntitiesInstances.PERSON_INFO_ATOMIC_REFERENCE.getAndUpdate( personInfo1 -> {
             this.setPersonInfo( personInfo1.update( psychologyCard ) );
             return personInfo1;
         } );
 
         this.setUserPassportNumber(
-                super.objectIsNotNull( apiResponseModel.getUser() )
+                objectIsNotNull( apiResponseModel.getUser() )
                     ? apiResponseModel.getUser().getPassportNumber()
                     : Errors.DATA_NOT_FOUND.name()
         );
@@ -81,7 +112,7 @@ public final class UserRequest extends DataValidationInspector implements KafkaC
                 super.newDate().get().toString(),
                 integratedServiceName,
                 microserviceName,
-                String.valueOf( createdAt )
+                String.valueOf( this.createdAt )
         );
     }
 
@@ -97,7 +128,7 @@ public final class UserRequest extends DataValidationInspector implements KafkaC
                 super.newDate().get().toString(),
                 integratedServiceName,
                 microserviceName,
-                String.valueOf( createdAt ),
+                String.valueOf( this.createdAt ),
                 this.personInfo.toString()
         );
     }

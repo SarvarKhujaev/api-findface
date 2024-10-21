@@ -1,9 +1,9 @@
 package com.ssd.mvd.entity.boardCrossing;
 
+import com.ssd.mvd.inspectors.CollectionsInspector;
 import com.ssd.mvd.interfaces.ServiceCommonMethods;
 import java.util.List;
 
-@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class Data implements ServiceCommonMethods {
     public Person getPerson() {
         return this.person;
@@ -41,6 +41,6 @@ public final class Data implements ServiceCommonMethods {
 
     @Override
     public void close() {
-        this.getCrossBoardList().clear();
+        CollectionsInspector.checkAndClear( this.getCrossBoardList() );
     }
 }

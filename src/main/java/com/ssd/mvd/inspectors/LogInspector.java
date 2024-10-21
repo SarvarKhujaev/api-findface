@@ -1,6 +1,8 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.subscribers.CustomSubscriber;
 import com.ssd.mvd.constants.Methods;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +13,23 @@ import reactor.util.retry.Retry;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class LogInspector extends ErrorController {
+    protected LogInspector () {
+        super( LogInspector.class );
+    }
+
+    @EntityConstructorAnnotation(
+            permission = {
+                    Config.class,
+                    CustomSubscriber.class,
+            }
+    )
+    protected <T extends UuidInspector> LogInspector ( @lombok.NonNull final Class<T> instance ) {
+        super( LogInspector.class );
+
+        AnnotationInspector.checkCallerPermission( instance, LogInspector.class );
+        AnnotationInspector.checkAnnotationIsImmutable( LogInspector.class );
+    }
+
     private final static Logger LOGGER = LogManager.getLogger( "LOGGER_WITH_JSON_LAYOUT" );
 
     @Async( value = "logging" )

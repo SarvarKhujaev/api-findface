@@ -31,7 +31,7 @@ public final class ErrorControllerTest extends ErrorController {
                                 entity -> StepVerifier.create(
                                         super.saveErrorLog(
                                                 Errors.SERVICE_WORK_ERROR.name(),
-                                                entity
+                                                entity.get()
                                         )
                                 ).expectNextCount( 1 )
                                 .expectComplete()
@@ -52,8 +52,9 @@ public final class ErrorControllerTest extends ErrorController {
                                 EntitiesInstances.instancesList,
                                 entity -> {
                                     assertNotNull( entity );
+                                    assertNotNull( entity.get() );
                                     super.saveErrorLog(
-                                            entity.getMethodName(),
+                                            entity.get().getMethodName(),
                                             Errors.SERVICE_WORK_ERROR.name(),
                                             Errors.DATA_NOT_FOUND.name()
                                     );
@@ -74,7 +75,8 @@ public final class ErrorControllerTest extends ErrorController {
                                 EntitiesInstances.instancesList,
                                 entity -> {
                                     assertNotNull( entity );
-                                    super.saveErrorLog( entity.getMethodName().name() );
+                                    assertNotNull( entity.get() );
+                                    super.saveErrorLog( entity.get().getMethodName().name() );
                                 }
                         )
                 )
@@ -90,7 +92,11 @@ public final class ErrorControllerTest extends ErrorController {
                 WebFluxInspector.convertValuesToParallelFlux(
                         integer -> super.analyze(
                                 EntitiesInstances.instancesList,
-                                super::completeError
+                                atomicReference -> {
+                                    assertNotNull( atomicReference );
+                                    assertNotNull( atomicReference.get() );
+                                    super.completeError( atomicReference.get() );
+                                }
                         )
                 )
         ).expectNextCount( WebFluxInspector.RESULT_COUNT)
@@ -109,7 +115,7 @@ public final class ErrorControllerTest extends ErrorController {
                                     assertNotNull( entity );
                                     StepVerifier.create(
                                             super.completeError(
-                                                    new IllegalArgumentException( entity.getMethodName().name() ),
+                                                    new IllegalArgumentException( entity.get().getMethodName().name() ),
                                                     Errors.SERVICE_WORK_ERROR
                                             )
                                     ).expectNextCount( 1 )
@@ -134,8 +140,8 @@ public final class ErrorControllerTest extends ErrorController {
                                     assertNotNull( entity );
                                     StepVerifier.create(
                                             super.completeError(
-                                                    new IllegalArgumentException( entity.getMethodName().name() ),
-                                                    entity
+                                                    new IllegalArgumentException( entity.get().getMethodName().name() ),
+                                                    entity.get()
                                             )
                                     ).expectNextCount( 1 )
                                     .expectComplete()

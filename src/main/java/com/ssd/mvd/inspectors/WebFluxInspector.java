@@ -8,8 +8,22 @@ import java.util.function.Predicate;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class WebFluxInspector extends Config {
+    protected WebFluxInspector () {
+        super( WebFluxInspector.class );
+    }
+
+    @EntityConstructorAnnotation( permission = RetryInspector.class )
+    protected <T extends UuidInspector> WebFluxInspector( @lombok.NonNull final Class<T> instance ) {
+        super( WebFluxInspector.class );
+
+        AnnotationInspector.checkCallerPermission( instance, WebFluxInspector.class );
+        AnnotationInspector.checkAnnotationIsImmutable( WebFluxInspector.class );
+    }
+
     protected static final int RESULT_COUNT = 1000;
 
     @lombok.NonNull

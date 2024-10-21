@@ -1,5 +1,6 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 
 import com.google.gson.GsonBuilder;
@@ -9,6 +10,14 @@ import java.util.List;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class CustomSerializer extends DataValidationInspector {
+    @EntityConstructorAnnotation( permission = ErrorController.class )
+    protected <T extends UuidInspector> CustomSerializer( @lombok.NonNull final Class<T> instance ) {
+        super( CustomSerializer.class );
+
+        AnnotationInspector.checkCallerPermission( instance, CustomSerializer.class );
+        AnnotationInspector.checkAnnotationIsImmutable( CustomSerializer.class );
+    }
+
     private final static Gson gson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
             .create();

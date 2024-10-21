@@ -5,30 +5,40 @@ import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.boardCrossing.CrossBoardInfo;
 import com.ssd.mvd.entity.response.ApiResponseModel;
-import com.ssd.mvd.request.RequestForBoardCrossing;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.boardCrossing.Person;
+
+import com.ssd.mvd.entityForLogging.UserRequest;
 import com.ssd.mvd.entityForLogging.PersonInfo;
+import com.ssd.mvd.entityForLogging.ErrorLog;
+
 import com.ssd.mvd.entity.response.Status;
+import com.ssd.mvd.entity.response.User;
+
 import com.ssd.mvd.entity.ModelForCarList;
 import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.entity.response.User;
 import com.ssd.mvd.entity.modelForGai.*;
 import com.ssd.mvd.entity.CarTotalData;
-import com.ssd.mvd.kafka.Notification;
 import com.ssd.mvd.entity.Pinpp;
 
+import com.ssd.mvd.request.RequestForBoardCrossing;
+import com.ssd.mvd.kafka.Notification;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.interfaces.KafkaCommonMethods;
+
 import org.apache.commons.collections4.list.UnmodifiableList;
-import java.lang.ref.WeakReference;
+import org.apache.commons.collections4.set.UnmodifiableSet;
 
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.channel.ConnectTimeoutException;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.Semaphore;
+import java.lang.ref.WeakReference;
+
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings( value = "хранит instance на все объекты" )
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
@@ -76,61 +86,61 @@ public final class EntitiesInstances {
     public static final AtomicReference< Semaphore > SEMAPHORE = generateAtomicEntity( new Semaphore( 1 ) );
 
     public static final AtomicReference< Data > CADASTR = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Data() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Data( EntitiesInstances.class ) )
     );
     public static final AtomicReference< Pinpp > PINPP = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Pinpp() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Pinpp( EntitiesInstances.class ) )
     );
     public static final AtomicReference< Person > PERSON = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Person() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Person( EntitiesInstances.class ) )
     );
     public static final AtomicReference< Insurance > INSURANCE = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Insurance() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Insurance( EntitiesInstances.class ) )
     );
     public static final AtomicReference< Tonirovka > TONIROVKA = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Tonirovka() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Tonirovka( EntitiesInstances.class ) )
     );
     public static final AtomicReference< Notification > NOTIFICATION = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new Notification() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new Notification( EntitiesInstances.class ) )
     );
     public static final AtomicReference< ModelForCar > MODEL_FOR_CAR = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForCar() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForCar( EntitiesInstances.class ) )
     );
     public static final AtomicReference< CarTotalData > CAR_TOTAL_DATA = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new CarTotalData() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new CarTotalData( EntitiesInstances.class ) )
     );
     public static final AtomicReference< PsychologyCard > PSYCHOLOGY_CARD = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new PsychologyCard() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new PsychologyCard( EntitiesInstances.class ) )
     );
     public static final AtomicReference< ViolationsList > VIOLATIONS_LIST = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new ViolationsList() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new ViolationsList( EntitiesInstances.class ) )
     );
     public static final AtomicReference< CrossBoardInfo > CROSS_BOARD_INFO = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new CrossBoardInfo() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new CrossBoardInfo( EntitiesInstances.class ) )
     );
     public static final AtomicReference< DoverennostList > DOVERENNOST_LIST = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new DoverennostList() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new DoverennostList( EntitiesInstances.class ) )
     );
     public static final AtomicReference< ModelForAddress > MODEL_FOR_ADDRESS = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForAddress() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForAddress( EntitiesInstances.class ) )
     );
     public static final AtomicReference< ModelForCarList > MODEL_FOR_CAR_LIST = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForCarList() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForCarList( EntitiesInstances.class ) )
     );
     public static final AtomicReference< ModelForPassport > MODEL_FOR_PASSPORT = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForPassport() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new ModelForPassport( EntitiesInstances.class ) )
     );
     public static final AtomicReference< PersonInfo > PERSON_INFO_ATOMIC_REFERENCE = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new PersonInfo() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new PersonInfo( EntitiesInstances.class ) )
     );
     public static final AtomicReference< UserRequest > USER_REQUEST_ATOMIC_REFERENCE = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new UserRequest() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new UserRequest( EntitiesInstances.class ) )
     );
     public static final AtomicReference< PersonTotalDataByFIO > PERSON_TOTAL_DATA_BY_FIO = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new PersonTotalDataByFIO() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new PersonTotalDataByFIO( EntitiesInstances.class ) )
     );
     public static final AtomicReference< RequestForBoardCrossing > REQUEST_FOR_BOARD_CROSSING = generateAtomicEntity(
-            AnnotationInspector.checkAnnotationIsNotImmutable( new RequestForBoardCrossing() )
+            AnnotationInspector.checkAnnotationIsNotImmutable( new RequestForBoardCrossing( EntitiesInstances.class ) )
     );
 
     public static final AtomicReference< ApiResponseModel > API_RESPONSE_MODEL_ATOMIC_REFERENCE = generateAtomicEntity(
@@ -152,30 +162,32 @@ public final class EntitiesInstances {
             new IllegalArgumentException()
     );
 
-    public static final UnmodifiableList< ? extends EntityCommonMethods<?> > instancesList = new UnmodifiableList<>(
+    public static final UnmodifiableList< AtomicReference< ? extends EntityCommonMethods<?> > > instancesList = new UnmodifiableList<>(
             List.of(
-                    CADASTR.get(),
-                    PINPP.get(),
-                    PERSON.get(),
-                    INSURANCE.get(),
-                    TONIROVKA.get(),
-                    MODEL_FOR_CAR.get(),
-                    CAR_TOTAL_DATA.get(),
-                    PSYCHOLOGY_CARD.get(),
-                    VIOLATIONS_LIST.get(),
-                    CROSS_BOARD_INFO.get(),
-                    DOVERENNOST_LIST.get(),
-                    MODEL_FOR_ADDRESS.get(),
-                    MODEL_FOR_CAR_LIST.get(),
-                    MODEL_FOR_PASSPORT.get(),
-                    PERSON_TOTAL_DATA_BY_FIO.get()
+                    PINPP,
+                    PERSON,
+                    CADASTR,
+                    INSURANCE,
+                    TONIROVKA,
+                    MODEL_FOR_CAR,
+                    CAR_TOTAL_DATA,
+                    PSYCHOLOGY_CARD,
+                    VIOLATIONS_LIST,
+                    CROSS_BOARD_INFO,
+                    DOVERENNOST_LIST,
+                    MODEL_FOR_ADDRESS,
+                    MODEL_FOR_CAR_LIST,
+                    MODEL_FOR_PASSPORT,
+                    PERSON_TOTAL_DATA_BY_FIO
             )
     );
 
-    public static void close() {
-        SEMAPHORE.get().release();
-        CustomServiceCleaner.clearReference( READ_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE );
-        CustomServiceCleaner.clearReference( CONNECT_TIMEOUT_EXCEPTION_ATOMIC_REFERENCE );
-        CustomServiceCleaner.clearReference( ILLEGAL_ARGUMENT_EXCEPTION_ATOMIC_REFERENCE );
-    }
+    @SuppressWarnings( value = "хранит instance на все объекты связанные с задачами" )
+    public static final Set< AtomicReference< ? extends KafkaCommonMethods> > kafkaEntities = UnmodifiableSet.unmodifiableSet(
+            Set.of(
+                    NOTIFICATION,
+                    USER_REQUEST_ATOMIC_REFERENCE,
+                    generateAtomicEntity( new ErrorLog( StringOperations.EMPTY ) )
+            )
+    );
 }

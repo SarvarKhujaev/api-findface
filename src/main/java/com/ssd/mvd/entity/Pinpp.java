@@ -1,7 +1,12 @@
 package com.ssd.mvd.entity;
 
-import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -67,9 +72,16 @@ public final class Pinpp implements EntityCommonMethods< Pinpp > {
     private String BirthPlaceCountry;
     private String BirthPlaceDistrict;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
-    public Pinpp () {}
+    @EntityConstructorAnnotation
+    public <T> Pinpp ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Pinpp.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Pinpp.class );
+    }
+
+    private Pinpp () {}
 
     @Override
     @lombok.NonNull

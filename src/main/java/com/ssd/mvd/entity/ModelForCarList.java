@@ -2,20 +2,23 @@ package com.ssd.mvd.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
 
+import com.ssd.mvd.inspectors.DataValidationInspector;
 import com.ssd.mvd.inspectors.CollectionsInspector;
-import com.ssd.mvd.entity.modelForGai.ModelForCar;
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.entity.modelForGai.ModelForCar;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
 import java.util.List;
 
-public final class ModelForCarList
-        extends CollectionsInspector
-        implements EntityCommonMethods< ModelForCarList >, ServiceCommonMethods {
+public final class ModelForCarList extends CollectionsInspector implements EntityCommonMethods< ModelForCarList > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -41,9 +44,17 @@ public final class ModelForCarList
         return this;
     }
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "modelForCarList" )
     private List< ModelForCar > modelForCarList;
+
+    @EntityConstructorAnnotation
+    public <T> ModelForCarList ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, ModelForCarList.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ModelForCarList.class );
+    }
 
     public ModelForCarList () {}
 
@@ -72,9 +83,17 @@ public final class ModelForCarList
     public void close() {
         super.analyze(
                 this.getModelForCarList(),
-                modelForCar -> modelForCar.getDoverennostList().getDoverennostsList().clear()
+                modelForCar -> {
+                    if (
+                            DataValidationInspector.objectIsNotNull(
+                                    modelForCar.getDoverennostList()
+                            )
+                    ) {
+                        CollectionsInspector.checkAndClear( modelForCar.getDoverennostList().getDoverennostsList() );
+                    }
+                }
         );
 
-        this.getModelForCarList().clear();
+        checkAndClear( this.getModelForCarList() );
     }
 }

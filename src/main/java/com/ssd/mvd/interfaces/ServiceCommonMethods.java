@@ -7,5 +7,5 @@ public interface ServiceCommonMethods {
         System.gc();
     }
 
-    void close();
+    default void close() {}
 }

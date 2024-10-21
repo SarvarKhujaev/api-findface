@@ -2,10 +2,13 @@ package com.ssd.mvd.entityForLogging;
 
 import com.google.gson.annotations.Expose;
 
-import com.ssd.mvd.inspectors.DataValidationInspector;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.entity.PsychologyCard;
-import com.ssd.mvd.inspectors.SerDes;
 import com.ssd.mvd.constants.Errors;
+
+import com.ssd.mvd.inspectors.DataValidationInspector;
+import com.ssd.mvd.inspectors.AnnotationInspector;
+import com.ssd.mvd.inspectors.SerDes;
 
 public final class PersonInfo extends DataValidationInspector {
     public void setPinfl ( final String pinfl ) {
@@ -51,14 +54,18 @@ public final class PersonInfo extends DataValidationInspector {
     @Expose
     private String passportNumber;
 
-    public PersonInfo () {}
+    @EntityConstructorAnnotation
+    public <T> PersonInfo ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, PersonInfo.class );
+        AnnotationInspector.checkAnnotationIsImmutable( PersonInfo.class );
+    }
 
     @lombok.NonNull
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )
     public synchronized PersonInfo update ( @lombok.NonNull final PsychologyCard psychologyCard ) {
-        if ( !super.isCollectionNotEmpty( psychologyCard.getForeignerList() ) ) {
-            if ( super.objectIsNotNull( psychologyCard.getPinpp() ) ) {
+        if ( !isCollectionNotEmpty( psychologyCard.getForeignerList() ) ) {
+            if ( objectIsNotNull( psychologyCard.getPinpp() ) ) {
                 this.setPinfl( psychologyCard.getPinpp().getPinpp() );
                 this.setCadastre( psychologyCard.getPinpp().getCadastre() );
                 this.setBirthDate( psychologyCard.getPinpp().getBirthDate() );
@@ -85,7 +92,7 @@ public final class PersonInfo extends DataValidationInspector {
             );
 
             this.setPhoto(
-                    super.isCollectionNotEmpty( psychologyCard.getPapilonData() )
+                    isCollectionNotEmpty( psychologyCard.getPapilonData() )
                             ? SerDes
                             .getSerDes()
                             .getBase64ToLink()

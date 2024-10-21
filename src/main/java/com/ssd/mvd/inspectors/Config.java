@@ -1,19 +1,31 @@
 package com.ssd.mvd.inspectors;
 
 import java.util.Map;
-import io.netty.handler.logging.LogLevel;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.ssd.mvd.constants.Errors;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.kafka.KafkaDataControl;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 
+import io.netty.handler.logging.LogLevel;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 @SuppressWarnings( value = "хранит все конфигурационные данные и параметры" )
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public class Config extends LogInspector implements ServiceCommonMethods {
-    protected Config () {}
+public class Config extends LogInspector {
+    @EntityConstructorAnnotation(
+            permission = {
+                    KafkaDataControl.class,
+                    WebFluxInspector.class
+            }
+    )
+    protected <T extends UuidInspector> Config( @lombok.NonNull final Class<T> instance ) {
+        super( Config.class );
+
+        AnnotationInspector.checkCallerPermission( instance, Config.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Config.class );
+    }
 
     public volatile static boolean flag = false;
 
@@ -36,7 +48,7 @@ public class Config extends LogInspector implements ServiceCommonMethods {
                     how many minutes to wait for Thread in SerDes class 180 mins by default
                     """
     )
-    protected static int waitingMins = 180;
+    protected static volatile int waitingMins = 180;
 
     @lombok.Synchronized
     protected final synchronized void setFlag( final boolean value ) {
@@ -263,6 +275,60 @@ public class Config extends LogInspector implements ServiceCommonMethods {
 
     @lombok.NonNull
     @lombok.Synchronized
+    public static synchronized String getRETRIES_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.RETRIES_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    public static synchronized String getLINGER_MS_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.LINGER_MS_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    public static synchronized String getBATCH_SIZE_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.BATCH_SIZE_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    public static synchronized String getBUFFER_MEMORY_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.BUFFER_MEMORY_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    public static synchronized String getREQUEST_TIMEOUT_MS_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.REQUEST_TIMEOUT_MS_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
+    public static synchronized String getMETADATA_MAX_AGE_CONFIG() {
+        return checkContextOrReturnDefaultValue(
+                "variables.KAFKA_VARIABLES.METADATA_MAX_AGE_CONFIG",
+                "-1"
+        );
+    }
+
+    @lombok.NonNull
+    @lombok.Synchronized
     public static synchronized String getERROR_LOGS() {
         return checkContextOrReturnDefaultValue(
                 "variables.KAFKA_VARIABLES.KAFKA_TOPICS.ERROR_LOGS",
@@ -309,9 +375,7 @@ public class Config extends LogInspector implements ServiceCommonMethods {
 
     @Override
     public void close() {
-        headers.get().clear();
-        fields.get().clear();
-
-        this.clean();
+        CollectionsInspector.checkAndClear( headers.get() );
+        CollectionsInspector.checkAndClear( fields.get() );
     }
 }

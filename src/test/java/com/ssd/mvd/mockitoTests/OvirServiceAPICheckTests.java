@@ -37,7 +37,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         final CrossBoardInfo crossBoardInfo = SerDes
                 .getSerDes()
                 .getGetCrossBoardInfo()
-                .apply( this.apiResponseModel.status().getMessage() )
+                .apply( this.apiResponseModel.getStatus().getMessage() )
                 .block();
 
         assertNotNull( crossBoardInfo );
@@ -328,7 +328,7 @@ public final class OvirServiceAPICheckTests extends TestCase {
         final CrossBoardInfo crossBoardInfo = SerDes
                 .getSerDes()
                 .getAnalyzeCrossData()
-                .apply( new CrossBoardInfo() )
+                .apply( EntitiesInstances.CROSS_BOARD_INFO.get() )
                 .block();
 
         assertNotNull( crossBoardInfo );

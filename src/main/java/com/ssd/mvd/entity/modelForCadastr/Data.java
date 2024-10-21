@@ -3,14 +3,15 @@ package com.ssd.mvd.entity.modelForCadastr;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.inspectors.*;
 
-import com.ssd.mvd.inspectors.CustomSerializer;
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
-public final class Data implements EntityCommonMethods< Data >, ServiceCommonMethods {
+public final class Data implements EntityCommonMethods< Data > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -31,15 +32,24 @@ public final class Data implements EntityCommonMethods< Data >, ServiceCommonMet
         return this.TemproaryRegistration;
     }
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "PermanentRegistration" )
     private CopyOnWriteArrayList< Person > PermanentRegistration;
 
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "TemproaryRegistration" )
     private CopyOnWriteArrayList< TemproaryRegistration > TemproaryRegistration;
 
-    public Data () {}
+    private Data () {}
+
+    @EntityConstructorAnnotation
+    public <T> Data ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Data.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Data.class );
+    }
 
     @Override
     @lombok.NonNull
@@ -67,7 +77,7 @@ public final class Data implements EntityCommonMethods< Data >, ServiceCommonMet
 
     @Override
     public void close() {
-        this.getTemproaryRegistration().clear();
-        this.getPermanentRegistration().clear();
+        CollectionsInspector.checkAndClear( this.getTemproaryRegistration() );
+        CollectionsInspector.checkAndClear( this.getPermanentRegistration() );
     }
 }

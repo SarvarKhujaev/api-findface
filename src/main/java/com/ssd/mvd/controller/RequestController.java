@@ -137,7 +137,7 @@ public final class RequestController extends LogInspector {
                 .getInstance()
                 .getPapilonList
                 .apply( base64url )
-                .filter( results -> super.isCollectionNotEmpty( results.getResults() ) )
+                .filter( results -> isCollectionNotEmpty( results.getResults() ) )
                 .flatMap( results -> Config.flag
                         ? results
                         .getResults()
@@ -178,7 +178,7 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> super.isCollectionNotEmpty( data.getPermanentRegistration() )
+                .flatMapMany( data -> isCollectionNotEmpty( data.getPermanentRegistration() )
                         ? Flux.fromStream( data.getPermanentRegistration().stream() )
                         .flatMap( person -> SerDes
                                 .getSerDes()
@@ -225,8 +225,8 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetModelForCarList()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMap( modelForCarList -> super.objectIsNotNull( modelForCarList )
-                        && super.isCollectionNotEmpty( modelForCarList.getModelForCarList() )
+                .flatMap( modelForCarList -> objectIsNotNull( modelForCarList )
+                        && isCollectionNotEmpty( modelForCarList.getModelForCarList() )
                                 ? this.getCarTotalData(
                                         EntitiesInstances.generateResponse(
                                                 modelForCarList
@@ -341,8 +341,8 @@ public final class RequestController extends LogInspector {
                 .getGetModelForCarList()
                 .apply( apiResponseModel.getStatus().getMessage() )
                 .flatMap(
-                        modelForCarList -> super.objectIsNotNull( modelForCarList )
-                                && super.isCollectionNotEmpty( modelForCarList.getModelForCarList() )
+                        modelForCarList -> objectIsNotNull( modelForCarList )
+                                && isCollectionNotEmpty( modelForCarList.getModelForCarList() )
                                 ? SerDes
                                 .getSerDes()
                                 .getFindAllAboutCarList()
@@ -431,9 +431,9 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetCrossBoardInfo()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMap( crossBoardInfo -> super.objectIsNotNull( crossBoardInfo.getData() )
-                        && super.isCollectionNotEmpty( crossBoardInfo.getData() )
-                        && super.isCollectionNotEmpty( crossBoardInfo.getData().get( 0 ).getCrossBoardList() )
+                .flatMap( crossBoardInfo -> objectIsNotNull( crossBoardInfo.getData() )
+                        && isCollectionNotEmpty( crossBoardInfo.getData() )
+                        && isCollectionNotEmpty( crossBoardInfo.getData().get( 0 ).getCrossBoardList() )
                         ? SerDes
                         .getSerDes()
                         .getAnalyzeCrossData()
@@ -483,7 +483,7 @@ public final class RequestController extends LogInspector {
                 .getSerDes()
                 .getGetCadaster()
                 .apply( apiResponseModel.getStatus().getMessage() )
-                .flatMapMany( data -> super.isCollectionNotEmpty( data.getPermanentRegistration() )
+                .flatMapMany( data -> isCollectionNotEmpty( data.getPermanentRegistration() )
                         ? Flux.fromStream(
                                 data.getPermanentRegistration().stream()
                         ).flatMap( person -> SerDes
@@ -536,7 +536,7 @@ public final class RequestController extends LogInspector {
                 .getInstance()
                 .getPapilonList
                 .apply( base64url )
-                .filter( results -> super.isCollectionNotEmpty( results.getResults() ) )
+                .filter( results -> isCollectionNotEmpty( results.getResults() ) )
                 .flatMap( results -> Config.flag
                         ? results
                         .getResults()
@@ -604,7 +604,7 @@ public final class RequestController extends LogInspector {
                 .getGetModelForPassport()
                 .apply( strings.get()[ 0 ] + strings.get()[ 1 ] )
                 .flatMap( data -> {
-                        CustomServiceCleaner.clearReference( strings );
+                        super.clearReference( strings );
                         return SerDes
                                 .getSerDes()
                                 .getGetPsychologyCardByPinflInitial()

@@ -2,15 +2,20 @@ package com.ssd.mvd.entity.modelForGai;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+
+import com.ssd.mvd.inspectors.CollectionsInspector;
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
 import java.util.List;
 
-public final class ViolationsList implements EntityCommonMethods< ViolationsList >, ServiceCommonMethods {
+public final class ViolationsList implements EntityCommonMethods< ViolationsList > {
     public ErrorResponse getErrorResponse() {
         return this.errorResponse;
     }
@@ -41,7 +46,13 @@ public final class ViolationsList implements EntityCommonMethods< ViolationsList
     @JsonDeserialize
     private List< ViolationsInformation > violationsInformationsList;
 
-    public ViolationsList () {}
+    @EntityConstructorAnnotation
+    public <T> ViolationsList ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, ViolationsList.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ViolationsList.class );
+    }
+
+    private ViolationsList () {}
 
     @Override
     @lombok.NonNull
@@ -66,6 +77,6 @@ public final class ViolationsList implements EntityCommonMethods< ViolationsList
 
     @Override
     public void close() {
-        this.getViolationsInformationsList().clear();
+        CollectionsInspector.checkAndClear( this.getViolationsInformationsList() );
     }
 }

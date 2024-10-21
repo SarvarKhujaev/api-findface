@@ -3,7 +3,12 @@ package com.ssd.mvd.entity.modelForFioOfPerson;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -46,12 +51,21 @@ public final class PersonTotalDataByFIO implements EntityCommonMethods< PersonTo
     private int AnswereId;
     private String AnswereMessage;
     private String AnswereComment;
+
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "Data" )
     private List< Person > Data;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
-    public PersonTotalDataByFIO () {}
+    private PersonTotalDataByFIO () {}
+
+    @EntityConstructorAnnotation
+    public <T> PersonTotalDataByFIO ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, PersonTotalDataByFIO.class );
+        AnnotationInspector.checkAnnotationIsImmutable( PersonTotalDataByFIO.class );
+    }
 
     private PersonTotalDataByFIO ( final ErrorResponse errorResponse ) {
         this.errorResponse = errorResponse;

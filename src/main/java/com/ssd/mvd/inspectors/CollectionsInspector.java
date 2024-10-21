@@ -1,5 +1,6 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -8,7 +9,17 @@ import java.util.*;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class CollectionsInspector extends TimeInspector {
-    protected CollectionsInspector () {}
+    protected CollectionsInspector () {
+        super( CollectionsInspector.class );
+    }
+
+    @EntityConstructorAnnotation( permission = CustomServiceCleaner.class )
+    protected <T extends UuidInspector> CollectionsInspector( @lombok.NonNull final Class<T> instance ) {
+        super( CollectionsInspector.class );
+
+        AnnotationInspector.checkCallerPermission( instance, CollectionsInspector.class );
+        AnnotationInspector.checkAnnotationIsImmutable( CollectionsInspector.class );
+    }
 
     @lombok.NonNull
     @lombok.Synchronized
@@ -25,7 +36,7 @@ public class CollectionsInspector extends TimeInspector {
     @lombok.NonNull
     @lombok.Synchronized
     protected static synchronized <T, V> WeakHashMap<T, V> newMap () {
-        return new WeakHashMap<>();
+        return new WeakHashMap<>( 1 );
     }
 
     @lombok.Synchronized
@@ -47,9 +58,31 @@ public class CollectionsInspector extends TimeInspector {
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
-    protected final synchronized <T> boolean isCollectionNotEmpty (
+    protected static synchronized <T> boolean isCollectionNotEmpty (
             final Collection<T> collection
     ) {
         return collection != null && !collection.isEmpty();
+    }
+
+    @lombok.Synchronized
+    @org.jetbrains.annotations.Contract( value = "_ -> true" )
+    protected static synchronized <T, U> boolean isCollectionNotEmpty (
+            final Map<T, U> map
+    ) {
+        return map != null && !map.isEmpty();
+    }
+
+    @lombok.Synchronized
+    public static synchronized <T> void checkAndClear (
+            final Collection<T> collection
+    ) {
+        if ( isCollectionNotEmpty( collection ) ) collection.clear();
+    }
+
+    @lombok.Synchronized
+    protected static synchronized <T, U> void checkAndClear (
+            final Map<T, U> map
+    ) {
+        if ( isCollectionNotEmpty( map ) ) map.clear();
     }
 }

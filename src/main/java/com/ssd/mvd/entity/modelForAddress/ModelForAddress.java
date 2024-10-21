@@ -1,10 +1,17 @@
 package com.ssd.mvd.entity.modelForAddress;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
 import com.ssd.mvd.entity.modelForPassport.RequestGuid;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.PermanentRegistration;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
+import com.ssd.mvd.inspectors.CollectionsInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -15,7 +22,7 @@ import java.util.List;
 @Jacksonized
 @lombok.Builder
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public final class ModelForAddress implements EntityCommonMethods< ModelForAddress >, ServiceCommonMethods {
+public final class ModelForAddress implements EntityCommonMethods< ModelForAddress > {
     public com.ssd.mvd.entity.PermanentRegistration getPermanentRegistration() {
         return this.PermanentRegistration;
     }
@@ -36,14 +43,25 @@ public final class ModelForAddress implements EntityCommonMethods< ModelForAddre
         return this.TemproaryRegistration;
     }
 
+    @WeakReferenceAnnotation( name = "RequestGuid", isCollection = false )
     private RequestGuid RequestGuid;
+    @WeakReferenceAnnotation( name = "PermanentRegistration", isCollection = false )
     private PermanentRegistration PermanentRegistration;
+
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "TemproaryRegistration" )
     private List< com.ssd.mvd.entity.modelForAddress.TemproaryRegistration > TemproaryRegistration;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
-    public ModelForAddress () {}
+    @EntityConstructorAnnotation
+    public <T> ModelForAddress ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, ModelForAddress.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ModelForAddress.class );
+    }
+
+    private ModelForAddress () {}
 
     @Override
     @lombok.NonNull
@@ -71,6 +89,6 @@ public final class ModelForAddress implements EntityCommonMethods< ModelForAddre
 
     @Override
     public void close() {
-        this.getTemproaryRegistration().clear();
+        CollectionsInspector.checkAndClear( this.getTemproaryRegistration() );
     }
 }

@@ -1,5 +1,6 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
 import com.ssd.mvd.entity.modelForCadastr.Person;
@@ -15,8 +16,18 @@ import reactor.netty.ByteBufMono;
 import java.util.Objects;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
-public class DataValidationInspector extends CollectionsInspector {
-    protected DataValidationInspector () {}
+public class DataValidationInspector extends AnnotationInspector {
+    protected DataValidationInspector () {
+        super( DataValidationInspector.class );
+    }
+
+    @EntityConstructorAnnotation( permission = CustomSerializer.class )
+    protected <T extends UuidInspector> DataValidationInspector( @lombok.NonNull final Class<T> instance ) {
+        super( DataValidationInspector.class );
+
+        AnnotationInspector.checkCallerPermission( instance, DataValidationInspector.class );
+        AnnotationInspector.checkAnnotationIsImmutable( DataValidationInspector.class );
+    }
 
     @lombok.NonNull
     @lombok.Synchronized
@@ -27,14 +38,21 @@ public class DataValidationInspector extends CollectionsInspector {
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
-    protected final synchronized boolean objectIsNotNull ( final Object o ) {
-        return Objects.nonNull( o );
+    public static synchronized boolean objectIsNotNull (
+            final Object ... o
+    ) {
+        return o.length == 0
+                ? Objects.nonNull( o[0] )
+                : convertArrayToList( o )
+                .stream()
+                .filter( Objects::nonNull )
+                .count() == o.length;
     }
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean checkParam ( final String param ) {
-        return this.objectIsNotNull( param ) && !param.isEmpty();
+        return objectIsNotNull( param ) && !param.isEmpty();
     }
 
     @lombok.Synchronized
@@ -49,8 +67,7 @@ public class DataValidationInspector extends CollectionsInspector {
             final HttpClientResponse httpClientResponse,
             final ByteBufMono byteBufMono
     ) {
-        return this.objectIsNotNull( byteBufMono )
-                && httpClientResponse.status().code() == 200;
+        return objectIsNotNull( byteBufMono ) && httpClientResponse.status().code() == 200;
     }
 
     @lombok.Synchronized
@@ -66,16 +83,18 @@ public class DataValidationInspector extends CollectionsInspector {
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean check ( final CarTotalData carTotalData ) {
-        return this.objectIsNotNull( carTotalData.getModelForCar() )
-                && this.objectIsNotNull( carTotalData.getModelForCar().getPinpp() )
+        return objectIsNotNull( carTotalData )
+                && objectIsNotNull( carTotalData.getModelForCar() )
+                && objectIsNotNull( carTotalData.getModelForCar().getPinpp() )
                 && !carTotalData.getModelForCar().getPinpp().isEmpty();
     }
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean check ( final PsychologyCard psychologyCard ) {
-        return this.objectIsNotNull( psychologyCard.getModelForCarList() )
-                && this.objectIsNotNull( psychologyCard
+        return objectIsNotNull( psychologyCard )
+                && objectIsNotNull( psychologyCard.getModelForCarList() )
+                && objectIsNotNull( psychologyCard
                 .getModelForCarList()
                 .getModelForCarList() )
                 && !psychologyCard
@@ -87,32 +106,32 @@ public class DataValidationInspector extends CollectionsInspector {
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean check ( final ModelForAddress modelForAddress ) {
-        return this.objectIsNotNull( modelForAddress ) && this.objectIsNotNull( modelForAddress.getPermanentRegistration() );
+        return objectIsNotNull( modelForAddress ) && objectIsNotNull( modelForAddress.getPermanentRegistration() );
     }
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean check ( final ModelForPassport modelForPassport ) {
-        return this.objectIsNotNull( modelForPassport )
-                && this.objectIsNotNull( modelForPassport.getData() )
-                && this.objectIsNotNull( modelForPassport.getData().getPerson() )
-                && this.objectIsNotNull( modelForPassport.getData().getPerson().getPinpp() )
-                && this.objectIsNotNull( modelForPassport.getData().getPerson().getPCitizen() );
+        return objectIsNotNull( modelForPassport )
+                && objectIsNotNull( modelForPassport.getData() )
+                && objectIsNotNull( modelForPassport.getData().getPerson() )
+                && objectIsNotNull( modelForPassport.getData().getPerson().getPinpp() )
+                && objectIsNotNull( modelForPassport.getData().getPerson().getPCitizen() );
     }
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean checkPinpp ( final PsychologyCard psychologyCard ) {
-        return this.objectIsNotNull( psychologyCard.getPinpp() )
-                && this.objectIsNotNull( psychologyCard.getPinpp().getCadastre() )
+        return objectIsNotNull( psychologyCard.getPinpp() )
+                && objectIsNotNull( psychologyCard.getPinpp().getCadastre() )
                 && psychologyCard.getPinpp().getCadastre().length() > 1;
     }
 
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean checkCadastor ( final PsychologyCard psychologyCard ) {
-        return this.objectIsNotNull( psychologyCard.getModelForCadastr() )
-                && this.objectIsNotNull(
+        return objectIsNotNull( psychologyCard.getModelForCadastr() )
+                && objectIsNotNull(
                         psychologyCard
                             .getModelForCadastr()
                             .getPermanentRegistration() )
@@ -124,8 +143,8 @@ public class DataValidationInspector extends CollectionsInspector {
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> _" )
     protected final synchronized boolean checkPassport ( final ModelForPassport modelForPassport ) {
-        return this.objectIsNotNull( modelForPassport )
-                && this.objectIsNotNull( modelForPassport.getData().getDocument() );
+        return objectIsNotNull( modelForPassport )
+                && objectIsNotNull( modelForPassport.getData().getDocument() );
     }
 
     @SuppressWarnings(

@@ -1,14 +1,19 @@
 package com.ssd.mvd.entity;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.DataValidationInspector;
+import com.ssd.mvd.inspectors.CustomServiceCleaner;
+import com.ssd.mvd.inspectors.AnnotationInspector;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.constants.ErrorResponse;
+import com.ssd.mvd.entity.modelForGai.*;
+
 import reactor.util.function.Tuple5;
 
-import com.ssd.mvd.entity.modelForGai.*;
-import com.ssd.mvd.constants.ErrorResponse;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
-
-public final class CarTotalData
-        implements EntityCommonMethods< CarTotalData >, ServiceCommonMethods {
+public final class CarTotalData implements EntityCommonMethods< CarTotalData > {
     public void setTonirovka ( final Tonirovka tonirovka ) {
         this.tonirovka = tonirovka;
     }
@@ -64,14 +69,22 @@ public final class CarTotalData
     private String gosNumber;
     private String cameraImage;
 
+    @WeakReferenceAnnotation( name = "tonirovka", isCollection = false )
     private Tonirovka tonirovka;
+    @WeakReferenceAnnotation( name = "insurance", isCollection = false )
     private Insurance insurance;
+    @WeakReferenceAnnotation( name = "modelForCar", isCollection = false )
     private ModelForCar modelForCar;
+    @WeakReferenceAnnotation( name = "psychologyCard", isCollection = false )
     private PsychologyCard psychologyCard;
+    @WeakReferenceAnnotation( name = "violationsList", isCollection = false )
     private ViolationsList violationsList;
+    @WeakReferenceAnnotation( name = "doverennostList", isCollection = false )
     private DoverennostList doverennostList;
+    @WeakReferenceAnnotation( name = "modelForCarList", isCollection = false )
     private ModelForCarList modelForCarList; // the list of all cars of each citizen
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
     @lombok.NonNull
@@ -89,7 +102,13 @@ public final class CarTotalData
         return new CarTotalData( modelForCar );
     }
 
-    public CarTotalData () {}
+    @EntityConstructorAnnotation
+    public <T> CarTotalData ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, CarTotalData.class );
+        AnnotationInspector.checkAnnotationIsImmutable( CarTotalData.class );
+    }
+
+    private CarTotalData () {}
 
     private CarTotalData( final ModelForCar modelForCar ) {
         this.setModelForCar( modelForCar );
@@ -131,10 +150,20 @@ public final class CarTotalData
 
     @Override
     public void close() {
-        this.violationsList.close();
-        this.psychologyCard.close();
-        this.doverennostList.close();
-        this.modelForCarList.close();
-        this.getModelForCar().getDoverennostList().close();
+        CustomServiceCleaner.clearReference( this.violationsList );
+        CustomServiceCleaner.clearReference( this.psychologyCard );
+        CustomServiceCleaner.clearReference( this.doverennostList );
+        CustomServiceCleaner.clearReference( this.modelForCarList );
+
+        if (
+                DataValidationInspector.objectIsNotNull(
+                        this.getModelForCar()
+                )
+                && DataValidationInspector.objectIsNotNull(
+                        this.getModelForCar().getDoverennostList()
+                )
+        ) {
+            CustomServiceCleaner.clearReference( this.getModelForCar().getDoverennostList() );
+        }
     }
 }

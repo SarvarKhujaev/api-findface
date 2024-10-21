@@ -64,6 +64,8 @@ public final class Purpose extends Archieve {
             @lombok.NonNull final CrossBoard crossBoard,
             @lombok.NonNull final Integer nationalityId
     ) {
+        super( Purpose.class );
+
         this.setTripPurpose(
                 Archieve.tripPurposes.getOrDefault(
                         crossBoard.getTrip_purpose_code(),
@@ -105,5 +107,7 @@ public final class Purpose extends Archieve {
                         Errors.DATA_NOT_FOUND.name()
                 )
         );
+
+        super.close();
     }
 }

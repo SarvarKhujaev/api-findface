@@ -15,11 +15,12 @@ public final class CustomSerializerTest extends CustomSerializer {
                                 EntitiesInstances.instancesList,
                                 entity -> {
                                     assertNotNull( entity );
-                                    assertNotNull( entity.getMethodName().getMethodApi() );
-                                    assertNotNull( entity.getMethodName() );
+                                    assertNotNull( entity.get() );
+                                    assertNotNull( entity.get().getMethodName().getMethodApi() );
+                                    assertNotNull( entity.get().getMethodName() );
 
-                                    assertTrue( super.checkString( entity.getMethodName().getMethodApi() ).isBlank() );
-                                    assertTrue( super.checkString( entity.getMethodName().name() ).isBlank() );
+                                    assertTrue( super.checkString( entity.get().getMethodName().getMethodApi() ).isBlank() );
+                                    assertTrue( super.checkString( entity.get().getMethodName().name() ).isBlank() );
                                 }
                         )
                 )
@@ -55,7 +56,7 @@ public final class CustomSerializerTest extends CustomSerializer {
                                     assertNotNull( temp );
                                     assertFalse( temp.isBlank() );
 
-                                    final Object object = deserialize( temp, entity.getClass() );
+                                    final Object object = deserialize( temp, entity.get().getClass() );
 
                                     assertNotNull( object );
                                     assertEquals( entity, object );

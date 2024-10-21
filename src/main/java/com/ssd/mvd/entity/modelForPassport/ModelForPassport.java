@@ -2,8 +2,14 @@ package com.ssd.mvd.entity.modelForPassport;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -39,12 +45,21 @@ public final class ModelForPassport implements EntityCommonMethods< ModelForPass
     private int AnswereId;
     private String AnswereMessage;
     private String AnswereComment;
+
     @JsonDeserialize
+    @WeakReferenceAnnotation( name = "Data", isCollection = false )
     private com.ssd.mvd.entity.modelForPassport.Data Data;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
-    public ModelForPassport () {}
+    @EntityConstructorAnnotation
+    public <T> ModelForPassport ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, ModelForPassport.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ModelForPassport.class );
+    }
+
+    private ModelForPassport () {}
 
     @Override
     @lombok.NonNull

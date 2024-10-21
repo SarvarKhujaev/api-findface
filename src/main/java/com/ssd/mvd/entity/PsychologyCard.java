@@ -1,30 +1,44 @@
 package com.ssd.mvd.entity;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
 import com.ssd.mvd.entity.modelForPassport.ModelForPassport;
 import com.ssd.mvd.entity.modelForAddress.ModelForAddress;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
-import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entity.modelForCadastr.Data;
 import com.ssd.mvd.entity.foreigner.Foreigner;
+
+import com.ssd.mvd.inspectors.CollectionsInspector;
+import com.ssd.mvd.inspectors.CustomServiceCleaner;
+import com.ssd.mvd.inspectors.AnnotationInspector;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.constants.ErrorResponse;
 
 import reactor.util.function.*;
 import java.util.List;
 
-public final class PsychologyCard implements EntityCommonMethods< PsychologyCard >, ServiceCommonMethods {
+public final class PsychologyCard implements EntityCommonMethods< PsychologyCard > {
+    @WeakReferenceAnnotation( name = "personInfo", isCollection = false )
     private Pinpp pinpp;
     private String personImage; // the image of the person
 
+    @WeakReferenceAnnotation( name = "papilonData" )
     private List< PapilonData > papilonData;
-
+    @WeakReferenceAnnotation( name = "violationList" )
     private List< Violation > violationList;
+    @WeakReferenceAnnotation( name = "foreignerList" )
     private List< Foreigner > foreignerList;
 
+    @WeakReferenceAnnotation( name = "modelForCarList", isCollection = false )
     private ModelForCarList modelForCarList; // the list of all cars which belongs to this person
+    @WeakReferenceAnnotation( name = "modelForAddress", isCollection = false )
     private ModelForAddress modelForAddress;
-
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
+    @WeakReferenceAnnotation( name = "modelForPassport", isCollection = false )
     private ModelForPassport modelForPassport;
+    @WeakReferenceAnnotation( name = "modelForCadastr", isCollection = false )
     private com.ssd.mvd.entity.modelForCadastr.Data modelForCadastr;
 
     public String getPersonImage() {
@@ -141,6 +155,12 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
         return this;
     }
 
+    @EntityConstructorAnnotation
+    public <T> PsychologyCard ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, PsychologyCard.class );
+        AnnotationInspector.checkAnnotationIsImmutable( PsychologyCard.class );
+    }
+
     public PsychologyCard () {}
 
     @lombok.NonNull
@@ -255,11 +275,12 @@ public final class PsychologyCard implements EntityCommonMethods< PsychologyCard
 
     @Override
     public void close() {
-        this.getPapilonData().clear();
-        this.getForeignerList().clear();
-        this.getViolationList().clear();
-        this.getModelForCarList().close();
-        this.getModelForCadastr().close();
-        this.getModelForAddress().close();
+        CollectionsInspector.checkAndClear( this.getPapilonData() );
+        CollectionsInspector.checkAndClear( this.getForeignerList() );
+        CollectionsInspector.checkAndClear( this.getViolationList() );
+
+        CustomServiceCleaner.clearReference( this.getModelForCarList() );
+        CustomServiceCleaner.clearReference( this.getModelForCadastr() );
+        CustomServiceCleaner.clearReference( this.getModelForAddress() );
     }
 }

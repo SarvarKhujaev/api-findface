@@ -1,11 +1,20 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import reactor.util.retry.Retry;
 import java.time.Duration;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class RetryInspector extends WebFluxInspector {
+    @EntityConstructorAnnotation( permission = SerDes.class )
+    protected <T extends UuidInspector> RetryInspector( @lombok.NonNull final Class<T> instance ) {
+        super( RetryInspector.class );
+
+        AnnotationInspector.checkCallerPermission( instance, RetryInspector.class );
+        AnnotationInspector.checkAnnotationIsImmutable( RetryInspector.class );
+    }
+
     @lombok.NonNull
     @lombok.Synchronized
     @org.jetbrains.annotations.Contract( value = "_ -> !null" )

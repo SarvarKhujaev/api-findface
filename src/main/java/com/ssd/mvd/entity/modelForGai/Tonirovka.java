@@ -1,7 +1,13 @@
 package com.ssd.mvd.entity.modelForGai;
 
-import com.ssd.mvd.interfaces.EntityCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
+import com.ssd.mvd.interfaces.EntityCommonMethods;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
@@ -48,6 +54,7 @@ public final class Tonirovka implements EntityCommonMethods< Tonirovka > {
     private String whoGavePermission;
     private String organWhichGavePermission;
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
     public ErrorResponse getErrorResponse() {
@@ -62,7 +69,13 @@ public final class Tonirovka implements EntityCommonMethods< Tonirovka > {
         return this;
     }
 
-    public Tonirovka () {}
+    @EntityConstructorAnnotation
+    public <T> Tonirovka ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Tonirovka.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Tonirovka.class );
+    }
+
+    private Tonirovka () {}
 
     @Override
     @lombok.NonNull

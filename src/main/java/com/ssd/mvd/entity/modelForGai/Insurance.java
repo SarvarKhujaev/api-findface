@@ -1,7 +1,12 @@
 package com.ssd.mvd.entity.modelForGai;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
+import com.ssd.mvd.annotations.WeakReferenceAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
+
+import com.ssd.mvd.inspectors.AnnotationInspector;
 import com.ssd.mvd.inspectors.CustomSerializer;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 import com.ssd.mvd.constants.Errors;
@@ -35,9 +40,16 @@ public final class Insurance implements EntityCommonMethods< Insurance > {
         return this;
     }
 
+    @WeakReferenceAnnotation( name = "errorResponse", isCollection = false )
     private ErrorResponse errorResponse;
 
-    public Insurance () {}
+    @EntityConstructorAnnotation
+    public <T> Insurance ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, Insurance.class );
+        AnnotationInspector.checkAnnotationIsImmutable( Insurance.class );
+    }
+
+    private Insurance () {}
 
     @Override
     @lombok.NonNull

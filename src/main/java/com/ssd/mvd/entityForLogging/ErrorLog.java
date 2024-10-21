@@ -1,22 +1,39 @@
 package com.ssd.mvd.entityForLogging;
 
-import com.google.gson.annotations.Expose;
+import com.ssd.mvd.annotations.AvroFieldAnnotation;
+import com.ssd.mvd.annotations.AvroMethodAnnotation;
 
 import com.ssd.mvd.inspectors.Config;
 import com.ssd.mvd.inspectors.TimeInspector;
 import com.ssd.mvd.interfaces.KafkaCommonMethods;
 
 public class ErrorLog extends TimeInspector implements KafkaCommonMethods {
-    @Expose
+    @AvroMethodAnnotation( name = "errorMessage" )
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    @AvroMethodAnnotation( name = "INTEGRATED_SERVICE" )
+    public String getINTEGRATED_SERVICE() {
+        return INTEGRATED_SERVICE;
+    }
+
+    @AvroMethodAnnotation( name = "INTEGRATED_SERVICE_API_DESCRIPTION" )
+    public String getINTEGRATED_SERVICE_API_DESCRIPTION() {
+        return INTEGRATED_SERVICE_API_DESCRIPTION;
+    }
+
+    @AvroFieldAnnotation( name = "errorMessage" )
     private String errorMessage;
 
-    @Expose
-    private final static String INTEGRATED_SERVICE = IntegratedServiceApis.OVIR.getName();
+    @AvroFieldAnnotation( name = "INTEGRATED_SERVICE" )
+    private static final String INTEGRATED_SERVICE = IntegratedServiceApis.OVIR.getName();
 
-    @Expose
-    private final static String INTEGRATED_SERVICE_API_DESCRIPTION = IntegratedServiceApis.OVIR.getDescription();
+    @AvroFieldAnnotation( name = "INTEGRATED_SERVICE_API_DESCRIPTION" )
+    private static final String INTEGRATED_SERVICE_API_DESCRIPTION = IntegratedServiceApis.OVIR.getDescription();
 
     public ErrorLog ( @lombok.NonNull final String errorMessage ) {
+        super( ErrorLog.class );
         this.errorMessage = errorMessage;
     }
 

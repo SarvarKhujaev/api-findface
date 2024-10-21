@@ -7,6 +7,7 @@ import org.reactivestreams.Subscriber;
 
 import java.util.function.Consumer;
 
+@com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public final class CustomSubscriber<T> extends LogInspector implements Subscriber<T> {
     private final Consumer< T > objectConsumer;
     private Subscription subscription;
@@ -14,6 +15,7 @@ public final class CustomSubscriber<T> extends LogInspector implements Subscribe
     public CustomSubscriber(
             @lombok.NonNull final Consumer< T > objectConsumer
     ) {
+        super( CustomSubscriber.class );
         this.objectConsumer = objectConsumer;
     }
 

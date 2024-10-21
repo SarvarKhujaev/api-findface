@@ -1,18 +1,15 @@
 package com.ssd.mvd.entity.boardCrossing;
 
-import com.ssd.mvd.inspectors.CollectionsInspector;
-import com.ssd.mvd.interfaces.ServiceCommonMethods;
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
-import com.ssd.mvd.inspectors.EntitiesInstances;
-import com.ssd.mvd.inspectors.CustomSerializer;
+import com.ssd.mvd.inspectors.*;
+
 import com.ssd.mvd.constants.ErrorResponse;
 import com.ssd.mvd.constants.Methods;
 
 import java.util.List;
 
-public final class CrossBoardInfo
-        extends CollectionsInspector
-        implements EntityCommonMethods< CrossBoardInfo >, ServiceCommonMethods {
+public final class CrossBoardInfo extends CollectionsInspector implements EntityCommonMethods< CrossBoardInfo > {
     public List< com.ssd.mvd.entity.boardCrossing.Data > getData() {
         return this.Data;
     }
@@ -43,7 +40,13 @@ public final class CrossBoardInfo
     private List< Data > Data;
     private ErrorResponse errorResponse;
 
-    public CrossBoardInfo () {}
+    @EntityConstructorAnnotation
+    public <T> CrossBoardInfo ( @lombok.NonNull final Class<T> instance ) {
+        AnnotationInspector.checkCallerPermission( instance, CrossBoardInfo.class );
+        AnnotationInspector.checkAnnotationIsImmutable( CrossBoardInfo.class );
+    }
+
+    private CrossBoardInfo () {}
 
     private CrossBoardInfo (
             @lombok.NonNull final List< CrossBoard > crossBoards,
@@ -88,9 +91,9 @@ public final class CrossBoardInfo
     public void close() {
         super.analyze(
                 this.getData(),
-                com.ssd.mvd.entity.boardCrossing.Data::close
+                CustomServiceCleaner::clearReference
         );
 
-        this.getData().clear();
+        checkAndClear( this.getData() );
     }
 }

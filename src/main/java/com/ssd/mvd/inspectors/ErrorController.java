@@ -1,5 +1,6 @@
 package com.ssd.mvd.inspectors;
 
+import com.ssd.mvd.annotations.EntityConstructorAnnotation;
 import com.ssd.mvd.entity.response.ApiResponseModel;
 import com.ssd.mvd.interfaces.EntityCommonMethods;
 import com.ssd.mvd.entityForLogging.ErrorLog;
@@ -14,6 +15,18 @@ import reactor.core.publisher.Mono;
 
 @com.ssd.mvd.annotations.ImmutableEntityAnnotation
 public class ErrorController extends CustomSerializer {
+    protected ErrorController () {
+        super( ErrorController.class );
+    }
+
+    @EntityConstructorAnnotation( permission = LogInspector.class )
+    protected <T extends UuidInspector> ErrorController( @lombok.NonNull final Class<T> instance ) {
+        super( ErrorController.class );
+
+        AnnotationInspector.checkCallerPermission( instance, ErrorController.class );
+        AnnotationInspector.checkAnnotationIsImmutable( ErrorController.class );
+    }
+
     @lombok.NonNull
     @lombok.Synchronized
     protected final synchronized ErrorResponse getErrorResponse () {
